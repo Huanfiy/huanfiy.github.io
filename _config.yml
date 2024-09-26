@@ -1,0 +1,20 @@
+# 网站的基本信息
+title: "我的博客"
+description: "这是一个使用 Jekyll 和 GitHub Pages 构建的个人博客。"
+author: "你的名字"
+
+# 选择主题
+theme: "jekyll-theme-cayman"
+
+# 网站的 URL 结构
+baseurl: "/my-blog" # 如果站点不是放在根目录，设置子路径
+url: "https://username.github.io" # 你的 GitHub Pages 链接
+
+# 插件
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# 分页设置
+paginate: 5
+paginate_path: "/page:num"
