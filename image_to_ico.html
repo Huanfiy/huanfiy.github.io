@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片转ICO工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+        canvas {
+            display: none;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .download-link {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>图片转ICO工具</h1>
+    <input type="file" id="imageInput" accept="image/png, image/jpeg, image/jpg">
+    <button id="convertButton">转换为ICO</button>
+    <a id="downloadLink" class="download-link" style="display:none;" download="icon.ico">下载图标</a>
+    <canvas id="canvas" width="64" height="64"></canvas>
+
+    <script>
+        document.getElementById('convertButton').addEventListener('click', function () {
+            const fileInput = document.getElementById('imageInput');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            if (!fileInput.files.length) {
+                alert('请先选择一张图片');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const img = new Image();
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+
+            img.onload = function () {
+                // 调整图片到64x64像素
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                // 将canvas内容转换为base64编码的ICO文件
+                canvas.toBlob(function (blob) {
+                    const url = URL.createObjectURL(blob);
+                    const downloadLink = document.getElementById('downloadLink');
+                    downloadLink.href = url;
+                    downloadLink.style.display = 'block';
+                }, 'image/x-icon');
+            };
+        });
+    </script>
+
+</body>
+</html>
