@@ -52,3 +52,30 @@ footer {
     background: #333;
     color: #fff;
 }
+
+/* 自定义按钮 */
+button {
+    background-color: #ff6b6b;
+    /* 亮红色按钮 */
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #ff9f43;
+    /* 橙色 hover 效果 */
+}
+
+/* 为页面的 section 添加透明背景 */
+section {
+    background-color: rgba(255, 255, 255, 0.8);
+    /* 透明白色背景 */
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}

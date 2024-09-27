@@ -5,13 +5,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Huanfiy的个人博客</title>
+    <!-- 引入 Tailwind CSS 和 Google Fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 全局字体样式 */
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* 设置背景动图 */
+        body {
+            background-image: url('https://media.giphy.com/media/3o7bu3XilJ5BOiSGic/giphy.gif'); /* 替换为您想要的动图 */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* 让文字更清晰可见 */
+        h1, p {
+            color: white;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        /* 导航栏样式 */
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style-type: none;
+            padding: 20px;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        nav ul li a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
 
 <body>
-    <header>
-        <h1>欢迎来到我的博客</h1>
-        <nav>
+    <header class="text-center pt-10">
+        <h1 class="text-5xl font-bold">欢迎来到我的博客</h1>
+        <nav class="my-6">
             <ul>
                 <li><a href="index.html">主页</a></li>
                 <li><a href="blog.html">博客</a></li>
@@ -21,14 +70,19 @@
         </nav>
     </header>
 
-    <section>
-        <h2>个人简介</h2>
-        <p>你好！我是Huanfiy，这里是我的个人博客，分享我的学习和开发经验。</p>
+    <section class="text-center mt-12">
+        <h2 class="text-3xl font-semibold text-white mb-6">个人简介</h2>
+        <p class="text-white text-lg max-w-2xl mx-auto">
+            你好！我是Huanfiy，这里是我的个人博客，分享我的学习和开发经验。
+        </p>
     </section>
 
-    <footer>
+    <footer class="text-center mt-20 text-white">
         <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
     </footer>
+
+    <!-- 引入 JavaScript 文件 -->
+    <script src="js/script.js"></script>
 </body>
 
 </html>

@@ -1,23 +1,45 @@
-// 回到顶部按钮功能
-const scrollToTopButton = document.createElement('button');
-scrollToTopButton.textContent = '回到顶部';
-scrollToTopButton.style.position = 'fixed';
-scrollToTopButton.style.bottom = '20px';
-scrollToTopButton.style.right = '20px';
-scrollToTopButton.style.display = 'none';
-document.body.appendChild(scrollToTopButton);
+// 鼠标点击特效：彩色波纹
+document.addEventListener("click", function (e) {
+  const ripple = document.createElement("span");
+  ripple.classList.add("ripple");
+  document.body.appendChild(ripple);
 
-window.addEventListener('scroll', () => {
-    if (window.scrollY > 200) {
-        scrollToTopButton.style.display = 'block';
-    } else {
-        scrollToTopButton.style.display = 'none';
+  ripple.style.left = `${e.pageX}px`;
+  ripple.style.top = `${e.pageY}px`;
+
+  // 使用鲜艳的颜色
+  const colors = ["#ff6b6b", "#1dd1a1", "#ff9f43", "#48dbfb", "#f368e0"];
+  ripple.style.backgroundColor =
+    colors[Math.floor(Math.random() * colors.length)];
+
+  setTimeout(() => {
+    ripple.remove();
+  }, 1000);
+});
+
+// 为 ripple 设置样式
+const style = document.createElement("style");
+style.innerHTML = `
+    .ripple {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: red;
+        border-radius: 50%;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        animation: ripple-animation 1s ease-out forwards;
     }
-});
 
-scrollToTopButton.addEventListener('click', () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-});
+    @keyframes ripple-animation {
+        from {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(10);
+        }
+    }
+`;
+document.head.appendChild(style);
