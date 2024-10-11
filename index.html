@@ -1,88 +1,88 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Huanfiy的个人博客</title>
     <!-- 引入 Tailwind CSS 和 Google Fonts -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
     <style>
-        /* 全局字体样式 */
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
+      /* 导航栏样式 */
+      nav ul {
+        display: flex;
+        justify-content: center;
+        list-style-type: none;
+        padding: 20px;
+      }
 
-        /* 设置背景动图 */
-        body {
-            background-image: url('https://media.giphy.com/media/3o7bu3XilJ5BOiSGic/giphy.gif'); /* 替换为您想要的动图 */
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
+      nav ul li {
+        margin: 0 15px;
+      }
 
-        /* 让文字更清晰可见 */
-        h1, p {
-            color: white;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
-        }
+      nav ul li a {
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 10px 20px;
+        /* background-color: #ff6b6b; 鲜艳亮红色 */
+        border-radius: 8px;
+        transition: background-color 0.3s;
+      }
 
-        /* 导航栏样式 */
-        nav ul {
-            display: flex;
-            justify-content: center;
-            list-style-type: none;
-            padding: 20px;
-        }
+      /* 主要标题样式 */
+      h1 {
+        color: #ff6b6b; /* 主颜色：亮红色 */
+        font-size: 4rem;
+      }
 
-        nav ul li {
-            margin: 0 15px;
-        }
+      /* 段落样式 */
+      p {
+        color: #576574; /* 中性灰色字体 */
+      }
 
-        nav ul li a {
-            color: white;
-            font-weight: 600;
-            text-decoration: none;
-            padding: 10px 20px;
-            background-color: rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
-            transition: background-color 0.3s;
-        }
-
-        nav ul li a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
+      /* 页脚样式 */
+      footer {
+        background-color: #1dd1a1; /* 青绿色 */
+        padding: 20px;
+        color: #fff;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <header class="text-center pt-10">
-        <h1 class="text-5xl font-bold">欢迎来到我的博客</h1>
-        <nav class="my-6">
-            <ul>
-                <li><a href="index.html">主页</a></li>
-                <li><a href="blog.html">博客</a></li>
-                <li><a href="about.html">关于我</a></li>
-                <li><a href="contact.html">联系我</a></li>
-            </ul>
-        </nav>
+      <h1 class="text-5xl font-bold">欢迎来到我的博客</h1>
+      <nav class="my-6">
+        <ul>
+          <li><a href="index.html">主页</a></li>
+          <li><a href="blog.html">博客</a></li>
+          <li><a href="about.html">关于我</a></li>
+          <li><a href="contact.html">联系我</a></li>
+          <li><a href="tool.html">小工具</a></li>
+        </ul>
+      </nav>
     </header>
 
     <section class="text-center mt-12">
-        <h2 class="text-3xl font-semibold text-white mb-6">个人简介</h2>
-        <p class="text-white text-lg max-w-2xl mx-auto">
-            你好！我是Huanfiy，这里是我的个人博客，分享我的学习和开发经验。
-        </p>
+      <h2 class="text-3xl font-semibold text-gray-700 mb-6">个人简介</h2>
+      <p class="text-gray-700 text-lg max-w-2xl mx-auto">
+        你好！我是Huanfiy，这里是我的个人博客，分享我的学习和开发经验。
+      </p>
     </section>
 
-    <footer class="text-center mt-20 text-white">
-        <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
+    <footer class="text-center mt-20">
+      <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
     </footer>
 
     <!-- 引入 JavaScript 文件 -->
     <script src="js/script.js"></script>
-</body>
-
+  </body>
 </html>

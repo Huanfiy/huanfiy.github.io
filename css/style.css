@@ -5,27 +5,47 @@
     box-sizing: border-box;
 }
 
+/* 引入 Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+/* 全局样式 */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
+    /* 使用 Poppins 字体 */
     line-height: 1.6;
     padding: 20px;
-    background-color: #f4f4f4;
+    background-color: #f0f8ff;
+    /* 浅蓝色背景 */
+    color: #333;
+    /* 深灰色字体 */
 }
 
+/* 头部样式 */
 header {
-    background: #333;
+    background: #00bfa5;
+    /* 清新绿色背景 */
     color: #fff;
+    /* 白色字体 */
     padding: 10px 0;
     text-align: center;
+    border-radius: 8px;
+    /* 圆角效果 */
 }
 
 header h1 {
     margin: 0;
+    font-weight: bold;
+    letter-spacing: 2px;
+    /* 增加文字间距 */
+    font-size: 2.5rem;
+    /* 设置较大的标题字体 */
 }
 
+/* 导航栏样式 */
 nav ul {
     list-style: none;
     padding: 0;
+    margin-top: 10px;
 }
 
 nav ul li {
@@ -36,46 +56,119 @@ nav ul li {
 nav ul li a {
     color: #fff;
     text-decoration: none;
+    font-weight: bold;
+    padding: 10px 20px;
+    background-color: #ffcc80;
+    /* 淡橙色按钮 */
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    /* 平滑的颜色过渡效果 */
 }
 
+nav ul li a:hover {
+    background-color: #ffd180;
+    /* 橙色 hover 效果 */
+}
+
+/* 主体内容样式 */
 section {
     margin: 20px 0;
     padding: 20px;
     background: #fff;
+    /* 白色背景 */
     border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* 添加轻微阴影 */
 }
 
+/* 页脚样式 */
 footer {
     text-align: center;
     margin-top: 20px;
     padding: 10px 0;
-    background: #333;
+    background: #00bfa5;
+    /* 清新绿色背景 */
     color: #fff;
+    /* 白色字体 */
+    border-radius: 8px;
+    /* 圆角效果 */
 }
 
-/* 自定义按钮 */
+/* 自定义按钮样式 */
 button {
-    background-color: #ff6b6b;
-    /* 亮红色按钮 */
+    background-color: #00bfa5;
+    /* 清新绿色按钮 */
     color: #fff;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    /* 平滑的颜色过渡 */
 }
 
 button:hover {
-    background-color: #ff9f43;
-    /* 橙色 hover 效果 */
+    background-color: #26debc;
+    /* 浅绿色 hover 效果 */
 }
 
-/* 为页面的 section 添加透明背景 */
-section {
-    background-color: rgba(255, 255, 255, 0.8);
-    /* 透明白色背景 */
-    padding: 20px;
-    border-radius: 10px;
+/* 其他文本样式 */
+p {
+    font-size: 1rem;
+    color: #333;
+    /* 深灰色文本 */
+    margin-bottom: 15px;
+    /* 给段落之间增加一些间距 */
+}
+
+h2 {
+    font-size: 2rem;
+    color: #00bfa5;
+    /* 清新绿色标题 */
+    margin-bottom: 15px;
+    font-weight: 600;
+    /* 半粗字体 */
+}
+
+/* 调整图片样式 */
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* 给图片添加阴影效果 */
     margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+/* markdown */
+#markdown-content {
+    margin: 20px 0;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#markdown-content h1 {
+    font-size: 2rem;
+    color: #00bfa5;
+    margin-bottom: 15px;
+}
+
+#markdown-content p {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#markdown-content ul {
+    margin-left: 20px;
+}
+
+#markdown-content li {
+    margin-bottom: 10px;
 }

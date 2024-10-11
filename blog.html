@@ -1,37 +1,83 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>博客列表 - Huanfiy的个人博客</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
 
-<body>
+  <body>
     <header>
-        <h1>我的博客</h1>
-        <nav>
-            <ul>
-                <li><a href="index.html">主页</a></li>
-                <li><a href="blog.html">博客</a></li>
-                <li><a href="about.html">关于我</a></li>
-                <li><a href="contact.html">联系我</a></li>
-            </ul>
-        </nav>
+      <h1>我的博客</h1>
+      <nav>
+        <ul>
+          <li><a href="index.html">主页</a></li>
+          <li><a href="blog.html">博客</a></li>
+          <li><a href="about.html">关于我</a></li>
+          <li><a href="contact.html">联系我</a></li>
+        </ul>
+      </nav>
     </header>
 
     <section>
-        <h2>最新文章</h2>
-        <ul>
-            <li><a href="posts/first-post.html">第一篇博客文章</a></li>
-            <!-- 您可以继续添加更多的博客文章链接 -->
-        </ul>
+      <h2>最新文章</h2>
+      <!-- 博客文章列表 -->
+      <ul id="blog-list">
+        <!-- 动态生成的博客文章链接将插入到这里 -->
+      </ul>
+    </section>
+
+    <section id="markdown-content">
+      <!-- 这里将动态加载和展示 Markdown 内容 -->
     </section>
 
     <footer>
-        <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
+      <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
     </footer>
-</body>
 
+    <!-- 引入 marked.js 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
+
+    <!-- JavaScript 用于加载 Markdown 文件和生成文章列表 -->
+    <script>
+      // 定义博客文章的元数据
+      const posts = [
+        { title: "git_use", file: "posts/git_use.md" },
+        { title: "tmux_look", file: "posts/tmux_look.md" },
+        { title: "第三篇博客文章", file: "posts/third-post.md" },
+      ];
+
+      // 动态生成博客文章列表
+      function generateBlogList(posts) {
+        const blogList = document.getElementById("blog-list");
+        posts.forEach((post) => {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = "#";
+          a.textContent = post.title;
+          a.onclick = function () {
+            loadMarkdown(post.file);
+          };
+          li.appendChild(a);
+          blogList.appendChild(li);
+        });
+      }
+
+      // 加载并渲染 Markdown 文件
+      function loadMarkdown(file) {
+        fetch(file)
+          .then((response) => response.text())
+          .then((text) => {
+            // 使用 marked.parse() 解析 Markdown
+            document.getElementById("markdown-content").innerHTML =
+              marked.parse(text);
+          })
+          .catch((error) => console.error("Error loading markdown:", error));
+      }
+
+      // 初始化博客文章列表
+      generateBlogList(posts);
+    </script>
+  </body>
 </html>
