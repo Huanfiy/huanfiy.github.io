@@ -3,44 +3,427 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>博客列表 - Huanfiy的个人博客</title>
+    <title>博客 - Huanfiy的个人博客</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="css/style.css" />
+    <!-- 引入 Font Awesome 图标库 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- 引入 AOS 动画库 -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <!-- 引入 marked.js 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
   </head>
 
   <body>
     <header>
-      <h1>我的博客</h1>
-      <nav>
-        <ul>
-          <li><a href="index.html">主页</a></li>
-          <li><a href="blog.html">博客</a></li>
-          <li><a href="about.html">关于我</a></li>
-          <li><a href="contact.html">联系我</a></li>
-        </ul>
-      </nav>
+      <div class="container mx-auto px-4">
+        <!-- 头像 -->
+        <img src="picture/icon.png" alt="Huanfiy头像" class="avatar" />
+
+        <h1 data-aos="fade-down">我的博客</h1>
+
+        <nav>
+          <!-- 导航链接 -->
+          <ul class="nav-links">
+            <li><a href="index.html">主页</a></li>
+            <li><a href="blog.html">博客</a></li>
+            <li><a href="about.html">关于我</a></li>
+            <li><a href="contact.html">联系我</a></li>
+            <li><a href="tool.html">小工具</a></li>
+          </ul>
+
+          <!-- 社交媒体链接 -->
+          <div class="social-links">
+            <a
+              href="https://github.com/Huanfiy"
+              target="_blank"
+              class="social-link"
+              title="GitHub"
+            >
+              <i class="fab fa-github"></i>
+            </a>
+            <a
+              href="https://space.bilibili.com/179895513"
+              target="_blank"
+              class="social-link"
+              title="哔哩哔哩"
+            >
+              <i class="fab fa-bilibili"></i>
+            </a>
+          </div>
+        </nav>
+      </div>
     </header>
 
-    <section>
-      <h2>最新文章</h2>
-      <!-- 博客文章列表 -->
-      <ul id="blog-list">
-        <!-- 动态生成的博客文章链接将插入到这里 -->
-      </ul>
+    <!-- 博客介绍区域 -->
+    <section class="hero" data-aos="fade-up">
+      <div class="container mx-auto px-4 text-center">
+        <h2>分享我的技术心得与生活感悟</h2>
+        <p class="max-w-2xl mx-auto">
+          在这里，我会定期分享我在技术领域的探索、学习心得以及生活中的点滴感悟。希望我的文章能够对您有所帮助或启发。
+        </p>
+      </div>
     </section>
 
-    <section id="markdown-content">
+    <!-- 博客分类 -->
+    <section data-aos="fade-up" data-aos-delay="100">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-wrap justify-center gap-4 mb-12">
+          <a
+            href="#"
+            class="px-6 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
+            >全部</a
+          >
+          <a
+            href="#"
+            class="px-6 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
+            >Web开发</a
+          >
+          <a
+            href="#"
+            class="px-6 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
+            >JavaScript</a
+          >
+          <a
+            href="#"
+            class="px-6 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
+            >前端框架</a
+          >
+          <a
+            href="#"
+            class="px-6 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
+            >后端开发</a
+          >
+          <a
+            href="#"
+            class="px-6 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
+            >生活随笔</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- 特色文章 -->
+    <section data-aos="fade-up" data-aos-delay="200">
+      <div class="container mx-auto px-4">
+        <h2 class="text-center mb-12">特色文章</h2>
+
+        <div
+          class="relative overflow-hidden rounded-xl shadow-xl mb-16"
+          data-aos="zoom-in"
+        >
+          <img
+            src="https://source.unsplash.com/random/1200x600?coding"
+            alt="特色文章"
+            class="w-full h-96 object-cover"
+          />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black to-transparent"
+          ></div>
+          <div class="absolute bottom-0 left-0 p-8 text-white">
+            <span
+              class="inline-block px-3 py-1 bg-primary-color rounded-full text-sm mb-4"
+              >Web开发</span
+            >
+            <h3 class="text-3xl font-bold mb-2">现代Web开发的最佳实践</h3>
+            <p class="mb-4 text-gray-200">
+              探索当今Web开发中的最佳实践、工具和技术，帮助您构建更高效、更可维护的应用程序。
+            </p>
+            <div class="flex items-center">
+              <img
+                src="picture/icon.png"
+                alt="作者头像"
+                class="w-10 h-10 rounded-full mr-3"
+              />
+              <div>
+                <p class="font-medium">Huanfiy</p>
+                <p class="text-sm text-gray-300">2024年5月15日 · 10分钟阅读</p>
+              </div>
+            </div>
+            <a href="#" class="btn mt-6">阅读全文</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 最新文章 -->
+    <section data-aos="fade-up" data-aos-delay="300">
+      <div class="container mx-auto px-4">
+        <h2 class="text-center mb-12">最新文章</h2>
+
+        <div class="grid">
+          <!-- 文章1 -->
+          <div class="card" data-aos="fade-up" data-aos-delay="100">
+            <img
+              src="https://source.unsplash.com/random/600x400?javascript"
+              alt="文章图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">2024年5月10日</span>
+                <span
+                  class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                  >JavaScript</span
+                >
+              </div>
+              <h3 class="card-title">JavaScript异步编程详解</h3>
+              <p>
+                深入理解JavaScript中的异步编程模式，包括Promise、async/await以及它们的最佳实践。
+              </p>
+              <div class="flex justify-between items-center mt-4">
+                <a href="#" class="text-primary-color hover:underline"
+                  >阅读更多</a
+                >
+                <span class="text-sm text-gray-500">8分钟阅读</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 文章2 -->
+          <div class="card" data-aos="fade-up" data-aos-delay="200">
+            <img
+              src="https://source.unsplash.com/random/600x400?react"
+              alt="文章图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">2024年5月5日</span>
+                <span
+                  class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs"
+                  >React</span
+                >
+              </div>
+              <h3 class="card-title">React Hooks完全指南</h3>
+              <p>
+                全面了解React Hooks的使用方法和最佳实践，提升您的React开发技能。
+              </p>
+              <div class="flex justify-between items-center mt-4">
+                <a href="#" class="text-primary-color hover:underline"
+                  >阅读更多</a
+                >
+                <span class="text-sm text-gray-500">12分钟阅读</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 文章3 -->
+          <div class="card" data-aos="fade-up" data-aos-delay="300">
+            <img
+              src="https://source.unsplash.com/random/600x400?css"
+              alt="文章图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">2024年4月28日</span>
+                <span
+                  class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs"
+                  >CSS</span
+                >
+              </div>
+              <h3 class="card-title">CSS Grid和Flexbox实战</h3>
+              <p>学习如何结合使用CSS Grid和Flexbox创建复杂而灵活的页面布局。</p>
+              <div class="flex justify-between items-center mt-4">
+                <a href="#" class="text-primary-color hover:underline"
+                  >阅读更多</a
+                >
+                <span class="text-sm text-gray-500">10分钟阅读</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 文章4 -->
+          <div class="card" data-aos="fade-up" data-aos-delay="400">
+            <img
+              src="https://source.unsplash.com/random/600x400?node"
+              alt="文章图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">2024年4月20日</span>
+                <span
+                  class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs"
+                  >Node.js</span
+                >
+              </div>
+              <h3 class="card-title">Node.js性能优化技巧</h3>
+              <p>
+                探索提升Node.js应用性能的各种技巧和最佳实践，让您的服务更加高效。
+              </p>
+              <div class="flex justify-between items-center mt-4">
+                <a href="#" class="text-primary-color hover:underline"
+                  >阅读更多</a
+                >
+                <span class="text-sm text-gray-500">15分钟阅读</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 文章5 -->
+          <div class="card" data-aos="fade-up" data-aos-delay="500">
+            <img
+              src="https://source.unsplash.com/random/600x400?design"
+              alt="文章图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">2024年4月15日</span>
+                <span
+                  class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs"
+                  >UI设计</span
+                >
+              </div>
+              <h3 class="card-title">Web设计中的色彩心理学</h3>
+              <p>
+                了解色彩如何影响用户体验，以及如何在您的Web设计中有效地使用色彩。
+              </p>
+              <div class="flex justify-between items-center mt-4">
+                <a href="#" class="text-primary-color hover:underline"
+                  >阅读更多</a
+                >
+                <span class="text-sm text-gray-500">7分钟阅读</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 文章6 -->
+          <div class="card" data-aos="fade-up" data-aos-delay="600">
+            <img
+              src="https://source.unsplash.com/random/600x400?security"
+              alt="文章图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-sm text-gray-500">2024年4月8日</span>
+                <span
+                  class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs"
+                  >Web安全</span
+                >
+              </div>
+              <h3 class="card-title">Web应用安全最佳实践</h3>
+              <p>学习保护您的Web应用免受常见安全威胁的最佳实践和技术。</p>
+              <div class="flex justify-between items-center mt-4">
+                <a href="#" class="text-primary-color hover:underline"
+                  >阅读更多</a
+                >
+                <span class="text-sm text-gray-500">11分钟阅读</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="flex justify-center mt-12" data-aos="fade-up">
+          <nav class="inline-flex rounded-md shadow-sm">
+            <a
+              href="#"
+              class="px-4 py-2 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50"
+              >上一页</a
+            >
+            <a
+              href="#"
+              class="px-4 py-2 bg-primary-color text-white border border-primary-color"
+              >1</a
+            >
+            <a
+              href="#"
+              class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50"
+              >2</a
+            >
+            <a
+              href="#"
+              class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50"
+              >3</a
+            >
+            <a
+              href="#"
+              class="px-4 py-2 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50"
+              >下一页</a
+            >
+          </nav>
+        </div>
+      </div>
+    </section>
+
+    <!-- 订阅区域 -->
+    <section data-aos="fade-up" data-aos-delay="400">
+      <div class="container mx-auto px-4 text-center">
+        <div
+          class="bg-primary-color bg-opacity-10 rounded-xl p-8 max-w-3xl mx-auto"
+        >
+          <h2 class="mb-4">订阅我的博客</h2>
+          <p class="mb-6">订阅我的博客，获取最新文章和更新通知。</p>
+          <form class="flex flex-col md:flex-row gap-4 max-w-lg mx-auto">
+            <input
+              type="email"
+              placeholder="您的邮箱地址"
+              class="flex-grow px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-color"
+            />
+            <button type="submit" class="btn whitespace-nowrap">
+              立即订阅
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Markdown 内容区域 -->
+    <section id="markdown-content" class="hidden">
       <!-- 这里将动态加载和展示 Markdown 内容 -->
     </section>
 
+    <!-- 页脚 -->
     <footer>
-      <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
+      <div class="container mx-auto px-4">
+        <div class="social-links mb-4">
+          <a
+            href="https://github.com/Huanfiy"
+            target="_blank"
+            class="social-link"
+            title="GitHub"
+          >
+            <i class="fab fa-github"></i>
+          </a>
+          <a
+            href="https://space.bilibili.com/179895513"
+            target="_blank"
+            class="social-link"
+            title="哔哩哔哩"
+          >
+            <i class="fab fa-bilibili"></i>
+          </a>
+        </div>
+        <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
+      </div>
     </footer>
 
-    <!-- 引入 marked.js 库 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
-
-    <!-- JavaScript 用于加载 Markdown 文件和生成文章列表 -->
+    <!-- 引入 JavaScript 文件 -->
+    <script src="js/script.js"></script>
+    <!-- 引入 AOS 动画库 -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
+      // 初始化 AOS 动画
+      AOS.init({
+        duration: 800,
+        easing: "ease",
+        once: true,
+      });
+
       // 定义博客文章的元数据
       const posts = [
         { title: "git_use", file: "posts/git_use.md" },
@@ -48,36 +431,38 @@
         { title: "第三篇博客文章", file: "posts/third-post.md" },
       ];
 
-      // 动态生成博客文章列表
-      function generateBlogList(posts) {
-        const blogList = document.getElementById("blog-list");
-        posts.forEach((post) => {
-          const li = document.createElement("li");
-          const a = document.createElement("a");
-          a.href = "#";
-          a.textContent = post.title;
-          a.onclick = function () {
-            loadMarkdown(post.file);
-          };
-          li.appendChild(a);
-          blogList.appendChild(li);
-        });
-      }
-
       // 加载并渲染 Markdown 文件
       function loadMarkdown(file) {
         fetch(file)
           .then((response) => response.text())
           .then((text) => {
-            // 使用 marked.parse() 解析 Markdown
-            document.getElementById("markdown-content").innerHTML =
-              marked.parse(text);
+            const markdownContent = document.getElementById("markdown-content");
+            markdownContent.innerHTML = marked.parse(text);
+            markdownContent.classList.remove("hidden");
+
+            // 隐藏其他内容区域
+            document
+              .querySelectorAll("section:not(#markdown-content)")
+              .forEach((section) => {
+                if (!section.classList.contains("hero")) {
+                  section.classList.add("hidden");
+                }
+              });
           })
           .catch((error) => console.error("Error loading markdown:", error));
       }
 
-      // 初始化博客文章列表
-      generateBlogList(posts);
+      // 为示例文章添加点击事件
+      document
+        .querySelectorAll(".card a.text-primary-color")
+        .forEach((link, index) => {
+          link.addEventListener("click", function (e) {
+            e.preventDefault();
+            if (posts[index]) {
+              loadMarkdown(posts[index].file);
+            }
+          });
+        });
     </script>
   </body>
 </html>

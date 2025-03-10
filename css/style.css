@@ -3,172 +3,461 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    transition: all 0.3s ease;
 }
 
-/* 引入 Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+/* 引入 Google Fonts - 使用更优雅的字体组合 */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;600&display=swap');
+
+:root {
+    /* 优雅的配色方案 */
+    --primary-color: #6c5ce7;      /* 主色调：优雅紫色 */
+    --secondary-color: #a29bfe;    /* 次要色调：淡紫色 */
+    --accent-color: #fd79a8;       /* 强调色：粉红色 */
+    --dark-color: #2d3436;         /* 深色：近黑色 */
+    --light-color: #f9f9f9;        /* 浅色：近白色 */
+    --text-color: #333333;         /* 文本色：深灰色 */
+    --text-light: #666666;         /* 浅文本色：中灰色 */
+    --gradient-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* 渐变背景 */
+    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* 优雅的阴影效果 */
+}
 
 /* 全局样式 */
 body {
-    font-family: 'Poppins', sans-serif;
-    /* 使用 Poppins 字体 */
-    line-height: 1.6;
-    padding: 20px;
-    background-color: #f0f8ff;
-    /* 浅蓝色背景 */
-    color: #333;
-    /* 深灰色字体 */
+    font-family: 'Raleway', sans-serif;
+    line-height: 1.8;
+    background-color: var(--light-color);
+    color: var(--text-color);
+    overflow-x: hidden;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--light-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
 }
 
 /* 头部样式 */
 header {
-    background: #00bfa5;
-    /* 清新绿色背景 */
-    color: #fff;
-    /* 白色字体 */
-    padding: 10px 0;
+    position: relative;
+    background: var(--gradient-bg);
+    color: white;
+    padding: 1.5rem 0;
     text-align: center;
-    border-radius: 8px;
-    /* 圆角效果 */
+    box-shadow: var(--box-shadow);
+    border-radius: 0 0 20px 20px;
+    margin-bottom: 3rem;
 }
 
 header h1 {
+    font-family: 'Playfair Display', serif;
     margin: 0;
-    font-weight: bold;
+    font-weight: 700;
     letter-spacing: 2px;
-    /* 增加文字间距 */
-    font-size: 2.5rem;
-    /* 设置较大的标题字体 */
+    font-size: 2.8rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    animation: fadeInDown 1s ease;
 }
 
 /* 导航栏样式 */
+nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+}
+
 nav ul {
     list-style: none;
     padding: 0;
-    margin-top: 10px;
+    margin: 1rem 0;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 nav ul li {
-    display: inline;
-    margin: 0 15px;
+    margin: 0.5rem 0.8rem;
+    position: relative;
 }
 
 nav ul li a {
-    color: #fff;
+    color: white;
     text-decoration: none;
-    font-weight: bold;
-    padding: 10px 20px;
-    background-color: #ffcc80;
-    /* 淡橙色按钮 */
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
-    /* 平滑的颜色过渡效果 */
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    border-radius: 30px;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
 }
 
-nav ul li a:hover {
-    background-color: #ffd180;
-    /* 橙色 hover 效果 */
+nav ul li a:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: var(--accent-color);
+    border-radius: 30px;
+    transition: all 0.4s ease;
+    z-index: -1;
+}
+
+nav ul li a:hover:before {
+    width: 100%;
+}
+
+/* 头像样式 */
+.avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: var(--box-shadow);
+    margin: 0 auto 1rem;
+    transition: transform 0.5s ease;
+    animation: fadeIn 1s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* 社交链接样式 */
+.social-links {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0 0.5rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    background-color: var(--accent-color);
+    transform: translateY(-5px);
+}
+
+.social-link svg {
+    fill: white;
+    width: 20px;
+    height: 20px;
 }
 
 /* 主体内容样式 */
 section {
-    margin: 20px 0;
-    padding: 20px;
-    background: #fff;
-    /* 白色背景 */
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    /* 添加轻微阴影 */
+    margin: 2rem auto;
+    padding: 2.5rem;
+    max-width: 1200px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: var(--box-shadow);
+    animation: fadeIn 1s ease;
+}
+
+section.hero {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    position: relative;
+    overflow: hidden;
+}
+
+section.hero:before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: var(--gradient-bg);
+    opacity: 0.1;
+    z-index: 0;
+}
+
+section.hero:after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: var(--gradient-bg);
+    opacity: 0.1;
+    z-index: 0;
+}
+
+/* 标题样式 */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+h1 {
+    font-size: 3rem;
+}
+
+h2 {
+    font-size: 2.2rem;
+}
+
+h2:after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: var(--accent-color);
+}
+
+.text-center h2:after {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* 段落样式 */
+p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+}
+
+/* 按钮样式 */
+.btn {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: var(--accent-color);
+    transition: all 0.4s ease;
+    z-index: -1;
+}
+
+.btn:hover:before {
+    width: 100%;
+}
+
+.btn:hover {
+    box-shadow: 0 7px 20px rgba(108, 92, 231, 0.5);
+    transform: translateY(-3px);
 }
 
 /* 页脚样式 */
 footer {
     text-align: center;
-    margin-top: 20px;
-    padding: 10px 0;
-    background: #00bfa5;
-    /* 清新绿色背景 */
-    color: #fff;
-    /* 白色字体 */
-    border-radius: 8px;
-    /* 圆角效果 */
+    padding: 2rem 0;
+    background: var(--dark-color);
+    color: white;
+    margin-top: 3rem;
+    position: relative;
 }
 
-/* 自定义按钮样式 */
-button {
-    background-color: #00bfa5;
-    /* 清新绿色按钮 */
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-    /* 平滑的颜色过渡 */
+footer p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
 }
 
-button:hover {
-    background-color: #26debc;
-    /* 浅绿色 hover 效果 */
+/* 卡片样式 */
+.card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
 }
 
-/* 其他文本样式 */
-p {
-    font-size: 1rem;
-    color: #333;
-    /* 深灰色文本 */
-    margin-bottom: 15px;
-    /* 给段落之间增加一些间距 */
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
-h2 {
-    font-size: 2rem;
-    color: #00bfa5;
-    /* 清新绿色标题 */
-    margin-bottom: 15px;
-    font-weight: 600;
-    /* 半粗字体 */
+.card-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
 }
 
-/* 调整图片样式 */
-img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    /* 给图片添加阴影效果 */
-    margin-bottom: 20px;
+.card-content {
+    padding: 1.5rem;
 }
 
+.card-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
 
+/* 网格布局 */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
 
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
-/* markdown */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    section {
+        padding: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 2.2rem;
+    }
+    
+    h2 {
+        font-size: 1.8rem;
+    }
+}
+
+/* Markdown 内容样式 */
 #markdown-content {
-    margin: 20px 0;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 2rem auto;
+    padding: 2.5rem;
+    max-width: 900px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: var(--box-shadow);
 }
 
 #markdown-content h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+#markdown-content h2 {
     font-size: 2rem;
-    color: #00bfa5;
-    margin-bottom: 15px;
+    color: var(--primary-color);
+    margin: 2rem 0 1rem;
+}
+
+#markdown-content h3 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin: 1.5rem 0 1rem;
 }
 
 #markdown-content p {
-    font-size: 1rem;
-    color: #333;
-    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
 }
 
-#markdown-content ul {
-    margin-left: 20px;
+#markdown-content ul, #markdown-content ol {
+    margin-left: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 #markdown-content li {
-    margin-bottom: 10px;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+}
+
+#markdown-content code {
+    background: #f1f1f1;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+#markdown-content pre {
+    background: #f1f1f1;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+}
+
+#markdown-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding-left: 1rem;
+    font-style: italic;
+    color: var(--text-light);
+    margin: 1.5rem 0;
+}
+
+#markdown-content img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    box-shadow: var(--box-shadow);
 }

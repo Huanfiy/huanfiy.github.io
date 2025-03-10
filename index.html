@@ -10,13 +10,20 @@
       rel="stylesheet"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
+    <!-- 引入 Font Awesome 图标库 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- 引入 AOS 动画库 -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
     <style>
       body {
-        font-family: 'Poppins', sans-serif;
+        font-family: "Poppins", sans-serif;
         background-color: #f7f7f7;
       }
 
@@ -116,83 +123,194 @@
 
   <body>
     <header>
-      <!-- 左上角头像 -->
-      <img src="picture/icon.png" alt="头像" class="avatar" />
+      <div class="container mx-auto px-4">
+        <!-- 头像 -->
+        <img src="picture/icon.png" alt="Huanfiy头像" class="avatar" />
 
-      <nav>
-        <!-- 居中的导航链接 -->
-        <ul class="nav-links">
-          <li><a href="index.html">主页</a></li>
-          <li><a href="blog.html">博客</a></li>
-          <li><a href="about.html">关于我</a></li>
-          <li><a href="contact.html">联系我</a></li>
-          <li><a href="tool.html">小工具</a></li>
-        </ul>
+        <h1 data-aos="fade-down">Huanfiy的个人空间</h1>
 
-        <!-- 右侧的 GitHub 和 哔哩哔哩图标 -->
-        <div class="social-links">
-          <!-- GitHub 图标链接 -->
+        <nav>
+          <!-- 导航链接 -->
+          <ul class="nav-links">
+            <li><a href="index.html">主页</a></li>
+            <li><a href="blog.html">博客</a></li>
+            <li><a href="about.html">关于我</a></li>
+            <li><a href="contact.html">联系我</a></li>
+            <li><a href="tool.html">小工具</a></li>
+          </ul>
+
+          <!-- 社交媒体链接 -->
+          <div class="social-links">
+            <!-- GitHub 图标链接 -->
+            <a
+              href="https://github.com/Huanfiy"
+              target="_blank"
+              class="social-link"
+              title="GitHub"
+            >
+              <i class="fab fa-github"></i>
+            </a>
+
+            <!-- 哔哩哔哩 图标链接 -->
+            <a
+              href="https://space.bilibili.com/179895513"
+              target="_blank"
+              class="social-link"
+              title="哔哩哔哩"
+            >
+              <i class="fab fa-bilibili"></i>
+            </a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- 英雄区域 -->
+    <section class="hero" data-aos="fade-up">
+      <div class="container mx-auto px-4">
+        <h1>欢迎来到我的世界</h1>
+        <p class="text-lg max-w-2xl mx-auto">
+          你好！我是Huanfiy，这里是我的个人空间，分享我的学习、开发经验和生活点滴。
+        </p>
+        <a href="about.html" class="btn mt-6">了解更多</a>
+      </div>
+    </section>
+
+    <!-- 特色内容区域 -->
+    <section data-aos="fade-up" data-aos-delay="200">
+      <div class="container mx-auto px-4">
+        <h2 class="text-center mb-12">我的专长</h2>
+        <div class="grid">
+          <!-- 卡片1 -->
+          <div class="card" data-aos="flip-left" data-aos-delay="100">
+            <div class="card-content text-center">
+              <i class="fas fa-code text-5xl text-primary-color mb-4"></i>
+              <h3 class="card-title">Web开发</h3>
+              <p>专注于前端技术栈，包括HTML、CSS、JavaScript以及现代框架。</p>
+            </div>
+          </div>
+
+          <!-- 卡片2 -->
+          <div class="card" data-aos="flip-left" data-aos-delay="200">
+            <div class="card-content text-center">
+              <i class="fas fa-mobile-alt text-5xl text-primary-color mb-4"></i>
+              <h3 class="card-title">移动应用</h3>
+              <p>开发跨平台移动应用，让您的想法在各种设备上实现。</p>
+            </div>
+          </div>
+
+          <!-- 卡片3 -->
+          <div class="card" data-aos="flip-left" data-aos-delay="300">
+            <div class="card-content text-center">
+              <i class="fas fa-server text-5xl text-primary-color mb-4"></i>
+              <h3 class="card-title">后端开发</h3>
+              <p>构建高效、安全的后端系统，确保应用稳定运行。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 最新博客区域 -->
+    <section data-aos="fade-up" data-aos-delay="300">
+      <div class="container mx-auto px-4">
+        <h2 class="text-center mb-12">最新博客</h2>
+        <div class="grid">
+          <!-- 博客文章1 -->
+          <div class="card" data-aos="zoom-in" data-aos-delay="100">
+            <img
+              src="https://source.unsplash.com/random/300x200?tech"
+              alt="博客图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <h3 class="card-title">Web开发最佳实践</h3>
+              <p>探索现代Web开发中的最佳实践和技巧，提升您的开发效率。</p>
+              <a href="#" class="btn mt-4">阅读更多</a>
+            </div>
+          </div>
+
+          <!-- 博客文章2 -->
+          <div class="card" data-aos="zoom-in" data-aos-delay="200">
+            <img
+              src="https://source.unsplash.com/random/300x200?code"
+              alt="博客图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <h3 class="card-title">JavaScript进阶指南</h3>
+              <p>深入了解JavaScript的高级概念，成为更专业的前端开发者。</p>
+              <a href="#" class="btn mt-4">阅读更多</a>
+            </div>
+          </div>
+
+          <!-- 博客文章3 -->
+          <div class="card" data-aos="zoom-in" data-aos-delay="300">
+            <img
+              src="https://source.unsplash.com/random/300x200?programming"
+              alt="博客图片"
+              class="card-img"
+            />
+            <div class="card-content">
+              <h3 class="card-title">响应式设计技巧</h3>
+              <p>学习如何创建在各种设备上都能完美展示的响应式网站。</p>
+              <a href="#" class="btn mt-4">阅读更多</a>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-8">
+          <a href="blog.html" class="btn">查看所有博客</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 联系区域 -->
+    <section data-aos="fade-up" data-aos-delay="400">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="mb-8">与我联系</h2>
+        <p class="max-w-2xl mx-auto mb-8">
+          如果您有任何问题、合作意向或者只是想打个招呼，请随时联系我。
+        </p>
+        <a href="contact.html" class="btn">发送消息</a>
+      </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+      <div class="container mx-auto px-4">
+        <div class="social-links mb-4">
           <a
             href="https://github.com/Huanfiy"
             target="_blank"
             class="social-link"
             title="GitHub"
           >
-            <!-- GitHub 图标 -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              class="bi bi-github"
-            >
-              <path
-                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.54 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-              />
-            </svg>
+            <i class="fab fa-github"></i>
           </a>
-
-          <!-- 哔哩哔哩 图标链接 -->
           <a
             href="https://space.bilibili.com/179895513"
             target="_blank"
             class="social-link"
             title="哔哩哔哩"
           >
-            <!-- 哔哩哔哩经典图标 -->
-            <svg
-              t="1661846453862"
-              class="icon"
-              viewBox="0 0 1024 1024"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              width="32"
-              height="32"
-            >
-              <path
-                d="M928 288c-17.664 0-32 14.336-32 32v480c0 17.664-14.336 32-32 32H160c-17.664 0-32-14.336-32-32V320c0-17.664-14.336-32-32-32S64 302.336 64 320v480c0 52.928 43.072 96 96 96h704c52.928 0 96-43.072 96-96V320c0-17.664-14.336-32-32-32z"
-              />
-              <path
-                d="M364.416 65.664a32 32 0 0 0-56.832 28.672l128 256A32 32 0 0 0 464 384c4.928 0 9.952-1.12 14.688-3.488a32 32 0 0 0 14.624-42.624l-128-256zM716.416 65.664a32 32 0 0 0-42.624 14.624l-128 256a32 32 0 0 0 14.624 42.624c4.736 2.368 9.76 3.488 14.688 3.488a32 32 0 0 0 28.16-17.312l128-256a32 32 0 0 0-14.848-42.624zM616 512a32 32 0 0 0-32 32v160a32 32 0 0 0 64 0V544a32 32 0 0 0-32-32zM424 512a32 32 0 0 0-32 32v160a32 32 0 0 0 64 0V544a32 32 0 0 0-32-32z"
-              />
-            </svg>
+            <i class="fab fa-bilibili"></i>
           </a>
         </div>
-      </nav>
-    </header>
-
-    <section class="text-center mt-12">
-      <h1 class="text-5xl font-bold">欢迎来到我的博客</h1>
-      <p class="text-gray-700 text-lg max-w-2xl mx-auto mt-6">
-        你好！我是Huanfiy，这里是我的个人博客，分享我的学习和开发经验。
-      </p>
-    </section>
-
-    <footer class="text-center mt-20">
-      <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
+        <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
+      </div>
     </footer>
 
     <!-- 引入 JavaScript 文件 -->
     <script src="js/script.js"></script>
+    <!-- 引入 AOS 动画库 -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      // 初始化 AOS 动画
+      AOS.init({
+        duration: 800,
+        easing: "ease",
+        once: true,
+      });
+    </script>
   </body>
 </html>
