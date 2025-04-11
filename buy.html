@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>淘宝链接转换器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        #result {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        a {
+            color: #ff4400;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            animation: fadeInOut 2s ease;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>淘宝链接转换器</h1>
+        <div>
+            <p>粘贴淘宝链接到下面的框中，会自动转换并复制简化链接：</p>
+            <textarea id="input" placeholder="在此粘贴淘宝链接..." 
+                     oninput="debounce(convertLink, 500)()"
+                     onpaste="setTimeout(convertLink, 100)"></textarea>
+        </div>
+        <div>
+            <p>转换结果：</p>
+            <div id="result"></div>
+        </div>
+    </div>
+    <div id="toast" class="toast">已复制到剪贴板</div>
+
+    <script>
+        // 防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction() {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func();
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 显示提示Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        // 复制到剪贴板
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('已复制到剪贴板');
+            } catch (err) {
+                showToast('复制失败，请手动复制');
+                console.error('复制失败:', err);
+            }
+        }
+
+        function convertLink() {
+            const input = document.getElementById('input').value.trim();
+            const result = document.getElementById('result');
+            
+            if (!input) {
+                result.innerHTML = '等待输入...';
+                return;
+            }
+
+            try {
+                // 创建URL对象来解析链接
+                const url = new URL(input);
+                
+                // 获取查询参数
+                const params = new URLSearchParams(url.search);
+                const id = params.get('id');
+                const skuId = params.get('skuId');
+                
+                if (!id) {
+                    result.innerHTML = '未找到商品ID，请确认链接是否正确。';
+                    return;
+                }
+
+                // 构建简化链接
+                let simplifiedUrl = `https://item.taobao.com/item.htm?id=${id}`;
+                if (skuId) {
+                    simplifiedUrl += `&skuId=${skuId}`;
+                }
+
+                // 创建可点击的链接
+                result.innerHTML = `
+                    <p>简化后的链接：</p>
+                    <a href="${simplifiedUrl}" target="_blank">${simplifiedUrl}</a>
+                    <p>商品ID：${id}</p>
+                    ${skuId ? `<p>SKU ID：${skuId}</p>` : ''}
+                `;
+
+                // 自动复制到剪贴板
+                copyToClipboard(simplifiedUrl);
+
+            } catch (error) {
+                result.innerHTML = '无效的URL，请检查输入的链接是否正确。';
+            }
+        }
+
+        // 页面加载完成后显示初始提示
+        window.onload = function() {
+            document.getElementById('result').innerHTML = '等待输入...';
+        }
+    </script>
+</body>
+</html>

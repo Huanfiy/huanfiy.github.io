@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>键盘刻意练习</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 900px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        
+        .stats div {
+            text-align: center;
+        }
+        
+        .exercise {
+            margin: 20px 0;
+        }
+        
+        .target-text {
+            background-color: #eef8ff;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 18px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .input-area {
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 18px;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+            resize: none;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+        
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .keyboard-row {
+            display: flex;
+            margin: 2px 0;
+        }
+        
+        .key {
+            width: 40px;
+            height: 40px;
+            margin: 2px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: bold;
+            user-select: none;
+            transition: all 0.1s;
+        }
+        
+        .key.special {
+            width: auto;
+            padding: 0 10px;
+        }
+        
+        .key.wide {
+            width: 90px;
+        }
+        
+        .key.space {
+            width: 300px;
+        }
+        
+        .key.active {
+            background-color: #4a90e2;
+            color: white;
+            transform: translateY(2px);
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
+        }
+        
+        .key.error {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .key.correct {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a90e2;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #357ab8;
+        }
+        
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+        
+        #hints {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fffde7;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>键盘刻意练习</h1>
+        
+        <div class="stats">
+            <div>
+                <h3>WPM</h3>
+                <p id="wpm">0</p>
+            </div>
+            <div>
+                <h3>准确率</h3>
+                <p id="accuracy">100%</p>
+            </div>
+            <div>
+                <h3>时间</h3>
+                <p id="time">00:00</p>
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h2>练习内容</h2>
+            <div class="target-text" id="target-text"></div>
+            
+            <div class="input-area">
+                <textarea id="user-input" placeholder="开始输入..."></textarea>
+            </div>
+            
+            <div id="hints">
+                <h3>键位提示</h3>
+                <p id="hint-text">注意正确的手指姿势，让手指自然放在键盘上。</p>
+            </div>
+        </div>
+        
+        <div class="keyboard">
+            <div class="keyboard-row">
+                <div class="key" data-key="`">~<br>`</div>
+                <div class="key" data-key="1">!<br>1</div>
+                <div class="key" data-key="2">@<br>2</div>
+                <div class="key" data-key="3">#<br>3</div>
+                <div class="key" data-key="4">$<br>4</div>
+                <div class="key" data-key="5">%<br>5</div>
+                <div class="key" data-key="6">^<br>6</div>
+                <div class="key" data-key="7">&<br>7</div>
+                <div class="key" data-key="8">*<br>8</div>
+                <div class="key" data-key="9">(<br>9</div>
+                <div class="key" data-key="0">)<br>0</div>
+                <div class="key" data-key="-">_<br>-</div>
+                <div class="key" data-key="="">+<br>=</div>
+                <div class="key special" data-key="Backspace">Backspace</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key special" data-key="Tab">Tab</div>
+                <div class="key" data-key="q">Q</div>
+                <div class="key" data-key="w">W</div>
+                <div class="key" data-key="e">E</div>
+                <div class="key" data-key="r">R</div>
+                <div class="key" data-key="t">T</div>
+                <div class="key" data-key="y">Y</div>
+                <div class="key" data-key="u">U</div>
+                <div class="key" data-key="i">I</div>
+                <div class="key" data-key="o">O</div>
+                <div class="key" data-key="p">P</div>
+                <div class="key" data-key="[">{<br>[</div>
+                <div class="key" data-key="]">}<br>]</div>
+                <div class="key" data-key="\\">|<br>\</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key special" data-key="CapsLock">Caps</div>
+                <div class="key" data-key="a">A</div>
+                <div class="key" data-key="s">S</div>
+                <div class="key" data-key="d">D</div>
+                <div class="key" data-key="f">F</div>
+                <div class="key" data-key="g">G</div>
+                <div class="key" data-key="h">H</div>
+                <div class="key" data-key="j">J</div>
+                <div class="key" data-key="k">K</div>
+                <div class="key" data-key="l">L</div>
+                <div class="key" data-key=";">:<br>;</div>
+                <div class="key" data-key="'">"<br>'</div>
+                <div class="key special" data-key="Enter">Enter</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key special" data-key="Shift">Shift</div>
+                <div class="key" data-key="z">Z</div>
+                <div class="key" data-key="x">X</div>
+                <div class="key" data-key="c">C</div>
+                <div class="key" data-key="v">V</div>
+                <div class="key" data-key="b">B</div>
+                <div class="key" data-key="n">N</div>
+                <div class="key" data-key="m">M</div>
+                <div class="key" data-key=",">&lt;<br>,</div>
+                <div class="key" data-key=".">><br>.</div>
+                <div class="key" data-key="/">?<br>/</div>
+                <div class="key special" data-key="Shift">Shift</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key special" data-key="Control">Ctrl</div>
+                <div class="key special" data-key="Meta">Win</div>
+                <div class="key special" data-key="Alt">Alt</div>
+                <div class="key space" data-key=" ">Space</div>
+                <div class="key special" data-key="Alt">Alt</div>
+                <div class="key special" data-key="Meta">Win</div>
+                <div class="key special" data-key="Control">Ctrl</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <select id="exercise-type">
+                <option value="code">编程代码</option>
+                <option value="symbols">符号练习</option>
+                <option value="brackets">括号练习</option>
+                <option value="operators">运算符练习</option>
+                <option value="functions">函数练习</option>
+                <option value="keywords">关键字练习</option>
+            </select>
+            <button id="show-hints">显示提示</button>
+            <button id="new-exercise">新练习</button>
+        </div>
+    </div>
+    
+    <script>
+        // 练习文本库
+        const exerciseTexts = {
+            code: [
+                `function calculateSum(arr) {\n    let sum = 0;\n    for (let i = 0; i < arr.length; i++) {\n        sum += arr[i];\n    }\n    return sum;\n}`,
+                `const user = {\n    name: "John",\n    age: 30,\n    isAdmin: false,\n    roles: ["user", "editor"]\n};`,
+                `class Circle {\n    constructor(radius) {\n        this.radius = radius;\n    }\n    \n    getArea() {\n        return Math.PI * this.radius * this.radius;\n    }\n}`,
+                `import React, { useState, useEffect } from 'react';\n\nfunction App() {\n    const [count, setCount] = useState(0);\n    \n    useEffect(() => {\n        document.title = 'Count: ' + count;\n    }, [count]);\n    \n    return (\n        <div>\n            <p>You clicked {count} times</p>\n            <button onClick={() => setCount(count + 1)}>\n                Click me\n            </button>\n        </div>\n    );\n}`
+            ],
+            symbols: [
+                `!@#$%^&*()_+{}|:"<>?~\`-=[]\\;',./`,
+                `/* ! */ && || <= >= != == === !== ? : + - * / % ^ & | ~ << >> >>> = += -= *= /= %= &= |= ^= <<= >>= >>>=`,
+                `{{ }} [[ ]] (( )) /* */ // <!-- --> <> </ /> ** ++ -- :: .. ... ?? ?. ?.()`,
+                `{ } [ ] ( ) < > " ' \` ; : , . / \\ | ! ? @ # $ % ^ & * - + = _ ~`
+            ],
+            brackets: [
+                `if (condition) { runThis(); } else { runThat(); }`,
+                `function nested() { if (x > 0) { for (let i = 0; i < 10; i++) { console.log(i); } } }`,
+                `const arr = [1, 2, [3, 4, [5, 6]], { a: 7, b: { c: 8 } }];`,
+                `<div><span>{user.firstName} {user.lastName}</span></div>`
+            ],
+            operators: [
+                `a = b + c * d / e - f % g;`,
+                `if (a > b && c < d || e === f && g !== h) { }`,
+                `x += 5; y -= 3; z *= 2; w /= 4; v %= 3; a <<= 1; b >>= 1;`,
+                `let result = condition ? 'yes' : 'no'; result = a ?? b; property = obj?.prop;`
+            ],
+            functions: [
+                `function handleSubmit(event) {\n    event.preventDefault();\n    const data = new FormData(event.target);\n    submitForm(data);\n}`,
+                `const fetchData = async () => {\n    try {\n        const response = await fetch(url);\n        const data = await response.json();\n        return data;\n    } catch (error) {\n        console.error(error);\n    }\n}`,
+                `map(item => item.id).filter(id => id > 100).reduce((acc, val) => acc + val, 0)`,
+                `addEventListener('click', function(e) {\n    if (e.target.matches('.button')) {\n        console.log('Button clicked');\n    }\n});`
+            ],
+            keywords: [
+                `const let var function class extends implements interface type return if else for while do switch case break continue try catch finally throw import export default from as`,
+                `async await yield static get set super this new delete typeof instanceof void in of`,
+                `public private protected abstract readonly virtual override sealed partial namespace using`,
+                `null undefined true false NaN Infinity globalThis arguments constructor prototype __proto__`
+            ]
+        };
+
+        // 获取DOM元素
+        const targetText = document.getElementById('target-text');
+        const userInput = document.getElementById('user-input');
+        const wpmDisplay = document.getElementById('wpm');
+        const accuracyDisplay = document.getElementById('accuracy');
+        const timeDisplay = document.getElementById('time');
+        const exerciseType = document.getElementById('exercise-type');
+        const newExerciseBtn = document.getElementById('new-exercise');
+        const hintsBtn = document.getElementById('show-hints');
+        const hintsDiv = document.getElementById('hints');
+        const hintText = document.getElementById('hint-text');
+        
+        // 初始状态
+        let startTime = null;
+        let timer = null;
+        let totalKeystrokes = 0;
+        let incorrectKeystrokes = 0;
+        let previousLength = 0; // 用于跟踪上一次输入的长度
+        
+        // 加载新练习
+        function loadNewExercise() {
+            const selectedType = exerciseType.value;
+            const texts = exerciseTexts[selectedType];
+            const randomText = texts[Math.floor(Math.random() * texts.length)];
+            targetText.textContent = randomText;
+            userInput.value = '';
+            previousLength = 0;
+            
+            resetStats();
+        }
+        
+        // 重置统计
+        function resetStats() {
+            startTime = null;
+            clearInterval(timer);
+            timer = null;
+            totalKeystrokes = 0;
+            incorrectKeystrokes = 0;
+            wpmDisplay.textContent = '0';
+            accuracyDisplay.textContent = '100%';
+            timeDisplay.textContent = '00:00';
+            
+            // 重置键盘显示
+            document.querySelectorAll('.key').forEach(key => {
+                key.classList.remove('active', 'correct', 'error');
+            });
+        }
+        
+        // 开始计时器
+        function startTimer() {
+            startTime = new Date();
+            timer = setInterval(updateTimer, 1000);
+        }
+        
+        // 更新计时器
+        function updateTimer() {
+            const now = new Date();
+            const diff = Math.floor((now - startTime) / 1000); // 秒
+            const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+            const seconds = (diff % 60).toString().padStart(2, '0');
+            timeDisplay.textContent = `${minutes}:${seconds}`;
+            
+            updateWPM();
+        }
+        
+        // 更新WPM
+        function updateWPM() {
+            if (!startTime) return;
+            
+            const now = new Date();
+            const timeElapsed = (now - startTime) / 1000 / 60; // 分钟
+            const words = userInput.value.length / 5; // 约5个字符为1个单词
+            const wpm = Math.round(words / timeElapsed);
+            
+            wpmDisplay.textContent = wpm;
+        }
+        
+        // 更新准确率
+        function updateAccuracy() {
+            if (totalKeystrokes === 0) return;
+            
+            const accuracy = Math.round(((totalKeystrokes - incorrectKeystrokes) / totalKeystrokes) * 100);
+            accuracyDisplay.textContent = `${accuracy}%`;
+        }
+        
+        // 处理键盘输入
+        userInput.addEventListener('input', function() {
+            if (!startTime && userInput.value.length > 0) {
+                startTimer();
+            }
+            
+            // 检查新输入的字符正确性
+            checkNewInput();
+            updateWPM();
+        });
+
+        // 检查新输入的字符
+        function checkNewInput() {
+            const targetContent = targetText.textContent;
+            const userContent = userInput.value;
+            const currentLength = userContent.length;
+            
+            // 如果是删除操作，不需要处理高亮
+            if (currentLength < previousLength) {
+                previousLength = currentLength;
+                return;
+            }
+            
+            // 只处理最新输入的字符
+            if (currentLength > 0 && currentLength > previousLength) {
+                const newChar = userContent[currentLength - 1];
+                const expectedChar = targetContent[currentLength - 1];
+                
+                // 高亮按键
+                highlightKey(newChar, newChar === expectedChar);
+                
+                // 更新错误统计
+                if (newChar !== expectedChar) {
+                    incorrectKeystrokes++;
+                    updateAccuracy();
+                }
+            }
+            
+            previousLength = currentLength;
+        }
+        
+        // 高亮键盘按键
+        function highlightKey(char, isCorrect) {
+            const key = char.toLowerCase();
+            const keyElement = document.querySelector(`[data-key="${key}"]`);
+            
+            if (keyElement) {
+                // 移除所有其他键的高亮
+                document.querySelectorAll('.key').forEach(k => {
+                    k.classList.remove('active', 'correct', 'error');
+                });
+                
+                // 添加当前键的高亮
+                if (isCorrect) {
+                    keyElement.classList.add('correct');
+                    setTimeout(() => {
+                        keyElement.classList.remove('correct');
+                    }, 150); // 缩短高亮时间
+                } else {
+                    keyElement.classList.add('error');
+                    setTimeout(() => {
+                        keyElement.classList.remove('error');
+                    }, 150); // 缩短高亮时间
+                }
+            }
+        }
+        
+        userInput.addEventListener('keydown', function(e) {
+            totalKeystrokes++;
+            
+            // 显示按键动画
+            const key = e.key.toLowerCase();
+            const keyElements = document.querySelectorAll(`[data-key="${key}"], [data-key="${e.code}"]`);
+            
+            // 移除所有其他键的高亮
+            document.querySelectorAll('.key').forEach(k => {
+                k.classList.remove('active');
+            });
+            
+            keyElements.forEach(keyElement => {
+                if (keyElement) {
+                    keyElement.classList.add('active');
+                    setTimeout(() => {
+                        keyElement.classList.remove('active');
+                    }, 100);
+                }
+            });
+            
+            // 检查是否完成练习
+            const targetContent = targetText.textContent;
+            if (userInput.value.length === targetContent.length - 1) {
+                clearInterval(timer);
+                showCompletionMessage();
+            }
+        });
+        
+        // 显示完成信息
+        function showCompletionMessage() {
+            const now = new Date();
+            const timeElapsed = (now - startTime) / 1000 / 60; // 分钟
+            const words = userInput.value.length / 5;
+            const wpm = Math.round(words / timeElapsed);
+            const accuracy = Math.round(((totalKeystrokes - incorrectKeystrokes) / totalKeystrokes) * 100);
+            
+            alert(`练习完成！
+WPM: ${wpm}
+准确率: ${accuracy}%
+时间: ${timeDisplay.textContent}`);
+        }
+        
+        // 事件监听器
+        newExerciseBtn.addEventListener('click', loadNewExercise);
+        
+        // 切换提示显示
+        hintsBtn.addEventListener('click', function() {
+            if (hintsDiv.style.display === 'block') {
+                hintsDiv.style.display = 'none';
+                hintsBtn.textContent = '显示提示';
+            } else {
+                hintsDiv.style.display = 'block';
+                hintsBtn.textContent = '隐藏提示';
+                
+                // 根据练习类型更新提示
+                switch (exerciseType.value) {
+                    case 'code':
+                        hintText.textContent = '记住编程常用组合键：Ctrl+C, Ctrl+V, Ctrl+Z, Ctrl+S。注意花括号、分号和缩进。';
+                        break;
+                    case 'symbols':
+                        hintText.textContent = '特殊符号通常在键盘顶部数字键的Shift位置。锻炼小指头和无名指的灵活性。';
+                        break;
+                    case 'brackets':
+                        hintText.textContent = '括号要成对输入，注意匹配 {}、[]、() 的位置和手指协调。';
+                        break;
+                    case 'operators':
+                        hintText.textContent = '运算符通常需要Shift键配合，尝试不看键盘找到 +、-、*、/、= 等符号。';
+                        break;
+                    case 'functions':
+                        hintText.textContent = '函数中包含各种括号和缩进，注意保持正确的代码格式。';
+                        break;
+                    case 'keywords':
+                        hintText.textContent = '熟记常用关键字的拼写，这些词在编程中高频出现。';
+                        break;
+                }
+            }
+        });
+        
+        exerciseType.addEventListener('change', loadNewExercise);
+        
+        // 初始加载
+        loadNewExercise();
+    </script>
+</body>
+</html>
