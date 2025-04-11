@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32-S3 引脚映射器</title>
+    <style>
+        :root {
+            --main-bg-color: #f5f5f5;
+            --dark-bg-color: #1e1e1e;
+            --main-text-color: #333;
+            --dark-text-color: #f0f0f0;
+            --chip-bg-color: #2c2c2c;
+            --dark-chip-bg-color: #121212;
+            --pin-default-color: #7a7a7a; /* 灰色 */
+            --pin-configured-color: #4CAF50; /* 绿色 */
+            --power-pin-color: #ff5252; /* 红色 */
+            --ground-pin-color: #2196F3; /* 蓝色 */
+            --special-pin-color: #E040FB; /* 紫色 */
+            --hover-color: #f0f0f0;
+            --dark-hover-color: #3a3a3a;
+            --border-color: #ddd;
+            --dark-border-color: #444;
+            --panel-bg-color: white;
+            --dark-panel-bg-color: #2a2a2a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--main-bg-color);
+            color: var(--main-text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: var(--dark-bg-color);
+            color: var(--dark-text-color);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .dark-mode .subtitle {
+            color: #aaa;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .chip-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        #chipSvg {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
+        .info-panel {
+            background-color: var(--panel-bg-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 500px;
+            max-width: 90%;
+            margin-top: 20px;
+        }
+
+        .dark-mode .info-panel {
+            background-color: var(--dark-panel-bg-color);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .search-container {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"], input[type="file"] {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .dark-mode input[type="text"], .dark-mode input[type="file"] {
+            background-color: #333;
+            color: white;
+            border-color: var(--dark-border-color);
+        }
+
+        .info-content {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .pin-detail {
+            border-left: 3px solid #4CAF50;
+            padding-left: 10px;
+            margin-bottom: 12px;
+        }
+
+        .pin-detail h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+        }
+
+        .pin-detail p {
+            margin: 4px 0;
+            font-size: 0.95rem;
+        }
+
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        .config-status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            font-size: 0.9rem;
+        }
+
+        .dark-mode .config-status {
+            background-color: #333;
+        }
+
+        .pin-type {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .pin-type.power {
+            background-color: var(--power-pin-color);
+        }
+
+        .pin-type.ground {
+            background-color: var(--ground-pin-color);
+        }
+
+        .pin-type.io {
+            background-color: var(--pin-configured-color);
+        }
+
+        .pin-type.special {
+            background-color: var(--special-pin-color);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .toolbar-group {
+            display: flex;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            margin: 0 5px;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        button.secondary {
+            background-color: #2196F3;
+        }
+
+        button.secondary:hover {
+            background-color: #0b7dda;
+        }
+
+        button.danger {
+            background-color: #f44336;
+        }
+
+        button.danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .dark-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .dark-toggle i {
+            margin-right: 5px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* SVG样式 */
+        .chip-body {
+            transition: fill 0.3s;
+        }
+
+        .dark-mode .chip-body {
+            fill: var(--dark-chip-bg-color);
+        }
+
+        .chip-text {
+            transition: fill 0.3s;
+        }
+
+        .dark-mode .chip-text {
+            fill: white;
+        }
+
+        .pin-circle {
+            cursor: pointer;
+            transition: r 0.2s, stroke-width 0.2s;
+        }
+
+        .pin-circle:hover {
+            r: 14;
+            stroke-width: 2;
+            stroke: white;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: absolute;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        /* 功能选择下拉菜单 */
+        .function-selector {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: white;
+        }
+
+        .dark-mode select {
+            background-color: #333;
+            color: white;
+            border-color: var(--dark-border-color);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* 导入导出区域 */
+        .import-export {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 评论区域 */
+        .comments-section {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .comments-section h3 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .dark-mode textarea {
+            background-color: #333;
+            color: white;
+            border-color: var(--dark-border-color);
+        }
+
+        .config-notes {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .dark-mode .config-notes {
+            color: #aaa;
+        }
+
+        .project-notes {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            margin-bottom: 20px;
+        }
+
+        .dark-mode .project-notes {
+            background-color: #282828;
+            border-color: var(--dark-border-color);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .info-panel {
+                width: 100%;
+            }
+            
+            .button-group, .toolbar, .import-export {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                margin: 5px;
+                width: 100%;
+            }
+            
+            .legend {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+        <i class="mode-icon">🌙</i> 切换深色模式
+    </button>
+
+    <div class="container">
+        <header>
+            <h1>ESP32-S3 引脚映射器</h1>
+            <p class="subtitle">交互式可视化工具，帮助您配置 ESP32-S3 的引脚功能</p>
+        </header>
+
+        <div class="toolbar">
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: var(--pin-default-color);"></div>
+                    <span>未配置</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: var(--pin-configured-color);"></div>
+                    <span>已配置</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: var(--power-pin-color);"></div>
+                    <span>电源</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: var(--ground-pin-color);"></div>
+                    <span>接地</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: var(--special-pin-color);"></div>
+                    <span>特殊</span>
+                </div>
+            </div>
+            <div class="toolbar-group">
+                <button class="danger" onclick="clearAllConfigurations()">清除所有配置</button>
+            </div>
+        </div>
+
+        <!-- 项目笔记区域 -->
+        <div class="project-notes">
+            <h3>项目笔记</h3>
+            <textarea id="projectNotes" placeholder="在这里添加关于整个项目的笔记、设计说明或配置原因..." oninput="updateProjectNotes(this.value)"></textarea>
+        </div>
+
+        <div class="import-export">
+            <button class="secondary" onclick="exportConfig()">导出配置</button>
+            <div class="file-actions">
+                <button class="secondary" onclick="document.getElementById('fileInput').click()">选择配置文件</button>
+                <input type="file" id="fileInput" accept=".json" onchange="handleFileSelect(event)">
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="chip-container">
+                <svg id="chipSvg" viewBox="0 0 800 800" width="800" height="800">
+                    <!-- SVG内容将由JavaScript动态生成 -->
+                </svg>
+                <div id="tooltip" class="tooltip"></div>
+            </div>
+
+            <div class="info-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">引脚信息</h2>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="searchPin" placeholder="搜索引脚 (例如: GPIO1, 3)" onkeyup="searchPins()">
+                </div>
+                
+                <div class="info-content" id="pinInfoContent">
+                    <div class="pin-detail">
+                        <p>请选择一个引脚查看详细信息</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新后的引脚数据，根据官方图片修正
+        const pins = [
+            // 左侧 (从上到下)
+            { id: 1, name: "LNA_IN", type: 'special', defaultFunction: "LNA_IN", capabilities: ["RF input"] },
+            { id: 2, name: "VDD3P3", type: 'power', defaultFunction: "VDD3P3", capabilities: ["3.3V Power"] },
+            { id: 3, name: "VDD3P3", type: 'power', defaultFunction: "VDD3P3", capabilities: ["3.3V Power"] },
+            { id: 4, name: "CHIP_PU", type: 'special', defaultFunction: "CHIP_PU", capabilities: ["Chip Power Up", "Reset"] },
+            { id: 5, name: "GPIO0", type: 'io', defaultFunction: "GPIO0", capabilities: ["GPIO", "Boot mode selection"] },
+            { id: 6, name: "GPIO1", type: 'io', defaultFunction: "GPIO1", capabilities: ["GPIO"] },
+            { id: 7, name: "GPIO2", type: 'io', defaultFunction: "GPIO2", capabilities: ["GPIO"] },
+            { id: 8, name: "GPIO3", type: 'io', defaultFunction: "GPIO3", capabilities: ["GPIO"] },
+            { id: 9, name: "GPIO4", type: 'io', defaultFunction: "GPIO4", capabilities: ["GPIO"] },
+            { id: 10, name: "GPIO5", type: 'io', defaultFunction: "GPIO5", capabilities: ["GPIO"] },
+            { id: 11, name: "GPIO6", type: 'io', defaultFunction: "GPIO6", capabilities: ["GPIO"] },
+            { id: 12, name: "GPIO7", type: 'io', defaultFunction: "GPIO7", capabilities: ["GPIO"] },
+            { id: 13, name: "GPIO8", type: 'io', defaultFunction: "GPIO8", capabilities: ["GPIO"] },
+            { id: 14, name: "GPIO9", type: 'io', defaultFunction: "GPIO9", capabilities: ["GPIO"] },
+            
+            // 底部 (从左到右)
+            { id: 15, name: "GPIO10", type: 'io', defaultFunction: "GPIO10", capabilities: ["GPIO"] },
+            { id: 16, name: "GPIO11", type: 'io', defaultFunction: "GPIO11", capabilities: ["GPIO"] },
+            { id: 17, name: "GPIO12", type: 'io', defaultFunction: "GPIO12", capabilities: ["GPIO"] },
+            { id: 18, name: "GPIO13", type: 'io', defaultFunction: "GPIO13", capabilities: ["GPIO"] },
+            { id: 19, name: "GPIO14", type: 'io', defaultFunction: "GPIO14", capabilities: ["GPIO"] },
+            { id: 20, name: "VDD3P3_RTC", type: 'power', defaultFunction: "VDD3P3_RTC", capabilities: ["3.3V RTC Power"] },
+            { id: 21, name: "XTAL_32K_P", type: 'special', defaultFunction: "XTAL_32K_P", capabilities: ["32K Crystal Oscillator P"] },
+            { id: 22, name: "XTAL_32K_N", type: 'special', defaultFunction: "XTAL_32K_N", capabilities: ["32K Crystal Oscillator N"] },
+            { id: 23, name: "GPIO17", type: 'io', defaultFunction: "GPIO17", capabilities: ["GPIO"] },
+            { id: 24, name: "GPIO18", type: 'io', defaultFunction: "GPIO18", capabilities: ["GPIO"] },
+            { id: 25, name: "GPIO19", type: 'io', defaultFunction: "GPIO19", capabilities: ["GPIO"] },
+            { id: 26, name: "GPIO20", type: 'io', defaultFunction: "GPIO20", capabilities: ["GPIO"] },
+            { id: 27, name: "GPIO21", type: 'io', defaultFunction: "GPIO21", capabilities: ["GPIO"] },
+            { id: 28, name: "SPICS1", type: 'io', defaultFunction: "SPICS1", capabilities: ["SPI CS1"] },
+            
+            // 右侧 (从下到上)
+            { id: 29, name: "VDD_SPI", type: 'power', defaultFunction: "VDD_SPI", capabilities: ["SPI Power"] },
+            { id: 30, name: "SPIHD", type: 'io', defaultFunction: "SPIHD", capabilities: ["SPI HD"] },
+            { id: 31, name: "SPIWP", type: 'io', defaultFunction: "SPIWP", capabilities: ["SPI WP"] },
+            { id: 32, name: "SPICS0", type: 'io', defaultFunction: "SPICS0", capabilities: ["SPI CS0"] },
+            { id: 33, name: "SPICLK", type: 'io', defaultFunction: "SPICLK", capabilities: ["SPI CLK"] },
+            { id: 34, name: "SPIQ", type: 'io', defaultFunction: "SPIQ", capabilities: ["SPI Q"] },
+            { id: 35, name: "SPID", type: 'io', defaultFunction: "SPID", capabilities: ["SPI D"] },
+            { id: 36, name: "SPICLK_N", type: 'io', defaultFunction: "SPICLK_N", capabilities: ["SPI CLK N"] },
+            { id: 37, name: "SPICLK_P", type: 'io', defaultFunction: "SPICLK_P", capabilities: ["SPI CLK P"] },
+            { id: 38, name: "GPIO33", type: 'io', defaultFunction: "GPIO33", capabilities: ["GPIO"] },
+            { id: 39, name: "GPIO34", type: 'io', defaultFunction: "GPIO34", capabilities: ["GPIO"] },
+            { id: 40, name: "GPIO35", type: 'io', defaultFunction: "GPIO35", capabilities: ["GPIO"] },
+            { id: 41, name: "GPIO36", type: 'io', defaultFunction: "GPIO36", capabilities: ["GPIO"] },
+            { id: 42, name: "GPIO37", type: 'io', defaultFunction: "GPIO37", capabilities: ["GPIO"] },
+            
+            // 顶部 (从右到左)
+            { id: 43, name: "GPIO38", type: 'io', defaultFunction: "GPIO38", capabilities: ["GPIO"] },
+            { id: 44, name: "MTCK", type: 'special', defaultFunction: "MTCK", capabilities: ["JTAG Test Clock"] },
+            { id: 45, name: "MTDO", type: 'special', defaultFunction: "MTDO", capabilities: ["JTAG Test Data Out"] },
+            { id: 46, name: "VDD3P3_CPU", type: 'power', defaultFunction: "VDD3P3_CPU", capabilities: ["3.3V CPU Power"] },
+            { id: 47, name: "MTDI", type: 'special', defaultFunction: "MTDI", capabilities: ["JTAG Test Data In"] },
+            { id: 48, name: "MTMS", type: 'special', defaultFunction: "MTMS", capabilities: ["JTAG Test Mode Select"] },
+            { id: 49, name: "U0TXD", type: 'io', defaultFunction: "U0TXD", capabilities: ["UART0 TXD"] },
+            { id: 50, name: "U0RXD", type: 'io', defaultFunction: "U0RXD", capabilities: ["UART0 RXD"] },
+            { id: 51, name: "GPIO45", type: 'io', defaultFunction: "GPIO45", capabilities: ["GPIO"] },
+            { id: 52, name: "GPIO46", type: 'io', defaultFunction: "GPIO46", capabilities: ["GPIO"] },
+            { id: 53, name: "XTAL_N", type: 'special', defaultFunction: "XTAL_N", capabilities: ["Crystal Oscillator N"] },
+            { id: 54, name: "XTAL_P", type: 'special', defaultFunction: "XTAL_P", capabilities: ["Crystal Oscillator P"] },
+            { id: 55, name: "VDDA", type: 'power', defaultFunction: "VDDA", capabilities: ["Analog Power"] },
+            { id: 56, name: "VDDA", type: 'power', defaultFunction: "VDDA", capabilities: ["Analog Power"] }
+        ];
+
+        // 功能字典：为每个引脚可以配置的可能功能
+        const pinFunctions = {
+            // GPIO引脚
+            "GPIO0": ["GPIO0"],
+            "GPIO1": ["GPIO1"],
+            "GPIO2": ["GPIO2"],
+            "GPIO3": ["GPIO3"],
+            "GPIO4": ["GPIO4"],
+            "GPIO5": ["GPIO5"],
+            "GPIO6": ["GPIO6"],
+            "GPIO7": ["GPIO7"],
+            "GPIO8": ["GPIO8"],
+            "GPIO9": ["GPIO9"],
+            "GPIO10": ["GPIO10"],
+            "GPIO11": ["GPIO11"],
+            "GPIO12": ["GPIO12"],
+            "GPIO13": ["GPIO13"],
+            "GPIO14": ["GPIO14"],    // 更多GPIO引脚...
+            "GPIO17": ["GPIO17", "DAC_1"],
+            "GPIO18": ["GPIO18", "DAC_2"],
+            "GPIO19": ["GPIO19", "USB_D-"],
+            "GPIO20": ["GPIO20", "USB_D+"],
+            "GPIO21": ["GPIO21"],
+            "SPIHD": ["SPIHD", "GPIO27"],
+            "SPIWP": ["SPIWP", "GPIO28"],
+            "SPICS0": ["SPICS0", "GPIO29"],
+            "SPICLK": ["SPICLK", "GPIO30"],
+            "SPIQ": ["SPIQ", "GPIO31"],
+            "SPID": ["SPID", "GPIO32"],
+            "SPICLK_N": ["SPICLK_N", "GPIO48"],
+            "SPICLK_P": ["SPICLK_P", "GPIO47"],
+            // 其他GPIO
+            "GPIO33": ["GPIO33"],
+            "GPIO34": ["GPIO34"],
+            "GPIO35": ["GPIO35"],
+            "GPIO36": ["GPIO36"],
+            "GPIO37": ["GPIO37"],
+            "GPIO38": ["GPIO38"],
+            // 电源和特殊引脚通常没有其他功能选项
+            "LNA_IN": ["LNA_IN"],
+            "VDD3P3": ["VDD3P3"],
+            "CHIP_PU": ["CHIP_PU"],
+            "VDD3P3_RTC": ["VDD3P3_RTC"],
+            "XTAL_32K_P": ["XTAL_32K_P"],
+            "XTAL_32K_N": ["XTAL_32K_N"],
+            "VDD_SPI": ["VDD_SPI"],
+            "VDD3P3_CPU": ["VDD3P3_CPU"],
+            "MTDI": ["MTDI", "GPIO41"],
+            "MTCK": ["MTCK", "GPIO39"],
+            "MTMS": ["MTMS", "GPIO42"],
+            "MTDO": ["MTDO", "GPIO40"],
+            "U0TXD": ["U0TXD", "GPIO43"],
+            "U0RXD": ["U0RXD", "GPIO44"],
+            "XTAL_N": ["XTAL_N"],
+            "XTAL_P": ["XTAL_P"],
+            "VDDA": ["VDDA"]
+        };
+
+        // 引脚配置状态
+        let pinConfigurations = {};
+        
+        // 引脚评论
+        let pinComments = {};
+        
+        // 项目笔记
+        let projectNotes = "";
+
+        // 更新项目笔记
+        function updateProjectNotes(notes) {
+            projectNotes = notes;
+        }
+        
+        // 创建SVG元素
+        function createSvgElements() {
+            const svg = document.getElementById('chipSvg');
+            const svgNS = "http://www.w3.org/2000/svg";
+            
+            // 背景白色矩形（方便查看和导出）
+            const background = document.createElementNS(svgNS, "rect");
+            background.setAttribute("x", 0);
+            background.setAttribute("y", 0);
+            background.setAttribute("width", 800);
+            background.setAttribute("height", 800);
+            background.setAttribute("fill", "white");
+            svg.appendChild(background);
+            
+            // 芯片主体
+            const chipBody = document.createElementNS(svgNS, "rect");
+            chipBody.setAttribute("x", 150);
+            chipBody.setAttribute("y", 150);
+            chipBody.setAttribute("width", 500);
+            chipBody.setAttribute("height", 500);
+            chipBody.setAttribute("rx", 10);
+            chipBody.setAttribute("ry", 10);
+            chipBody.setAttribute("fill", "#2c2c2c");
+            chipBody.setAttribute("stroke", "#000");
+            chipBody.setAttribute("stroke-width", "2");
+            chipBody.setAttribute("stroke-dasharray", "5,5");
+            chipBody.classList.add("chip-body");
+            svg.appendChild(chipBody);
+            
+            // 芯片标签
+            const chipText = document.createElementNS(svgNS, "text");
+            chipText.setAttribute("x", 400);
+            chipText.setAttribute("y", 400);
+            chipText.setAttribute("text-anchor", "middle");
+            chipText.setAttribute("dominant-baseline", "middle");
+            chipText.setAttribute("fill", "white");
+            chipText.setAttribute("font-size", "36");
+            chipText.setAttribute("font-weight", "bold");
+            chipText.textContent = "ESP32-S3";
+            chipText.classList.add("chip-text");
+            svg.appendChild(chipText);
+            
+            // 创建引脚
+            const pinRadius = 12;
+            
+            // 左侧引脚 (从上到下)
+            for (let i = 0; i < 14; i++) {
+                createPin(svg, svgNS, pins[i], 150, 205 + i * 30, "left", pinRadius);
+            }
+            
+            // 底部引脚 (从左到右)
+            for (let i = 0; i < 14; i++) {
+                createPin(svg, svgNS, pins[i+14], 200 + i * 30, 650, "bottom", pinRadius);
+            }
+            
+            // 右侧引脚 (从下到上)
+            for (let i = 0; i < 14; i++) {
+                createPin(svg, svgNS, pins[i+28], 650, 595 - i * 30, "right", pinRadius);
+            }
+            
+            // 顶部引脚 (从右到左)
+            for (let i = 0; i < 14; i++) {
+                createPin(svg, svgNS, pins[i+42], 595 - i * 30, 150, "top", pinRadius);
+            }
+            
+            // 添加GND标记 (根据图示在芯片右下部)
+            const gndText = document.createElementNS(svgNS, "text");
+            gndText.setAttribute("x", 350);
+            gndText.setAttribute("y", 550);
+            gndText.setAttribute("fill", "white");
+            gndText.setAttribute("font-size", "20");
+            gndText.textContent = "57 GND";
+            svg.appendChild(gndText);
+        }
+        
+        // 创建单个引脚
+        function createPin(svg, svgNS, pin, x, y, side, radius) {
+            // 确定引脚颜色
+            let pinColor;
+            if (pin.type === 'power') {
+                pinColor = '#ff5252'; // 红色
+            } else if (pin.type === 'ground' && pin.defaultFunction === 'GND') {
+                pinColor = '#2196F3'; // 蓝色
+            } else if (pin.type === 'special') {
+                pinColor = '#E040FB'; // 紫色
+            } else {
+                pinColor = '#7a7a7a'; // 灰色
+            }
+            
+            // 创建引脚圆点
+            const pinCircle = document.createElementNS(svgNS, "circle");
+            pinCircle.setAttribute("cx", x);
+            pinCircle.setAttribute("cy", y);
+            pinCircle.setAttribute("r", radius);
+            pinCircle.setAttribute("fill", pinColor);
+            pinCircle.setAttribute("stroke", "#000");
+            pinCircle.setAttribute("stroke-width", "1");
+            pinCircle.setAttribute("data-id", pin.id);
+            pinCircle.setAttribute("data-name", pin.name);
+            pinCircle.classList.add("pin-circle");
+            
+            // 添加事件监听器
+            pinCircle.addEventListener("click", function() {
+                selectPin(pin.id);
+            });
+            
+            // 添加悬停提示事件
+            pinCircle.addEventListener("mousemove", function(e) {
+                showTooltip(e, `引脚 ${pin.id}: ${pin.name} - ${pin.defaultFunction}`);
+            });
+            
+            pinCircle.addEventListener("mouseout", function() {
+                hideTooltip();
+            });
+            
+            svg.appendChild(pinCircle);
+            
+            // 创建引脚盒子（虚线边框）
+            const pinBox = document.createElementNS(svgNS, "rect");
+            let boxX = x, boxY = y, boxWidth = 30, boxHeight = 20;
+            
+            switch(side) {
+                case "left":
+                    boxX = x - 45;
+                    boxY = y - 10;
+                    break;
+                case "right":
+                    boxX = x + 15;
+                    boxY = y - 10;
+                    break;
+                case "top":
+                    boxX = x - 15;
+                    boxY = y - 30;
+                    break;
+                case "bottom":
+                    boxX = x - 15;
+                    boxY = y + 10;
+                    break;
+            }
+            
+            pinBox.setAttribute("x", boxX);
+            pinBox.setAttribute("y", boxY);
+            pinBox.setAttribute("width", boxWidth);
+            pinBox.setAttribute("height", boxHeight);
+            pinBox.setAttribute("fill", "none");
+            pinBox.setAttribute("stroke", "#666");
+            pinBox.setAttribute("stroke-width", "1");
+            pinBox.setAttribute("stroke-dasharray", "2,2");
+            svg.appendChild(pinBox);
+            
+            // 创建引脚号
+            const pinNumber = document.createElementNS(svgNS, "text");
+            let textX = 0, textY = 0;
+            
+            switch(side) {
+                case "left":
+                    textX = boxX + boxWidth/2;
+                    textY = boxY + boxHeight/2 + 5;
+                    break;
+                case "right":
+                    textX = boxX + boxWidth/2;
+                    textY = boxY + boxHeight/2 + 5;
+                    break;
+                case "top":
+                    textX = boxX + boxWidth/2;
+                    textY = boxY + boxHeight/2 + 5;
+                    break;
+                case "bottom":
+                    textX = boxX + boxWidth/2;
+                    textY = boxY + boxHeight/2 + 5;
+                    break;
+            }
+            
+            pinNumber.setAttribute("x", textX);
+            pinNumber.setAttribute("y", textY);
+            pinNumber.setAttribute("text-anchor", "middle");
+            pinNumber.setAttribute("fill", "#333");
+            pinNumber.setAttribute("font-size", "12");
+            pinNumber.textContent = pin.id;
+            svg.appendChild(pinNumber);
+            
+            // 添加引脚功能名称（在芯片外）
+            const pinFunction = document.createElementNS(svgNS, "text");
+            let funcX = 0, funcY = 0, rotate = 0;
+            
+            switch(side) {
+                case "left":
+                    funcX = x - 60;
+                    funcY = y + 5;
+                    pinFunction.setAttribute("text-anchor", "end");
+                    rotate = 0;
+                    break;
+                case "right":
+                    funcX = x + 60;
+                    funcY = y + 5;
+                    pinFunction.setAttribute("text-anchor", "start");
+                    rotate = 0;
+                    break;
+                case "top":
+                    funcX = x;
+                    funcY = y - 40;
+                    pinFunction.setAttribute("text-anchor", "middle");
+                    rotate = -90;
+                    break;
+                case "bottom":
+                    funcX = x;
+                    funcY = y + 40;
+                    pinFunction.setAttribute("text-anchor", "middle");
+                    rotate = -90;
+                    break;
+            }
+            
+            pinFunction.setAttribute("x", funcX);
+            pinFunction.setAttribute("y", funcY);
+            if (rotate !== 0) {
+                pinFunction.setAttribute("transform", `rotate(${rotate}, ${funcX}, ${funcY})`);
+            }
+            pinFunction.setAttribute("fill", "#333");
+            pinFunction.setAttribute("font-size", "12");
+            pinFunction.textContent = pin.name;
+            svg.appendChild(pinFunction);
+        }
+        
+        // 显示工具提示
+        function showTooltip(event, text) {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.textContent = text;
+            tooltip.style.left = `${event.pageX + 10}px`;
+            tooltip.style.top = `${event.pageY + 10}px`;
+            tooltip.style.opacity = "1";
+        }
+        
+        // 隐藏工具提示
+        function hideTooltip() {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.style.opacity = "0";
+        }
+
+        // 选择引脚
+        function selectPin(pinId) {
+            // 移除之前选中的引脚高亮
+            document.querySelectorAll('.pin-circle').forEach(pin => {
+                pin.setAttribute("stroke-width", "1");
+                pin.removeAttribute("filter");
+            });
+            
+            // 高亮当前选中的引脚
+            const pinElement = document.querySelector(`.pin-circle[data-id="${pinId}"]`);
+            if (pinElement) {
+                pinElement.setAttribute("stroke-width", "3");
+                pinElement.setAttribute("stroke", "white");
+                // 创建发光效果
+                const svgNS = "http://www.w3.org/2000/svg";
+                const defs = document.querySelector("#chipSvg defs") || document.createElementNS(svgNS, "defs");
+                if (!document.querySelector("#chipSvg defs")) {
+                    document.getElementById("chipSvg").appendChild(defs);
+                }
+                
+                if (!document.getElementById("glowFilter")) {
+                    const filter = document.createElementNS(svgNS, "filter");
+                    filter.setAttribute("id", "glowFilter");
+                    filter.setAttribute("x", "-50%");
+                    filter.setAttribute("y", "-50%");
+                    filter.setAttribute("width", "200%");
+                    filter.setAttribute("height", "200%");
+                    
+                    const feGaussianBlur = document.createElementNS(svgNS, "feGaussianBlur");
+                    feGaussianBlur.setAttribute("stdDeviation", "2");
+                    feGaussianBlur.setAttribute("result", "blur");
+                    
+                    const feComposite = document.createElementNS(svgNS, "feComposite");
+                    feComposite.setAttribute("in", "SourceGraphic");
+                    feComposite.setAttribute("in2", "blur");
+                    feComposite.setAttribute("operator", "over");
+                    
+                    filter.appendChild(feGaussianBlur);
+                    filter.appendChild(feComposite);
+                    defs.appendChild(filter);
+                }
+                
+                pinElement.setAttribute("filter", "url(#glowFilter)");
+            }
+            
+            // 显示引脚详情
+            displayPinInfo(pinId);
+        }
+
+        // 显示引脚信息
+        function displayPinInfo(pinId) {
+            const pin = pins.find(p => p.id === pinId);
+            if (!pin) return;
+            
+            const infoContent = document.getElementById('pinInfoContent');
+            
+            let pinTypeDisplay = '';
+            if (pin.type === 'power') {
+                pinTypeDisplay = '<span class="pin-type power">电源</span>';
+            } else if (pin.type === 'ground' && pin.defaultFunction === 'GND') {
+                pinTypeDisplay = '<span class="pin-type ground">接地</span>';
+            } else if (pin.type === 'special') {
+                pinTypeDisplay = '<span class="pin-type special">特殊</span>';
+            } else {
+                pinTypeDisplay = '<span class="pin-type io">IO</span>';
+            }
+            
+            let configStatus = '';
+            if (pinConfigurations[pinId]) {
+                configStatus = `<div class="config-status">
+                    <span class="label">当前配置:</span> ${pinConfigurations[pinId]}
+                </div>`;
+            }
+            
+            // 创建功能选择下拉菜单
+            let functionSelector = '';
+            if (pinFunctions[pin.name]) {
+                functionSelector = `
+                <div class="function-selector">
+                    <label for="function-select">选择功能:</label>
+                    <select id="function-select" onchange="updatePinFunction(${pin.id}, this.value)">
+                        <option value="">-- 请选择功能 --</option>
+                        ${pinFunctions[pin.name].map(func => 
+                            `<option value="${func}" ${pinConfigurations[pinId] === func ? 'selected' : ''}>${func}</option>`
+                        ).join('')}
+                    </select>
+                </div>`;
+            }
+            
+            // 添加评论区域
+            const currentComment = pinComments[pinId] || '';
+            const commentSection = `
+                <div class="comments-section">
+                    <h3>引脚评论:</h3>
+                    <textarea id="pinComment" placeholder="添加关于此引脚配置的备注、原因或用途..." oninput="updatePinComment(${pinId}, this.value)">${currentComment}</textarea>
+                    <p class="config-notes">添加的评论将随配置一起保存</p>
+                </div>
+            `;
+            
+            infoContent.innerHTML = `
+                <div class="pin-detail">
+                    <h3>${pinTypeDisplay} 引脚 ${pin.id} (${pin.name})</h3>
+                    <p><span class="label">引脚名称:</span> ${pin.name}</p>
+                    <p><span class="label">默认功能:</span> ${pin.defaultFunction}</p>
+                    ${configStatus}
+                    ${functionSelector}
+                    ${commentSection}
+                    <div class="button-group">
+                        <button onclick="configurePin(${pin.id})">配置为默认功能</button>
+                        <button onclick="clearPinConfiguration(${pin.id})">清除配置</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 更新引脚评论
+        function updatePinComment(pinId, comment) {
+            pinComments[pinId] = comment;
+        }
+
+        // 更新引脚功能
+        function updatePinFunction(pinId, functionName) {
+            if (!functionName) return;
+            
+            // 更新配置状态
+            pinConfigurations[pinId] = functionName;
+            
+            // 更新引脚颜色
+            const pinElement = document.querySelector(`.pin-circle[data-id="${pinId}"]`);
+            if (pinElement) {
+                pinElement.setAttribute("fill", "var(--pin-configured-color)");
+            }
+            
+            // 更新信息面板
+            displayPinInfo(pinId);
+        }
+
+        // 配置引脚
+        function configurePin(pinId) {
+            const pin = pins.find(p => p.id === pinId);
+            if (!pin) return;
+            
+            // 更新配置状态
+            pinConfigurations[pinId] = pin.defaultFunction;
+            
+            // 更新引脚颜色
+            const pinElement = document.querySelector(`.pin-circle[data-id="${pinId}"]`);
+            if (pinElement) {
+                pinElement.setAttribute("fill", "var(--pin-configured-color)");
+            }
+            
+            // 更新信息面板
+            displayPinInfo(pinId);
+        }
+
+        // 清除引脚配置
+        function clearPinConfiguration(pinId) {
+            const pin = pins.find(p => p.id === pinId);
+            if (!pin) return;
+            
+            // 删除配置
+            delete pinConfigurations[pinId];
+            
+            // 恢复引脚颜色
+            const pinElement = document.querySelector(`.pin-circle[data-id="${pinId}"]`);
+            if (pinElement) {
+                let pinColor;
+                if (pin.type === 'power') {
+                    pinColor = '#ff5252'; // 红色
+                } else if (pin.type === 'ground' && pin.defaultFunction === 'GND') {
+                    pinColor = '#2196F3'; // 蓝色
+                } else if (pin.type === 'special') {
+                    pinColor = '#E040FB'; // 紫色
+                } else {
+                    pinColor = '#7a7a7a'; // 灰色
+                }
+                pinElement.setAttribute("fill", pinColor);
+            }
+            
+            // 更新信息面板
+            displayPinInfo(pinId);
+        }
+
+        // 清除所有配置
+        function clearAllConfigurations() {
+            if (confirm("确定要清除所有配置和评论吗？")) {
+                for (const pinId in pinConfigurations) {
+                    clearPinConfiguration(parseInt(pinId));
+                }
+                pinComments = {};
+                projectNotes = "";
+                document.getElementById("projectNotes").value = "";
+            }
+        }
+
+        // 搜索引脚
+        function searchPins() {
+            const searchTerm = document.getElementById('searchPin').value.toLowerCase();
+            
+            if (!searchTerm) {
+                document.querySelectorAll('.pin-circle').forEach(pin => {
+                    pin.style.opacity = '1';
+                });
+                return;
+            }
+            
+            document.querySelectorAll('.pin-circle').forEach(pin => {
+                const pinId = parseInt(pin.getAttribute('data-id'));
+                const pinName = pin.getAttribute('data-name');
+                const pinData = pins.find(p => p.id === pinId);
+                
+                if (pinId.toString().includes(searchTerm) || 
+                    pinName.toLowerCase().includes(searchTerm) ||
+                    pinData.defaultFunction.toLowerCase().includes(searchTerm) ||
+                    pinData.capabilities.some(c => c.toLowerCase().includes(searchTerm))) {
+                    pin.style.opacity = '1';
+                } else {
+                    pin.style.opacity = '0.3';
+                }
+            });
+        }
+
+        // 导出配置到JSON文件
+        function exportConfig() {
+            // 创建一个包含当前配置和评论的对象
+            const configData = {
+                date: new Date().toISOString(),
+                pinConfigurations: pinConfigurations,
+                pinComments: pinComments,
+                projectNotes: projectNotes,
+                chipType: "ESP32-S3"
+            };
+            
+            // 转换为JSON字符串
+            const jsonStr = JSON.stringify(configData, null, 2);
+            
+            // 创建Blob对象
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            
+            // 创建下载链接
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ESP32-S3-config-${new Date().toISOString().slice(0,10)}.json`;
+            
+            // 模拟点击下载
+            document.body.appendChild(a);
+            a.click();
+            
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
+            
+            // 提示用户
+            alert('配置和评论已导出为JSON文件!');
+        }
+
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const configData = JSON.parse(e.target.result);
+                    
+                    // 检查数据格式是否正确
+                    if (!configData.pinConfigurations || !configData.chipType) {
+                        throw new Error('配置文件格式不正确');
+                    }
+                    
+                    // 确认芯片类型
+                    if (configData.chipType !== "ESP32-S3") {
+                        if (!confirm(`警告: 配置文件中的芯片类型 (${configData.chipType}) 与当前芯片 (ESP32-S3) 不匹配。继续导入可能会导致错误配置。是否继续?`)) {
+                            return;
+                        }
+                    }
+                    
+                    // 导入配置前清除当前配置
+                    clearAllConfigurations();
+                    
+                    // 导入新配置
+                    pinConfigurations = configData.pinConfigurations;
+                    
+                    // 导入评论和笔记（如果有）
+                    if (configData.pinComments) {
+                        pinComments = configData.pinComments;
+                    }
+                    
+                    if (configData.projectNotes) {
+                        projectNotes = configData.projectNotes;
+                        document.getElementById("projectNotes").value = projectNotes;
+                    }
+                    
+                    // 更新所有引脚的显示
+                    updateAllPinColors();
+                    
+                    alert('配置和评论已成功导入!');
+                    
+                } catch (error) {
+                    alert(`导入配置失败: ${error.message}`);
+                }
+                
+                // 重置文件输入，允许再次选择同一文件
+                event.target.value = '';
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // 更新所有引脚的颜色
+        function updateAllPinColors() {
+            // 首先重置所有引脚为默认颜色
+            document.querySelectorAll('.pin-circle').forEach(pinElement => {
+                const pinId = parseInt(pinElement.getAttribute('data-id'));
+                const pin = pins.find(p => p.id === pinId);
+                
+                let pinColor;
+                if (pin.type === 'power') {
+                    pinColor = '#ff5252'; // 红色
+                } else if (pin.type === 'ground' && pin.defaultFunction === 'GND') {
+                    pinColor = '#2196F3'; // 蓝色
+                } else if (pin.type === 'special') {
+                    pinColor = '#E040FB'; // 紫色
+                } else {
+                    pinColor = '#7a7a7a'; // 灰色
+                }
+                
+                // 如果引脚在导入的配置中被配置，则设置为绿色
+                if (pinConfigurations[pinId]) {
+                    pinColor = 'var(--pin-configured-color)';
+                }
+                
+                pinElement.setAttribute("fill", pinColor);
+            });
+        }
+
+        // 切换深色模式
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.mode-icon');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.textContent = '☀️';
+            } else {
+                icon.textContent = '🌙';
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            createSvgElements();
+        });
+    </script>
+</body>
+</html>
