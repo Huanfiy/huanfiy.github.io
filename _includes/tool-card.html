@@ -1,0 +1,27 @@
+<div
+  class="card"
+  data-aos="fade-up"
+  data-aos-delay="{{ include.delay | default: 100 }}"
+>
+  <div class="card-content text-center">
+    <i class="{{ include.tool.icon }} text-5xl text-primary-color mb-4"></i>
+    <h3 class="card-title">{{ include.tool.name }}</h3>
+    <p class="mb-6">{{ include.tool.description }}</p>
+
+    {% case include.tool.status %} {% when 'active' %}
+    <button
+      id="show{{ include.tool.id | capitalize }}"
+      class="btn"
+      data-tool="{{ include.tool.id }}"
+    >
+      使用工具
+    </button>
+    {% when 'coming-soon' %}
+    <button class="btn opacity-50 cursor-not-allowed" disabled>即将推出</button>
+    {% when 'planned' %}
+    <button class="btn opacity-30 cursor-not-allowed" disabled>计划中</button>
+    {% else %}
+    <button class="btn opacity-50 cursor-not-allowed" disabled>暂未开放</button>
+    {% endcase %}
+  </div>
+</div>

@@ -1,3 +1,41 @@
-test
-build
-tmp
+# Jekyll 构建文件
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Bundle
+vendor/
+Gemfile.lock
+
+# 开发工具
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+
+# 临时文件
+tmp/
+temp/
+
+# 部署相关
+deploy.log
+.deploy/
+
+# Node.js (如果使用)
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# 环境配置
+.env
+.env.local
+.env.production

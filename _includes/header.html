@@ -1,0 +1,37 @@
+<header>
+  <div class="container mx-auto px-4">
+    <!-- 头像 -->
+    <img src="{{ '/picture/icon.png' | relative_url }}" alt="{{ site.author }}头像" class="avatar">
+
+    <h1 data-aos="fade-down">
+      {% if page.header_title %}
+        {{ page.header_title }}
+      {% elsif page.title %}
+        {{ page.title }}
+      {% else %}
+        {{ site.title }}
+      {% endif %}
+    </h1>
+
+    <nav>
+      <!-- 导航链接 -->
+      <ul class="nav-links">
+        <li><a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>主页</a></li>
+        <li><a href="{{ '/blog/' | relative_url }}" {% if page.url contains 'blog' %}class="active"{% endif %}>博客</a></li>
+        <li><a href="{{ '/about.html' | relative_url }}" {% if page.url contains 'about' %}class="active"{% endif %}>关于我</a></li>
+        <li><a href="{{ '/contact.html' | relative_url }}" {% if page.url contains 'contact' %}class="active"{% endif %}>联系我</a></li>
+        <li><a href="{{ '/tool/' | relative_url }}" {% if page.url contains 'tool' %}class="active"{% endif %}>小工具</a></li>
+      </ul>
+
+      <!-- 社交媒体链接 -->
+      <div class="social-links">
+        <a href="{{ site.social.github }}" target="_blank" class="social-link" title="GitHub">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="{{ site.social.bilibili }}" target="_blank" class="social-link" title="哔哩哔哩">
+          <i class="fab fa-bilibili"></i>
+        </a>
+      </div>
+    </nav>
+  </div>
+</header> 

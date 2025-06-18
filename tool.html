@@ -1,327 +1,230 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>小工具 - Huanfiy的个人博客</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="css/style.css" />
-    <!-- 引入 Font Awesome 图标库 -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <!-- 引入 AOS 动画库 -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
-  </head>
-  <body>
-    <header>
-      <div class="container mx-auto px-4">
-        <!-- 头像 -->
-        <img src="picture/icon.png" alt="Huanfiy头像" class="avatar" />
+---
+layout: default
+title: "小工具"
+header_title: "实用小工具"
+description: "提供各种实用的在线工具，提高工作效率和生活便利性"
+---
 
-        <h1 data-aos="fade-down">实用小工具</h1>
+<!-- 工具介绍区域 -->
+<section class="hero" data-aos="fade-up">
+  <div class="container mx-auto px-4 text-center">
+    <h2>便捷实用的在线工具</h2>
+    <p class="max-w-2xl mx-auto">
+      这里提供了一些我开发的实用小工具，希望能够帮助您提高工作效率。无需下载安装，直接在浏览器中使用。
+    </p>
+  </div>
+</section>
 
-        <nav>
-          <!-- 导航链接 -->
-          <ul class="nav-links">
-            <li><a href="index.html">主页</a></li>
-            <li><a href="blog.html">博客</a></li>
-            <li><a href="about.html">关于我</a></li>
-            <li><a href="contact.html">联系我</a></li>
-            <li><a href="tool.html">小工具</a></li>
-          </ul>
+<!-- 特色工具 -->
+<section data-aos="fade-up" data-aos-delay="200">
+  <div class="container mx-auto px-4">
+    <h2 class="text-center mb-12">特色工具</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% for tool in site.data.tools %} {% if tool.featured %} {% include
+      tool-card.html tool=tool delay=forloop.index0 %} {% endif %} {% endfor %}
+    </div>
+  </div>
+</section>
 
-          <!-- 社交媒体链接 -->
-          <div class="social-links">
-            <a
-              href="https://github.com/Huanfiy"
-              target="_blank"
-              class="social-link"
-              title="GitHub"
-            >
-              <i class="fab fa-github"></i>
-            </a>
-            <a
-              href="https://space.bilibili.com/179895513"
-              target="_blank"
-              class="social-link"
-              title="哔哩哔哩"
-            >
-              <i class="fab fa-bilibili"></i>
-            </a>
-          </div>
-        </nav>
-      </div>
-    </header>
+<!-- 所有工具 -->
+{% assign other_tools = site.data.tools | where_exp: "tool", "tool.featured !=
+true" %} {% if other_tools.size > 0 %}
+<section data-aos="fade-up" data-aos-delay="400">
+  <div class="container mx-auto px-4">
+    <h2 class="text-center mb-12">更多工具</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% for tool in other_tools %} {% include tool-card.html tool=tool
+      delay=forloop.index0 %} {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 
-    <!-- 工具介绍区域 -->
-    <section class="hero" data-aos="fade-up">
-      <div class="container mx-auto px-4 text-center">
-        <h2>便捷实用的在线工具</h2>
-        <p class="max-w-2xl mx-auto">
-          这里提供了一些我开发的实用小工具，希望能够帮助您提高工作效率。无需下载安装，直接在浏览器中使用。
+<!-- 图片转ICO工具区域 -->
+<section id="ico-converter-section" class="hidden" data-aos="fade-up">
+  <div class="container mx-auto px-4 max-w-2xl">
+    <div class="bg-white p-8 rounded-xl shadow-lg">
+      <div class="text-center mb-8">
+        <i class="fas fa-image text-5xl text-primary-color mb-4"></i>
+        <h2 class="mb-4">图片转ICO工具</h2>
+        <p class="text-gray-600">
+          将您的图片转换为网站图标(ICO)格式，建议使用正方形图片获得最佳效果。
         </p>
       </div>
-    </section>
 
-    <!-- 工具列表 -->
-    <section data-aos="fade-up" data-aos-delay="200">
-      <div class="container mx-auto px-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <!-- 图片转ICO工具 -->
-          <div class="card" data-aos="fade-up">
-            <div class="card-content text-center">
-              <i class="fas fa-image text-5xl text-primary-color mb-4"></i>
-              <h3 class="card-title">图片转ICO工具</h3>
-              <p class="mb-6">
-                将您的图片快速转换为网站图标(ICO)格式，支持PNG、JPG等常见格式。
-              </p>
-              <button id="showIcoTool" class="btn">使用工具</button>
-            </div>
-          </div>
-
-          <!-- 占位工具卡片 -->
-          <div class="card" data-aos="fade-up" data-aos-delay="100">
-            <div class="card-content text-center">
-              <i class="fas fa-code text-5xl text-primary-color mb-4"></i>
-              <h3 class="card-title">代码格式化工具</h3>
-              <p class="mb-6">
-                一键美化您的代码，支持HTML、CSS、JavaScript等多种语言。
-              </p>
-              <button class="btn opacity-50 cursor-not-allowed">
-                即将推出
-              </button>
-            </div>
-          </div>
-
-          <!-- 占位工具卡片 -->
-          <div class="card" data-aos="fade-up" data-aos-delay="200">
-            <div class="card-content text-center">
-              <i class="fas fa-file-alt text-5xl text-primary-color mb-4"></i>
-              <h3 class="card-title">Markdown编辑器</h3>
-              <p class="mb-6">
-                在线编辑Markdown文档，实时预览效果，轻松导出为HTML或PDF。
-              </p>
-              <button class="btn opacity-50 cursor-not-allowed">
-                即将推出
-              </button>
-            </div>
-          </div>
+      <div class="space-y-6">
+        <div
+          class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-primary-color transition-colors"
+        >
+          <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+          <p class="text-gray-500 mb-4">点击选择或拖放图片到这里</p>
+          <input
+            type="file"
+            id="imageInput"
+            accept="image/png, image/jpeg, image/jpg"
+            class="hidden"
+          />
+          <button id="browseButton" class="btn">浏览文件</button>
         </div>
-      </div>
-    </section>
 
-    <!-- 图片转ICO工具区域 -->
-    <section id="icoToolSection" class="hidden" data-aos="fade-up">
-      <div class="container mx-auto px-4 max-w-2xl">
-        <div class="bg-white p-8 rounded-xl shadow-lg">
-          <div class="text-center mb-8">
-            <i class="fas fa-image text-5xl text-primary-color mb-4"></i>
-            <h2 class="mb-4">图片转ICO工具</h2>
-            <p class="text-gray-600">
-              将您的图片转换为网站图标(ICO)格式，建议使用正方形图片获得最佳效果。
-            </p>
+        <div id="previewContainer" class="hidden flex flex-col items-center">
+          <p class="text-gray-600 mb-2">预览:</p>
+          <div
+            class="relative w-16 h-16 border border-gray-300 rounded-md overflow-hidden mb-4"
+          >
+            <img id="imagePreview" class="w-full h-full object-cover" />
           </div>
-
-          <div class="space-y-6">
-            <div
-              class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-primary-color transition-colors"
+          <div class="flex space-x-4">
+            <button id="convertButton" class="btn">转换为ICO</button>
+            <button
+              id="resetButton"
+              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
             >
-              <i
-                class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"
-              ></i>
-              <p class="text-gray-500 mb-4">点击选择或拖放图片到这里</p>
-              <input
-                type="file"
-                id="imageInput"
-                accept="image/png, image/jpeg, image/jpg"
-                class="hidden"
-              />
-              <button id="browseButton" class="btn">浏览文件</button>
-            </div>
-
-            <div
-              id="previewContainer"
-              class="hidden flex flex-col items-center"
-            >
-              <p class="text-gray-600 mb-2">预览:</p>
-              <div
-                class="relative w-16 h-16 border border-gray-300 rounded-md overflow-hidden mb-4"
-              >
-                <img id="imagePreview" class="w-full h-full object-cover" />
-              </div>
-              <div class="flex space-x-4">
-                <button id="convertButton" class="btn">转换为ICO</button>
-                <button
-                  id="resetButton"
-                  class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
-                >
-                  重置
-                </button>
-              </div>
-            </div>
-
-            <div id="resultContainer" class="hidden text-center">
-              <div class="bg-green-50 text-green-700 p-4 rounded-lg mb-4">
-                <i class="fas fa-check-circle mr-2"></i>
-                <span>转换成功！</span>
-              </div>
-              <a id="downloadLink" class="btn inline-block" download="icon.ico">
-                <i class="fas fa-download mr-2"></i>下载图标
-              </a>
-            </div>
+              重置
+            </button>
           </div>
         </div>
 
-        <div class="text-center mt-8">
-          <button
-            id="backToTools"
-            class="text-primary-color hover:underline flex items-center justify-center mx-auto"
-          >
-            <i class="fas fa-arrow-left mr-2"></i>返回工具列表
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <canvas id="canvas" width="64" height="64" class="hidden"></canvas>
-
-    <!-- 页脚 -->
-    <footer>
-      <div class="container mx-auto px-4">
-        <div class="social-links mb-4">
-          <a
-            href="https://github.com/Huanfiy"
-            target="_blank"
-            class="social-link"
-            title="GitHub"
-          >
-            <i class="fab fa-github"></i>
-          </a>
-          <a
-            href="https://space.bilibili.com/179895513"
-            target="_blank"
-            class="social-link"
-            title="哔哩哔哩"
-          >
-            <i class="fab fa-bilibili"></i>
+        <div id="resultContainer" class="hidden text-center">
+          <div class="bg-green-50 text-green-700 p-4 rounded-lg mb-4">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span>转换成功！</span>
+          </div>
+          <a id="downloadLink" class="btn inline-block" download="icon.ico">
+            <i class="fas fa-download mr-2"></i>下载图标
           </a>
         </div>
-        <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
       </div>
-    </footer>
+    </div>
 
-    <!-- 引入 JavaScript 文件 -->
-    <script src="js/script.js"></script>
-    <!-- 引入 AOS 动画库 -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-      // 初始化 AOS 动画
-      AOS.init({
-        duration: 800,
-        easing: "ease",
-        once: true,
-      });
+    <div class="text-center mt-8">
+      <button
+        id="backToTools"
+        class="text-primary-color hover:underline flex items-center justify-center mx-auto"
+      >
+        <i class="fas fa-arrow-left mr-2"></i>返回工具列表
+      </button>
+    </div>
+  </div>
+</section>
 
-      // 工具切换逻辑
-      document
-        .getElementById("showIcoTool")
-        .addEventListener("click", function () {
+<!-- 工具建议 -->
+<section data-aos="fade-up" data-aos-delay="600">
+  <div class="container mx-auto px-4 text-center">
+    <div
+      class="bg-primary-color bg-opacity-10 rounded-xl p-8 max-w-3xl mx-auto"
+    >
+      <h2 class="mb-4">需要其他工具？</h2>
+      <p class="mb-6">
+        如果您有其他工具需求或建议，请随时联系我。我会根据大家的反馈不断完善和新增实用工具。
+      </p>
+      <a href="{{ '/contact.html' | relative_url }}" class="btn">提交建议</a>
+    </div>
+  </div>
+</section>
+
+<canvas id="canvas" width="64" height="64" class="hidden"></canvas>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 工具切换功能
+    const toolButtons = document.querySelectorAll("[data-tool]");
+    const toolSections = document.querySelectorAll('[id$="-section"]');
+    const backButtons = document.querySelectorAll('[id^="backTo"]');
+
+    // 显示工具
+    toolButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        const toolId = this.dataset.tool;
+        const targetSection = document.getElementById(toolId + "-section");
+
+        if (targetSection) {
+          // 隐藏主要内容
           document
-            .querySelector('section[data-aos-delay="200"]')
-            .classList.add("hidden");
-          document.getElementById("icoToolSection").classList.remove("hidden");
-        });
+            .querySelectorAll('section:not([id$="-section"])')
+            .forEach((section) => {
+              section.classList.add("hidden");
+            });
 
-      document
-        .getElementById("backToTools")
-        .addEventListener("click", function () {
-          document.getElementById("icoToolSection").classList.add("hidden");
-          document
-            .querySelector('section[data-aos-delay="200"]')
-            .classList.remove("hidden");
-          resetTool();
-        });
-
-      // 图片上传和预览
-      const browseButton = document.getElementById("browseButton");
-      const imageInput = document.getElementById("imageInput");
-      const previewContainer = document.getElementById("previewContainer");
-      const imagePreview = document.getElementById("imagePreview");
-      const resultContainer = document.getElementById("resultContainer");
-      const resetButton = document.getElementById("resetButton");
-
-      browseButton.addEventListener("click", function () {
-        imageInput.click();
-      });
-
-      imageInput.addEventListener("change", function () {
-        if (this.files && this.files[0]) {
-          const reader = new FileReader();
-
-          reader.onload = function (e) {
-            imagePreview.src = e.target.result;
-            previewContainer.classList.remove("hidden");
-            resultContainer.classList.add("hidden");
-          };
-
-          reader.readAsDataURL(this.files[0]);
+          // 显示目标工具
+          targetSection.classList.remove("hidden");
         }
       });
+    });
 
-      // 转换逻辑
-      document
-        .getElementById("convertButton")
-        .addEventListener("click", function () {
-          const canvas = document.getElementById("canvas");
-          const ctx = canvas.getContext("2d");
-
-          if (!imageInput.files.length) {
-            alert("请先选择一张图片");
-            return;
-          }
-
-          const file = imageInput.files[0];
-          const img = new Image();
-          const reader = new FileReader();
-
-          reader.onload = function (e) {
-            img.src = e.target.result;
-          };
-
-          reader.readAsDataURL(file);
-
-          img.onload = function () {
-            // 调整图片到64x64像素
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-            // 将canvas内容转换为base64编码的ICO文件
-            canvas.toBlob(function (blob) {
-              const url = URL.createObjectURL(blob);
-              const downloadLink = document.getElementById("downloadLink");
-              downloadLink.href = url;
-              resultContainer.classList.remove("hidden");
-            }, "image/x-icon");
-          };
+    // 返回工具列表
+    backButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        // 隐藏所有工具区域
+        toolSections.forEach((section) => {
+          section.classList.add("hidden");
         });
 
-      // 重置工具
-      function resetTool() {
-        imageInput.value = "";
-        previewContainer.classList.add("hidden");
-        resultContainer.classList.add("hidden");
-      }
+        // 显示主要内容
+        document
+          .querySelectorAll('section:not([id$="-section"])')
+          .forEach((section) => {
+            section.classList.remove("hidden");
+          });
+      });
+    });
 
-      resetButton.addEventListener("click", resetTool);
-    </script>
-  </body>
-</html>
+    // ICO转换工具功能
+    initIcoConverter();
+  });
+
+  function initIcoConverter() {
+    const imageInput = document.getElementById("imageInput");
+    const browseButton = document.getElementById("browseButton");
+    const previewContainer = document.getElementById("previewContainer");
+    const imagePreview = document.getElementById("imagePreview");
+    const convertButton = document.getElementById("convertButton");
+    const resetButton = document.getElementById("resetButton");
+    const resultContainer = document.getElementById("resultContainer");
+    const downloadLink = document.getElementById("downloadLink");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!imageInput) return;
+
+    browseButton.addEventListener("click", () => imageInput.click());
+
+    imageInput.addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          imagePreview.src = e.target.result;
+          previewContainer.classList.remove("hidden");
+          resultContainer.classList.add("hidden");
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    convertButton.addEventListener("click", function () {
+      const img = new Image();
+      img.onload = function () {
+        // 清除canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 在canvas上绘制调整大小的图像
+        ctx.drawImage(img, 0, 0, 64, 64);
+
+        // 转换为ICO格式 (这里简化为PNG)
+        canvas.toBlob(function (blob) {
+          const url = URL.createObjectURL(blob);
+          downloadLink.href = url;
+          resultContainer.classList.remove("hidden");
+        }, "image/png");
+      };
+      img.src = imagePreview.src;
+    });
+
+    resetButton.addEventListener("click", function () {
+      imageInput.value = "";
+      previewContainer.classList.add("hidden");
+      resultContainer.classList.add("hidden");
+    });
+  }
+</script>

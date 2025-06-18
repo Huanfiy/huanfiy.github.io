@@ -1,4 +1,17 @@
-# [官网](https://github.com/gpakosz/.tmux)
+---
+title: "Tmux配置与使用指南"
+date: 2024-03-10
+categories: ["工具", "终端"]
+tags: ["tmux", "终端", "配置", "快捷键"]
+description: "Tmux终端复用器的详细配置说明和快捷键使用指南，基于gpakosz的优秀配置"
+author: "Huanfiy"
+---
+
+# Tmux 配置与使用指南
+
+参考配置：[官网](https://github.com/gpakosz/.tmux)
+
+## 快捷键说明
 
 - `<prefix>` means you have to either hit Ctrl + a or Ctrl + b
 - `<prefix> c` means you have to hit Ctrl + a or Ctrl + b followed by c
@@ -39,17 +52,15 @@ Bindings for `copy-mode-vi`:
 - `y` copies the selection to the top paste-buffer
 - `Escape` cancels the current operation
 
-
-
 开启鼠标后按 `shift` 配合鼠标选中内容
 
 在 tmux 中`shift` `鼠中` = primary 剪切板， 鼠中为 tmux 内部剪切板
 
-在 linux 中 `ctrl v`= 标准剪切板	鼠中 = primary 剪切板
+在 linux 中 `ctrl v`= 标准剪切板 鼠中 = primary 剪切板
 
 prefix C-f 文件搜索
 
-PR  /搜索	n N 上下导航
+PR /搜索 n N 上下导航
 
 `PR + q` pane 指示器
 

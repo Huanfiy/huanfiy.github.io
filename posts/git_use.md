@@ -1,8 +1,17 @@
-# git use record
+---
+title: "Git使用记录"
+date: 2024-03-15
+categories: ["工具", "版本控制"]
+tags: ["git", "命令行", "版本控制"]
+description: "Git常用命令的使用记录和实用示例，包括reflog和reset等重要命令的详细说明"
+author: "Huanfiy"
+---
 
-## command
+# Git 使用记录
 
-##### `git reflog` 
+## 常用命令
+
+##### `git reflog`
 
 命令用于查看 Git 仓库的引用日志（reflog）。引用日志记录了仓库中的 HEAD 和分支在历史上的移动，即使在已经被删除的分支或提交之后，也可以通过引用日志找回之前的状态。
 
@@ -17,7 +26,4 @@
 3. `git reset --mixed <commit>`：将 HEAD 指针移动到指定的提交，并将暂存区的内容重置为该提交的内容。工作区的更改将被保留，但未暂存的更改将被放回工作区。
 4. `git reset --hard <commit>`：将 HEAD 指针和分支指针移动到指定的提交，并且强制重置暂存区和工作区，使其与指定的提交完全一致。慎用，因为会丢失未提交的更改。
 
-
-
 ## example
-

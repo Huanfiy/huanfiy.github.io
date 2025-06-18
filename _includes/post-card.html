@@ -1,0 +1,63 @@
+<div
+  class="card"
+  data-aos="fade-up"
+  data-aos-delay="{{ include.delay | default: 100 }}"
+>
+  {% if include.post.image %}
+  <img
+    src="{{ include.post.image }}"
+    alt="{{ include.post.title }}"
+    class="card-img"
+  />
+  {% else %}
+  <img
+    src="https://source.unsplash.com/600x400?{{ include.post.tags[0] | default: 'coding' }}"
+    alt="{{ include.post.title }}"
+    class="card-img"
+  />
+  {% endif %}
+
+  <div class="card-content">
+    <div class="flex justify-between items-center mb-3">
+      <span class="text-sm text-gray-500"
+        >{{ include.post.date | date: "%Y年%m月%d日" }}</span
+      >
+      {% if include.post.categories %}
+      <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+        {{ include.post.categories[0] }}
+      </span>
+      {% endif %}
+    </div>
+
+    <h3 class="card-title">{{ include.post.title }}</h3>
+
+    <p class="text-gray-600 mb-4">
+      {% if include.post.description %} {{ include.post.description | truncate:
+      120 }} {% else %} {{ include.post.content | strip_html | truncate: 120 }}
+      {% endif %}
+    </p>
+
+    {% if include.post.tags %}
+    <div class="flex flex-wrap gap-1 mb-4">
+      {% for tag in include.post.tags limit: 3 %}
+      <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
+        >{{ tag }}</span
+      >
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="flex justify-between items-center">
+      <a
+        href="{{ include.post.url | relative_url }}"
+        class="text-primary-color hover:underline"
+      >
+        阅读更多
+      </a>
+      <span class="text-sm text-gray-500">
+        {% assign word_count = include.post.content | strip_html |
+        number_of_words %} {{ word_count | divided_by: 200 | plus: 1 }}分钟阅读
+      </span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,30 @@
+<footer>
+  <div class="container mx-auto px-4">
+    <div class="social-links mb-4">
+      <a
+        href="{{ site.social.github }}"
+        target="_blank"
+        class="social-link"
+        title="GitHub"
+      >
+        <i class="fab fa-github"></i>
+      </a>
+      <a
+        href="{{ site.social.bilibili }}"
+        target="_blank"
+        class="social-link"
+        title="哔哩哔哩"
+      >
+        <i class="fab fa-bilibili"></i>
+      </a>
+    </div>
+    <p>&copy; {{ 'now' | date: '%Y' }} {{ site.author }}. 保留所有权利。</p>
+    {% if site.email %}
+    <p class="text-sm mt-2">
+      <a href="mailto:{{ site.email }}" class="hover:text-accent-color"
+        >{{ site.email }}</a
+      >
+    </p>
+    {% endif %}
+  </div>
+</footer>

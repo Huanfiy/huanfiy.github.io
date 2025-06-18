@@ -1,0 +1,37 @@
+<!-- JavaScript 文件 -->
+<script src="{{ '/js/script.js' | relative_url }}"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+<script>
+  // 初始化 AOS 动画
+  AOS.init({
+    duration: 800,
+    easing: "ease",
+    once: true,
+  });
+
+  // 搜索功能
+  function initSearch() {
+    const searchInput = document.getElementById("search-input");
+    const searchResults = document.getElementById("search-results");
+
+    if (searchInput && searchResults) {
+      searchInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        if (query.length < 2) {
+          searchResults.innerHTML = "";
+          searchResults.classList.add("hidden");
+          return;
+        }
+
+        // 这里可以添加搜索逻辑
+        performSearch(query);
+      });
+    }
+  }
+
+  // 页面加载完成后初始化
+  document.addEventListener("DOMContentLoaded", function () {
+    initSearch();
+  });
+</script>

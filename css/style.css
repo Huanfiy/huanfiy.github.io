@@ -119,8 +119,13 @@ nav ul li a:before {
     z-index: -1;
 }
 
-nav ul li a:hover:before {
+nav ul li a:hover:before,
+nav ul li a.active:before {
     width: 100%;
+}
+
+nav ul li a.active {
+    color: white;
 }
 
 /* 头像样式 */
@@ -460,4 +465,98 @@ footer p {
     border-radius: 8px;
     margin: 1.5rem 0;
     box-shadow: var(--box-shadow);
+}
+
+/* Prose 样式 - 用于文章内容 */
+.prose {
+    max-width: none;
+    color: var(--text-color);
+}
+
+.prose h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--dark-color);
+}
+
+.prose h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--dark-color);
+}
+
+.prose h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--dark-color);
+}
+
+.prose h4, .prose h5, .prose h6 {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--dark-color);
+}
+
+.prose p {
+    margin-bottom: 1rem;
+    line-height: 1.7;
+}
+
+.prose ul, .prose ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.prose li {
+    margin-bottom: 0.5rem;
+}
+
+.prose code {
+    background-color: #f3f4f6;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--accent-color);
+}
+
+.prose pre {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.prose pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+}
+
+.prose blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    background-color: var(--light-color);
+    padding: 1rem 1rem 1rem 2rem;
+    border-radius: 0 8px 8px 0;
+}
+
+.prose a {
+    color: var(--primary-color);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.prose a:hover {
+    border-bottom-color: var(--primary-color);
 }
