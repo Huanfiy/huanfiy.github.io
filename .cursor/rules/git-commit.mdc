@@ -1,0 +1,27 @@
+---
+description: Git Commit Spec
+alwaysApply: true
+---
+# Git Commit 规范
+
+## 1. 格式
+`<type>(<scope>): <subject>` (英文短句，单行)
+
+## 2. Type
+- **feat**: 新功能 | **fix**: 修复 | **perf**: 性能
+- **refactor**: 重构 | **chore**: 杂项/工具 | **docs**: 文档
+
+## 3. Scope
+可选。如：`ble`, `drivers`, `board_b`, `tools` 等模块名。
+
+## 4. 原则
+- **单一粒度**: 一个 Commit 只做一件事，禁止混杂。
+- **可回滚**: 确保每个 Commit 能独立通过构建。
+
+## 5. 流程
+1. `git diff` 确认改动，`git add` 精确暂存。
+2. `./run.sh rebuild` 验证编译。
+3. 检查无 Lint 报错。
+
+## 6. Breaking Change
+接口不兼容时用 `feat!: ...` 并在 Body 注明 `BREAKING CHANGE: ...`
