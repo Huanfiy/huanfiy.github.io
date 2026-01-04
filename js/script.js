@@ -1,45 +1,49 @@
-// 鼠标点击特效：彩色波纹
-document.addEventListener("click", function (e) {
-  const ripple = document.createElement("span");
-  ripple.classList.add("ripple");
-  document.body.appendChild(ripple);
+// Mobile Navigation Toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
 
-  ripple.style.left = `${e.pageX}px`;
-  ripple.style.top = `${e.pageY}px`;
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            
+            // Toggle icon between bars and times (X)
+            const icon = menuToggle.querySelector('i');
+            if (icon.classList.contains('fa-bars')) {
+                icon.classList.replace('fa-bars', 'fa-times');
+            } else {
+                icon.classList.replace('fa-times', 'fa-bars');
+            }
+        });
+    }
 
-  // 使用鲜艳的颜色
-  const colors = ["#ff6b6b", "#1dd1a1", "#ff9f43", "#48dbfb", "#f368e0"];
-  ripple.style.backgroundColor =
-    colors[Math.floor(Math.random() * colors.length)];
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (navLinks && navLinks.classList.contains('active')) {
+            if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+                navLinks.classList.remove('active');
+                const icon = menuToggle.querySelector('i');
+                icon.classList.replace('fa-times', 'fa-bars');
+            }
+        }
+    });
 
-  setTimeout(() => {
-    ripple.remove();
-  }, 1000);
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth'
+                });
+                // Close menu if open
+                if (navLinks && navLinks.classList.contains('active')) {
+                    navLinks.classList.remove('active');
+                    const icon = menuToggle.querySelector('i');
+                    icon.classList.replace('fa-times', 'fa-bars');
+                }
+            }
+        });
+    });
 });
-
-// 为 ripple 设置样式
-const style = document.createElement("style");
-style.innerHTML = `
-    .ripple {
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        background: red;
-        border-radius: 50%;
-        pointer-events: none;
-        transform: translate(-50%, -50%);
-        animation: ripple-animation 1s ease-out forwards;
-    }
-
-    @keyframes ripple-animation {
-        from {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        to {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(10);
-        }
-    }
-`;
-document.head.appendChild(style);

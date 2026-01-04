@@ -1,316 +1,115 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Huanfiy的个人博客</title>
-    <!-- 引入 Tailwind CSS 和 Google Fonts -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="css/style.css" />
-    <!-- 引入 Font Awesome 图标库 -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huanfiy的空间 - 记录与分享</title>
+    <!-- 引入自定义 CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- 引入 Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- 引入 AOS 动画库 -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
-    <style>
-      body {
-        font-family: "Poppins", sans-serif;
-        background-color: #f7f7f7;
-      }
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+</head>
+<body>
 
-      /* 左上角头像样式 */
-      .avatar {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%; /* 将图片裁剪为圆形 */
-        object-fit: cover; /* 保证图片不变形 */
-      }
-
-      /* 导航栏容器 */
-      nav {
-        /* background-color: #1e272e; 深灰色背景 */
-        padding: 20px;
-        display: flex;
-        flex-direction: column; /* 列布局，分成两行 */
-        align-items: center; /* 居中对齐 */
-      }
-
-      /* 导航菜单居中 */
-      .nav-links {
-        display: flex;
-        justify-content: center;
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-        width: 100%;
-      }
-
-      .nav-links li {
-        margin: 0 15px;
-      }
-
-      .nav-links li a {
-        color: #fff;
-        font-weight: 600;
-        text-decoration: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        transition: background-color 0.3s;
-      }
-
-      .nav-links li a:hover {
-        background-color: #ff6b6b;
-      }
-
-      /* GitHub 和 哔哩哔哩 链接样式 */
-      .social-links {
-        display: flex;
-        justify-content: flex-end; /* 右侧对齐 */
-        width: 100%; /* 铺满整行 */
-        margin-top: 10px; /* 与导航链接保持一定距离 */
-      }
-
-      .social-link {
-        position: relative;
-        padding: 10px;
-        background-color: #1e272e; /* 与导航栏背景色一致 */
-        border-radius: 50%;
-        margin-left: 10px;
-        transition: background-color 0.3s;
-      }
-
-      .social-link:hover {
-        background-color: #ff6b6b;
-      }
-
-      .social-link svg {
-        fill: #fff;
-        width: 32px;
-        height: 32px;
-      }
-
-      /* 主要标题样式 */
-      h1 {
-        color: #ff6b6b; /* 主颜色：亮红色 */
-        font-size: 4rem;
-      }
-
-      /* 段落样式 */
-      p {
-        color: #576574; /* 中性灰色字体 */
-      }
-
-      /* 页脚样式 */
-      footer {
-        background-color: #1dd1a1; /* 青绿色 */
-        padding: 20px;
-        color: #fff;
-      }
-    </style>
-  </head>
-
-  <body>
+    <!-- 导航栏 -->
     <header>
-      <div class="container mx-auto px-4">
-        <!-- 头像 -->
-        <img src="picture/icon.png" alt="Huanfiy头像" class="avatar" />
-
-        <h1 data-aos="fade-down">Huanfiy的个人空间</h1>
-
-        <nav>
-          <!-- 导航链接 -->
-          <ul class="nav-links">
-            <li><a href="index.html">主页</a></li>
-            <li><a href="blog.html">博客</a></li>
-            <li><a href="about.html">关于我</a></li>
-            <li><a href="contact.html">联系我</a></li>
-            <li><a href="tool.html">小工具</a></li>
-          </ul>
-
-          <!-- 社交媒体链接 -->
-          <div class="social-links">
-            <!-- GitHub 图标链接 -->
-            <a
-              href="https://github.com/Huanfiy"
-              target="_blank"
-              class="social-link"
-              title="GitHub"
-            >
-              <i class="fab fa-github"></i>
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="picture/icon.png" alt="Logo">
+                <span>Huanfiy</span>
             </a>
-
-            <!-- 哔哩哔哩 图标链接 -->
-            <a
-              href="https://space.bilibili.com/179895513"
-              target="_blank"
-              class="social-link"
-              title="哔哩哔哩"
-            >
-              <i class="fab fa-bilibili"></i>
-            </a>
-          </div>
-        </nav>
-      </div>
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+            <nav class="nav-links">
+                <a href="index.html" class="active">主页</a>
+                <a href="blog.html">博客</a>
+                <a href="tool.html">工具</a>
+                <a href="about.html">关于</a>
+            </nav>
+        </div>
     </header>
 
-    <!-- 英雄区域 -->
-    <section class="hero" data-aos="fade-up">
-      <div class="container mx-auto px-4">
-        <h1>欢迎来到我的世界</h1>
-        <p class="text-lg max-w-2xl mx-auto">
-          你好！我是Huanfiy，这里是我的个人空间，分享我的学习、开发经验和生活点滴。
-        </p>
-        <a href="about.html" class="btn mt-6">了解更多</a>
-      </div>
+    <!-- 核心展示区 (Hero) -->
+    <section class="hero">
+        <div class="hero-content" data-aos="fade-up">
+            <div class="avatar-container" style="margin-bottom: 2rem;">
+                <img src="picture/icon.png" alt="Huanfiy" style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid white; box-shadow: var(--shadow-md); margin: 0 auto;">
+            </div>
+            <h1>你好，我是 <span>Huanfiy</span></h1>
+            <p>一名热衷于技术分享与工具开发的探索者。<br>在这里记录学习，分享生活，构建有趣的世界。</p>
+            
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+                <a href="#explore" class="btn">开始探索</a>
+                <a href="about.html" class="btn btn-outline">了解更多</a>
+            </div>
+        </div>
     </section>
 
-    <!-- 特色内容区域 -->
-    <section data-aos="fade-up" data-aos-delay="200">
-      <div class="container mx-auto px-4">
-        <h2 class="text-center mb-12">我的专长</h2>
-        <div class="grid">
-          <!-- 卡片1 -->
-          <div class="card" data-aos="flip-left" data-aos-delay="100">
-            <div class="card-content text-center">
-              <i class="fas fa-code text-5xl text-primary-color mb-4"></i>
-              <h3 class="card-title">Web开发</h3>
-              <p>专注于前端技术栈，包括HTML、CSS、JavaScript以及现代框架。</p>
-            </div>
-          </div>
+    <!-- 核心板块入口 -->
+    <section id="explore" class="container" style="padding-bottom: 4rem;">
+        <div class="grid-3">
+            <!-- 博客入口 -->
+            <article class="card" data-aos="fade-up" data-aos-delay="100" onclick="location.href='blog.html'" style="cursor: pointer;">
+                <div class="tool-icon" style="background: #e3f9e5; color: #2ecc71;">
+                    <i class="fas fa-pen-nib"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">技术博客</h3>
+                <p style="color: var(--light-text);">分享 Web 开发、编程心得与折腾记录。记录成长的每一步。</p>
+                <div style="margin-top: auto; padding-top: 1rem; color: var(--primary-color); font-weight: bold;">
+                    阅读文章 <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
+                </div>
+            </article>
 
-          <!-- 卡片2 -->
-          <div class="card" data-aos="flip-left" data-aos-delay="200">
-            <div class="card-content text-center">
-              <i class="fas fa-mobile-alt text-5xl text-primary-color mb-4"></i>
-              <h3 class="card-title">移动应用</h3>
-              <p>开发跨平台移动应用，让您的想法在各种设备上实现。</p>
-            </div>
-          </div>
+            <!-- 工具入口 -->
+            <article class="card" data-aos="fade-up" data-aos-delay="200" onclick="location.href='tool.html'" style="cursor: pointer;">
+                <div class="tool-icon" style="background: #e0f7fa; color: #00bcd4;">
+                    <i class="fas fa-toolbox"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">实用工具箱</h3>
+                <p style="color: var(--light-text);">自制或收集的实用在线工具。提高效率，解决小问题。</p>
+                <div style="margin-top: auto; padding-top: 1rem; color: var(--accent-color); font-weight: bold;">
+                    使用工具 <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
+                </div>
+            </article>
 
-          <!-- 卡片3 -->
-          <div class="card" data-aos="flip-left" data-aos-delay="300">
-            <div class="card-content text-center">
-              <i class="fas fa-server text-5xl text-primary-color mb-4"></i>
-              <h3 class="card-title">后端开发</h3>
-              <p>构建高效、安全的后端系统，确保应用稳定运行。</p>
-            </div>
-          </div>
+            <!-- 关于入口 -->
+            <article class="card" data-aos="fade-up" data-aos-delay="300" onclick="location.href='about.html'" style="cursor: pointer;">
+                <div class="tool-icon" style="background: #f3e5f5; color: #9c27b0;">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">关于我</h3>
+                <p style="color: var(--light-text);">了解更多关于我的故事、技能栈以及联系方式。</p>
+                <div style="margin-top: auto; padding-top: 1rem; color: #9c27b0; font-weight: bold;">
+                    查看详情 <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
+                </div>
+            </article>
         </div>
-      </div>
-    </section>
-
-    <!-- 最新博客区域 -->
-    <section data-aos="fade-up" data-aos-delay="300">
-      <div class="container mx-auto px-4">
-        <h2 class="text-center mb-12">最新博客</h2>
-        <div class="grid">
-          <!-- 博客文章1 -->
-          <div class="card" data-aos="zoom-in" data-aos-delay="100">
-            <img
-              src="https://source.unsplash.com/random/300x200?tech"
-              alt="博客图片"
-              class="card-img"
-            />
-            <div class="card-content">
-              <h3 class="card-title">Web开发最佳实践</h3>
-              <p>探索现代Web开发中的最佳实践和技巧，提升您的开发效率。</p>
-              <a href="#" class="btn mt-4">阅读更多</a>
-            </div>
-          </div>
-
-          <!-- 博客文章2 -->
-          <div class="card" data-aos="zoom-in" data-aos-delay="200">
-            <img
-              src="https://source.unsplash.com/random/300x200?code"
-              alt="博客图片"
-              class="card-img"
-            />
-            <div class="card-content">
-              <h3 class="card-title">JavaScript进阶指南</h3>
-              <p>深入了解JavaScript的高级概念，成为更专业的前端开发者。</p>
-              <a href="#" class="btn mt-4">阅读更多</a>
-            </div>
-          </div>
-
-          <!-- 博客文章3 -->
-          <div class="card" data-aos="zoom-in" data-aos-delay="300">
-            <img
-              src="https://source.unsplash.com/random/300x200?programming"
-              alt="博客图片"
-              class="card-img"
-            />
-            <div class="card-content">
-              <h3 class="card-title">响应式设计技巧</h3>
-              <p>学习如何创建在各种设备上都能完美展示的响应式网站。</p>
-              <a href="#" class="btn mt-4">阅读更多</a>
-            </div>
-          </div>
-        </div>
-        <div class="text-center mt-8">
-          <a href="blog.html" class="btn">查看所有博客</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- 联系区域 -->
-    <section data-aos="fade-up" data-aos-delay="400">
-      <div class="container mx-auto px-4 text-center">
-        <h2 class="mb-8">与我联系</h2>
-        <p class="max-w-2xl mx-auto mb-8">
-          如果您有任何问题、合作意向或者只是想打个招呼，请随时联系我。
-        </p>
-        <a href="contact.html" class="btn">发送消息</a>
-      </div>
     </section>
 
     <!-- 页脚 -->
     <footer>
-      <div class="container mx-auto px-4">
-        <div class="social-links mb-4">
-          <a
-            href="https://github.com/Huanfiy"
-            target="_blank"
-            class="social-link"
-            title="GitHub"
-          >
-            <i class="fab fa-github"></i>
-          </a>
-          <a
-            href="https://space.bilibili.com/179895513"
-            target="_blank"
-            class="social-link"
-            title="哔哩哔哩"
-          >
-            <i class="fab fa-bilibili"></i>
-          </a>
+        <div class="container">
+            <div class="social-icons">
+                <a href="https://github.com/Huanfiy" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                <a href="https://space.bilibili.com/179895513" target="_blank" title="Bilibili"><i class="fab fa-bilibili"></i></a>
+                <a href="mailto:your-email@example.com" title="Email"><i class="fas fa-envelope"></i></a>
+            </div>
+            <p style="color: var(--light-text); font-size: 0.9rem;">
+                &copy; 2024 Huanfiy. Design with <i class="fas fa-heart" style="color: #ff6b6b;"></i> & Luo Xiaohei Style.
+            </p>
         </div>
-        <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
-      </div>
     </footer>
 
-    <!-- 引入 JavaScript 文件 -->
-    <script src="js/script.js"></script>
-    <!-- 引入 AOS 动画库 -->
+    <!-- 脚本 -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="js/script.js"></script>
     <script>
-      // 初始化 AOS 动画
-      AOS.init({
-        duration: 800,
-        easing: "ease",
-        once: true,
-      });
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
     </script>
-  </body>
+</body>
 </html>
