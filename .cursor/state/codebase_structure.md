@@ -19,6 +19,7 @@
 │   ├── git_use.md
 │   └── tmux_look.md
 ├── picture/            # [资源] 图片资源
+├── run.sh              # [运维] 自动部署脚本 (rsync)
 └── README.md           # 项目说明
 ```
 
