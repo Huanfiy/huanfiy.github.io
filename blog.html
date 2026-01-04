@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>博客 - Huanfiy</title>
+    <title>博客 - Haunfly</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <!-- Marked.js 用于解析 Markdown -->
+    <!-- Marked.js 用于解析 Markdown (主CDN + 备用CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
+    <script>
+        // 如果主 CDN 加载失败，尝试备用 CDN
+        if (typeof marked === 'undefined') {
+            document.write('<script src="https://unpkg.com/marked@4.0.12/marked.min.js"><\/script>');
+        }
+    </script>
+    <script>
+        // 二次检查，如果仍然失败，尝试 cdnjs
+        if (typeof marked === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.12/marked.min.js"><\/script>');
+        }
+    </script>
 </head>
 <body>
 
@@ -16,7 +28,7 @@
         <div class="container">
             <a href="index.html" class="logo">
                 <img src="picture/icon.png" alt="Logo">
-                <span>Huanfiy</span>
+                <span>Haunfly</span>
             </a>
             <div class="menu-toggle"><i class="fas fa-bars"></i></div>
             <nav class="nav-links">
@@ -90,7 +102,7 @@
 
     <footer>
         <div class="container">
-            <p style="color: var(--light-text); font-size: 0.9rem;">&copy; 2024 Huanfiy. 保留所有权利。</p>
+            <p style="color: var(--light-text); font-size: 0.9rem;">&copy; 2024 Haunfly. 保留所有权利。</p>
         </div>
     </footer>
 
@@ -110,6 +122,16 @@
             
             // 滚动到顶部
             window.scrollTo(0, 0);
+
+            // 检查 marked 库是否已加载
+            if (typeof marked === 'undefined') {
+                contentDiv.innerHTML = `<div style="text-align:center; color:red; padding: 2rem;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Markdown 解析库加载失败</p>
+                    <p style="font-size: 0.9rem; color: var(--light-text);">请检查网络连接后刷新页面</p>
+                </div>`;
+                return;
+            }
 
             // Fetch 并渲染
             fetch(file)
