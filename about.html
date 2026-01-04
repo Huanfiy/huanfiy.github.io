@@ -1,283 +1,113 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>关于我 - Huanfiy的个人博客</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="css/style.css" />
-    <!-- 引入 Font Awesome 图标库 -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <!-- 引入 AOS 动画库 -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
-  </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于我 - Huanfiy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+</head>
+<body>
 
-  <body>
     <header>
-      <div class="container mx-auto px-4">
-        <!-- 头像 -->
-        <img src="picture/icon.png" alt="Huanfiy头像" class="avatar" />
-
-        <h1 data-aos="fade-down">关于我</h1>
-
-        <nav>
-          <!-- 导航链接 -->
-          <ul class="nav-links">
-            <li><a href="index.html">主页</a></li>
-            <li><a href="blog.html">博客</a></li>
-            <li><a href="about.html">关于我</a></li>
-            <li><a href="contact.html">联系我</a></li>
-            <li><a href="tool.html">小工具</a></li>
-          </ul>
-
-          <!-- 社交媒体链接 -->
-          <div class="social-links">
-            <a
-              href="https://github.com/Huanfiy"
-              target="_blank"
-              class="social-link"
-              title="GitHub"
-            >
-              <i class="fab fa-github"></i>
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="picture/icon.png" alt="Logo">
+                <span>Huanfiy</span>
             </a>
-            <a
-              href="https://space.bilibili.com/179895513"
-              target="_blank"
-              class="social-link"
-              title="哔哩哔哩"
-            >
-              <i class="fab fa-bilibili"></i>
-            </a>
-          </div>
-        </nav>
-      </div>
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+            <nav class="nav-links">
+                <a href="index.html">主页</a>
+                <a href="blog.html">博客</a>
+                <a href="tool.html">工具</a>
+                <a href="about.html" class="active">关于</a>
+            </nav>
+        </div>
     </header>
 
-    <!-- 个人简介区域 -->
-    <section data-aos="fade-up">
-      <div class="container mx-auto px-4">
-        <div class="flex flex-col md:flex-row items-center gap-8">
-          <div class="md:w-1/3">
-            <img
-              src="https://source.unsplash.com/random/400x600?portrait"
-              alt="个人照片"
-              class="rounded-lg shadow-lg w-full"
-              data-aos="fade-right"
-            />
-          </div>
-          <div class="md:w-2/3" data-aos="fade-left">
-            <h2>自我介绍</h2>
-            <p>
-              我是Huanfiy，一名充满激情的开发者和技术爱好者。我热衷于探索新技术，解决复杂问题，并通过我的博客分享我的学习心得和经验。
-            </p>
-            <p>
-              我的专业领域包括Web开发、移动应用开发和后端系统构建。我相信技术的力量可以改变世界，而我希望成为这个变革的一部分。
-            </p>
-
-            <div class="mt-8">
-              <h3 class="text-xl mb-4">我的技能</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="flex items-center">
-                  <i class="fab fa-html5 text-2xl mr-3 text-orange-500"></i>
-                  <div>
-                    <p class="font-bold">HTML/CSS</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        class="bg-orange-500 h-2.5 rounded-full"
-                        style="width: 95%"
-                      ></div>
-                    </div>
-                  </div>
+    <main class="container" style="padding-top: 3rem; max-width: 900px;">
+        
+        <!-- 个人简介 -->
+        <section style="display: flex; gap: 40px; align-items: center; margin-bottom: 4rem; flex-wrap: wrap;" data-aos="fade-up">
+            <div style="flex: 1; min-width: 300px;">
+                <h1 style="margin-bottom: 1.5rem; color: var(--dark-text);">关于 Huanfiy</h1>
+                <p style="color: var(--light-text); margin-bottom: 1rem;">
+                    你好！我是 Huanfiy，一名热爱技术的开发者。我喜欢折腾各种有趣的技术，从前端开发到嵌入式硬件都有涉猎。
+                </p>
+                <p style="color: var(--light-text);">
+                    我相信技术应当服务于生活，让世界变得更简单、更有趣。这个网站是我在网络世界的自留地，用来存放我的学习笔记和开发的小工具。
+                </p>
+                <div style="margin-top: 2rem;">
+                    <span class="blog-tag" style="font-size: 1rem; padding: 5px 15px; margin-right: 10px;">Web 开发</span>
+                    <span class="blog-tag" style="font-size: 1rem; padding: 5px 15px; margin-right: 10px;">嵌入式</span>
+                    <span class="blog-tag" style="font-size: 1rem; padding: 5px 15px;">摄影</span>
                 </div>
-                <div class="flex items-center">
-                  <i class="fab fa-js text-2xl mr-3 text-yellow-500"></i>
-                  <div>
-                    <p class="font-bold">JavaScript</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        class="bg-yellow-500 h-2.5 rounded-full"
-                        style="width: 90%"
-                      ></div>
-                    </div>
-                  </div>
+            </div>
+            <div style="flex: 0 0 300px; margin: 0 auto;">
+                <img src="picture/icon.png" alt="Profile" style="width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+            </div>
+        </section>
+
+        <!-- 经历时间线 (简化版) -->
+        <section data-aos="fade-up" data-aos-delay="100" style="margin-bottom: 4rem;">
+            <h2 class="section-title">我的旅程</h2>
+            <div style="position: relative; padding-left: 20px; border-left: 2px solid var(--border-color);">
+                
+                <div style="margin-bottom: 2rem; position: relative;">
+                    <div style="position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; background: var(--primary-color); border-radius: 50%; border: 3px solid white;"></div>
+                    <h3 style="font-size: 1.2rem;">全栈开发探索</h3>
+                    <p style="color: #999; font-size: 0.9rem;">2022 - 至今</p>
+                    <p style="margin-top: 0.5rem; color: var(--light-text);">开始深入研究现代 Web 技术栈，构建个人项目。</p>
                 </div>
-                <div class="flex items-center">
-                  <i class="fab fa-react text-2xl mr-3 text-blue-500"></i>
-                  <div>
-                    <p class="font-bold">React</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        class="bg-blue-500 h-2.5 rounded-full"
-                        style="width: 85%"
-                      ></div>
-                    </div>
-                  </div>
+
+                <div style="margin-bottom: 2rem; position: relative;">
+                    <div style="position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; background: var(--accent-color); border-radius: 50%; border: 3px solid white;"></div>
+                    <h3 style="font-size: 1.2rem;">接触编程世界</h3>
+                    <p style="color: #999; font-size: 0.9rem;">2020 - 2022</p>
+                    <p style="margin-top: 0.5rem; color: var(--light-text);">初识代码，对计算机科学产生浓厚兴趣。</p>
                 </div>
-                <div class="flex items-center">
-                  <i class="fab fa-node-js text-2xl mr-3 text-green-500"></i>
-                  <div>
-                    <p class="font-bold">Node.js</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        class="bg-green-500 h-2.5 rounded-full"
-                        style="width: 80%"
-                      ></div>
-                    </div>
-                  </div>
+            </div>
+        </section>
+
+        <!-- 兴趣 -->
+        <section data-aos="fade-up" data-aos-delay="200" style="text-align: center; margin-bottom: 4rem;">
+            <h2 class="section-title">兴趣爱好</h2>
+            <div class="grid-3">
+                <div class="card" style="align-items: center; text-align: center;">
+                    <i class="fas fa-camera" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <h4>摄影</h4>
+                    <p style="font-size: 0.9rem; color: var(--light-text);">捕捉生活瞬间</p>
                 </div>
-              </div>
+                <div class="card" style="align-items: center; text-align: center;">
+                    <i class="fas fa-book" style="font-size: 2rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
+                    <h4>阅读</h4>
+                    <p style="font-size: 0.9rem; color: var(--light-text);">科幻与技术</p>
+                </div>
+                <div class="card" style="align-items: center; text-align: center;">
+                    <i class="fas fa-gamepad" style="font-size: 2rem; color: #a55eea; margin-bottom: 1rem;"></i>
+                    <h4>游戏</h4>
+                    <p style="font-size: 0.9rem; color: var(--light-text);">独立游戏爱好者</p>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
+        </section>
 
-    <!-- 教育和经历区域 -->
-    <section data-aos="fade-up" data-aos-delay="200">
-      <div class="container mx-auto px-4">
-        <h2 class="text-center mb-12">教育与经历</h2>
+    </main>
 
-        <div class="relative border-l-4 border-primary-color ml-6 pl-8 pb-8">
-          <!-- 时间线项目1 -->
-          <div class="mb-12 relative" data-aos="fade-left">
-            <div
-              class="absolute -left-14 w-10 h-10 bg-primary-color rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-graduation-cap text-white"></i>
-            </div>
-            <h3 class="text-xl font-bold">计算机科学学士学位</h3>
-            <p class="text-gray-600">某知名大学 | 2016-2020</p>
-            <p class="mt-2">
-              主修计算机科学，专注于软件工程和Web开发。在校期间参与多个项目，并获得优秀毕业生称号。
-            </p>
-          </div>
-
-          <!-- 时间线项目2 -->
-          <div class="mb-12 relative" data-aos="fade-left" data-aos-delay="100">
-            <div
-              class="absolute -left-14 w-10 h-10 bg-primary-color rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-briefcase text-white"></i>
-            </div>
-            <h3 class="text-xl font-bold">前端开发工程师</h3>
-            <p class="text-gray-600">某科技公司 | 2020-2022</p>
-            <p class="mt-2">
-              负责公司主要产品的前端开发，使用React和TypeScript构建高性能Web应用。
-            </p>
-          </div>
-
-          <!-- 时间线项目3 -->
-          <div class="relative" data-aos="fade-left" data-aos-delay="200">
-            <div
-              class="absolute -left-14 w-10 h-10 bg-primary-color rounded-full flex items-center justify-center"
-            >
-              <i class="fas fa-laptop-code text-white"></i>
-            </div>
-            <h3 class="text-xl font-bold">全栈开发工程师</h3>
-            <p class="text-gray-600">现任职位 | 2022-至今</p>
-            <p class="mt-2">
-              负责从前端到后端的全栈开发工作，使用现代技术栈构建可扩展的Web应用和服务。
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 兴趣爱好区域 -->
-    <section data-aos="fade-up" data-aos-delay="300">
-      <div class="container mx-auto px-4 text-center">
-        <h2 class="mb-12">兴趣爱好</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div
-            class="p-6 bg-white rounded-lg shadow-md"
-            data-aos="zoom-in"
-            data-aos-delay="100"
-          >
-            <i class="fas fa-book text-4xl text-primary-color mb-4"></i>
-            <h3 class="text-xl font-bold mb-2">阅读</h3>
-            <p>热爱阅读技术书籍和科幻小说，不断扩展知识面。</p>
-          </div>
-
-          <div
-            class="p-6 bg-white rounded-lg shadow-md"
-            data-aos="zoom-in"
-            data-aos-delay="200"
-          >
-            <i class="fas fa-hiking text-4xl text-primary-color mb-4"></i>
-            <h3 class="text-xl font-bold mb-2">旅行</h3>
-            <p>喜欢探索新的地方，体验不同的文化和风景。</p>
-          </div>
-
-          <div
-            class="p-6 bg-white rounded-lg shadow-md"
-            data-aos="zoom-in"
-            data-aos-delay="300"
-          >
-            <i class="fas fa-camera text-4xl text-primary-color mb-4"></i>
-            <h3 class="text-xl font-bold mb-2">摄影</h3>
-            <p>业余摄影爱好者，喜欢捕捉生活中的美好瞬间。</p>
-          </div>
-
-          <div
-            class="p-6 bg-white rounded-lg shadow-md"
-            data-aos="zoom-in"
-            data-aos-delay="400"
-          >
-            <i class="fas fa-chess text-4xl text-primary-color mb-4"></i>
-            <h3 class="text-xl font-bold mb-2">下棋</h3>
-            <p>享受下棋的策略思考过程，经常参加线上比赛。</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 页脚 -->
     <footer>
-      <div class="container mx-auto px-4">
-        <div class="social-links mb-4">
-          <a
-            href="https://github.com/Huanfiy"
-            target="_blank"
-            class="social-link"
-            title="GitHub"
-          >
-            <i class="fab fa-github"></i>
-          </a>
-          <a
-            href="https://space.bilibili.com/179895513"
-            target="_blank"
-            class="social-link"
-            title="哔哩哔哩"
-          >
-            <i class="fab fa-bilibili"></i>
-          </a>
+        <div class="container">
+            <div class="social-icons">
+                <a href="https://github.com/Huanfiy" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://space.bilibili.com/179895513" target="_blank"><i class="fab fa-bilibili"></i></a>
+            </div>
+            <p style="color: var(--light-text); font-size: 0.9rem;">&copy; 2024 Huanfiy.</p>
         </div>
-        <p>&copy; 2024 Huanfiy. 保留所有权利。</p>
-      </div>
     </footer>
 
-    <!-- 引入 JavaScript 文件 -->
-    <script src="js/script.js"></script>
-    <!-- 引入 AOS 动画库 -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="js/script.js"></script>
     <script>
-      // 初始化 AOS 动画
-      AOS.init({
-        duration: 800,
-        easing: "ease",
-        once: true,
-      });
+        AOS.init({ duration: 800, once: true });
     </script>
-  </body>
+</body>
 </html>
