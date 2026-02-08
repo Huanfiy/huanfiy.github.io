@@ -3,75 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>淘宝链接转换器</title>
+    <title>链接转换器 - Haunfly</title>
     <link rel="icon" type="image/png" href="../picture/icon.png">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
+        /* ---- Page Layout ---- */
+        .converter-wrapper {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 20px 4rem;
         }
-        .container {
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--light-text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            transition: color 0.25s;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+            color: var(--dark-text);
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--light-text);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* ---- Tool Icon ---- */
+        .tool-icon-header {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #fff0f0;
+            color: #ff6b6b;
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin: 0 auto 1rem;
         }
-        textarea {
+
+        /* ---- Input Card ---- */
+        .converter-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--dark-text);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-label i {
+            color: var(--primary-color);
+            font-size: 0.85rem;
+        }
+
+        .link-input {
             width: 100%;
-            height: 100px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+            min-height: 100px;
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-family: 'Nunito', sans-serif;
+            color: var(--dark-text);
+            background: var(--bg-color);
+            resize: vertical;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            line-height: 1.6;
         }
-        #result {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #f9f9f9;
+
+        .link-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(106, 176, 76, 0.12);
         }
-        a {
-            color: #ff4400;
-            text-decoration: none;
+
+        .link-input::placeholder {
+            color: #b2bec3;
         }
-        a:hover {
-            text-decoration: underline;
+
+        /* ---- Result Card ---- */
+        .result-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            transition: all 0.3s;
         }
+
+        .result-empty {
+            text-align: center;
+            padding: 1.5rem 0;
+            color: var(--light-text);
+        }
+
+        .result-empty i {
+            font-size: 2rem;
+            color: var(--border-color);
+            margin-bottom: 0.8rem;
+            display: block;
+        }
+
+        /* ---- Result Success ---- */
+        .result-success .result-link-box {
+            background: var(--bg-color);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .result-link-box a {
+            color: var(--primary-color);
+            font-weight: 600;
+            word-break: break-all;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .result-link-box a:hover {
+            color: var(--primary-hover);
+        }
+
+        .copy-btn {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(106, 176, 76, 0.3);
+        }
+
+        .result-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: #f0f9eb;
+            color: var(--primary-color);
+        }
+
+        .meta-tag i {
+            font-size: 0.75rem;
+        }
+
+        /* ---- Error State ---- */
+        .result-error {
+            text-align: center;
+            padding: 1rem 0;
+            color: #d63031;
+        }
+
+        .result-error i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* ---- Toast ---- */
         .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background-color: #4CAF50;
+            top: 24px;
+            right: 24px;
+            padding: 12px 24px;
+            background: var(--primary-color);
             color: white;
-            border-radius: 4px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(106, 176, 76, 0.3);
             display: none;
-            animation: fadeInOut 2s ease;
+            z-index: 1000;
+            animation: toastSlide 2s ease forwards;
         }
-        @keyframes fadeInOut {
-            0% { opacity: 0; }
-            20% { opacity: 1; }
-            80% { opacity: 1; }
-            100% { opacity: 0; }
+
+        .toast i {
+            margin-right: 6px;
+        }
+
+        @keyframes toastSlide {
+            0%   { opacity: 0; transform: translateY(-12px); }
+            15%  { opacity: 1; transform: translateY(0); }
+            80%  { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-12px); }
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 600px) {
+            .converter-wrapper {
+                padding: 1.5rem 16px 3rem;
+            }
+
+            .converter-card,
+            .result-card {
+                padding: 1.5rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .result-success .result-link-box {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+            .copy-btn {
+                width: 100%;
+                height: 40px;
+                border-radius: 50px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>淘宝链接转换器</h1>
-        <div>
-            <p>粘贴淘宝链接到下面的框中，会自动转换并复制简化链接：</p>
-            <textarea id="input" placeholder="在此粘贴淘宝链接..." 
-                     oninput="debounce(convertLink, 500)()"
-                     onpaste="setTimeout(convertLink, 100)"></textarea>
+
+    <div class="converter-wrapper">
+        <!-- 返回链接 -->
+        <a href="../tool.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> 返回工具库
+        </a>
+
+        <!-- 标题区 -->
+        <div class="tool-icon-header">
+            <i class="fas fa-shopping-cart"></i>
         </div>
-        <div>
-            <p>转换结果：</p>
-            <div id="result"></div>
+        <h1 class="page-title">链接转换器</h1>
+        <p class="page-subtitle">粘贴淘宝链接，自动提取商品 ID 并生成简洁链接</p>
+
+        <!-- 输入区 -->
+        <div class="converter-card">
+            <div class="card-label"><i class="fas fa-paste"></i> 粘贴链接</div>
+            <textarea id="input" class="link-input"
+                      placeholder="将淘宝链接粘贴到这里，会自动转换..."
+                      oninput="debounce(convertLink, 500)()"
+                      onpaste="setTimeout(convertLink, 100)"></textarea>
+        </div>
+
+        <!-- 结果区 -->
+        <div class="result-card">
+            <div class="card-label"><i class="fas fa-magic"></i> 转换结果</div>
+            <div id="result">
+                <div class="result-empty">
+                    <i class="fas fa-link"></i>
+                    <p>等待粘贴链接...</p>
+                </div>
+            </div>
         </div>
     </div>
-    <div id="toast" class="toast">已复制到剪贴板</div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"><i class="fas fa-check-circle"></i>已复制到剪贴板</div>
 
     <script>
         // 防抖函数
@@ -87,11 +324,15 @@
             };
         }
 
-        // 显示提示Toast
+        // 显示提示 Toast
         function showToast(message) {
             const toast = document.getElementById('toast');
-            toast.textContent = message;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i>${message}`;
             toast.style.display = 'block';
+            // 重启动画
+            toast.style.animation = 'none';
+            toast.offsetHeight; // 触发 reflow
+            toast.style.animation = 'toastSlide 2s ease forwards';
             setTimeout(() => {
                 toast.style.display = 'none';
             }, 2000);
@@ -111,23 +352,28 @@
         function convertLink() {
             const input = document.getElementById('input').value.trim();
             const result = document.getElementById('result');
-            
+
             if (!input) {
-                result.innerHTML = '等待输入...';
+                result.innerHTML = `
+                    <div class="result-empty">
+                        <i class="fas fa-link"></i>
+                        <p>等待粘贴链接...</p>
+                    </div>`;
                 return;
             }
 
             try {
-                // 创建URL对象来解析链接
                 const url = new URL(input);
-                
-                // 获取查询参数
                 const params = new URLSearchParams(url.search);
                 const id = params.get('id');
                 const skuId = params.get('skuId');
-                
+
                 if (!id) {
-                    result.innerHTML = '未找到商品ID，请确认链接是否正确。';
+                    result.innerHTML = `
+                        <div class="result-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>未找到商品 ID，请确认链接是否正确</p>
+                        </div>`;
                     return;
                 }
 
@@ -137,25 +383,31 @@
                     simplifiedUrl += `&skuId=${skuId}`;
                 }
 
-                // 创建可点击的链接
+                // 渲染结果
                 result.innerHTML = `
-                    <p>简化后的链接：</p>
-                    <a href="${simplifiedUrl}" target="_blank">${simplifiedUrl}</a>
-                    <p>商品ID：${id}</p>
-                    ${skuId ? `<p>SKU ID：${skuId}</p>` : ''}
-                `;
+                    <div class="result-success">
+                        <div class="result-link-box">
+                            <a href="${simplifiedUrl}" target="_blank">${simplifiedUrl}</a>
+                            <button class="copy-btn" onclick="copyToClipboard('${simplifiedUrl}')" title="复制链接">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="result-meta">
+                            <span class="meta-tag"><i class="fas fa-tag"></i> 商品ID: ${id}</span>
+                            ${skuId ? `<span class="meta-tag"><i class="fas fa-barcode"></i> SKU: ${skuId}</span>` : ''}
+                        </div>
+                    </div>`;
 
-                // 自动复制到剪贴板
+                // 自动复制
                 copyToClipboard(simplifiedUrl);
 
             } catch (error) {
-                result.innerHTML = '无效的URL，请检查输入的链接是否正确。';
+                result.innerHTML = `
+                    <div class="result-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>无效的 URL，请检查输入的链接是否正确</p>
+                    </div>`;
             }
-        }
-
-        // 页面加载完成后显示初始提示
-        window.onload = function() {
-            document.getElementById('result').innerHTML = '等待输入...';
         }
     </script>
 </body>
