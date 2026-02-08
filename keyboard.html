@@ -3,573 +3,1081 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>键盘刻意练习</title>
+    <title>键位练习 - Haunfly</title>
     <link rel="icon" type="image/png" href="picture/icon.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
+        /* ---- Page Layout ---- */
+        .practice-wrapper {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 20px 4rem;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+            color: var(--dark-text);
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--light-text);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* ---- Mode Selector (pill buttons) ---- */
+        .mode-selector {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .mode-btn {
+            padding: 7px 16px;
+            border-radius: 50px;
+            border: 2px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--light-text);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: inherit;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .mode-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        /* ---- Stats Bar ---- */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item { text-align: center; }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            color: var(--light-text);
+            margin-top: 2px;
+        }
+
+        /* ---- Practice Area ---- */
+        .practice-area {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            min-height: 190px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
+            justify-content: center;
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.02);
+            user-select: none;
+            transition: opacity 0.15s;
         }
-        
-        .container {
-            width: 90%;
-            max-width: 900px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        
-        .stats {
+
+        /* Key Queue */
+        .key-queue-wrapper {
             display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-        }
-        
-        .stats div {
-            text-align: center;
-        }
-        
-        .exercise {
-            margin: 20px 0;
-        }
-        
-        .target-text {
-            background-color: #eef8ff;
-            padding: 15px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 18px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            border-left: 4px solid #4a90e2;
-        }
-        
-        .input-area {
-            margin-top: 20px;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
             width: 100%;
+            margin-bottom: 1rem;
+            min-height: 34px;
+            overflow: hidden;
         }
-        
-        textarea {
+
+        .queue-separator {
+            width: 2px;
+            height: 24px;
+            background: var(--border-color);
+            margin: 0 6px;
+            border-radius: 1px;
+            flex-shrink: 0;
+        }
+
+        .queue-key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 30px;
+            padding: 0 8px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            font-family: 'Nunito', monospace;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .queue-key.done-correct {
+            background: #e3f9e5;
+            color: #27ae60;
+        }
+
+        .queue-key.done-wrong {
+            background: #fde8e8;
+            color: #e74c3c;
+            text-decoration: line-through;
+        }
+
+        .queue-key.upcoming {
+            background: #f0f2f5;
+            color: var(--light-text);
+        }
+
+        /* Current Key */
+        .current-key-display {
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .current-key-display .key-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 32px;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border-radius: var(--radius-md);
+            box-shadow: 0 6px 20px rgba(106, 176, 76, 0.3);
+            animation: pulse-glow 2s ease-in-out infinite;
+            min-width: 90px;
+            letter-spacing: 1px;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 6px 20px rgba(106, 176, 76, 0.25); }
+            50% { box-shadow: 0 6px 30px rgba(106, 176, 76, 0.45); }
+        }
+
+        .current-key-display .key-label.correct-flash {
+            animation: correct-flash 0.35s ease;
+        }
+
+        .current-key-display .key-label.wrong-flash {
+            animation: wrong-flash 0.4s ease;
+        }
+
+        @keyframes correct-flash {
+            0% { background: linear-gradient(135deg, #2ecc71, #27ae60); transform: scale(1.1); }
+            100% { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); transform: scale(1); }
+        }
+
+        @keyframes wrong-flash {
+            0%, 30% { background: linear-gradient(135deg, #e74c3c, #c0392b); transform: scale(0.93); }
+            60% { transform: scale(1.06); }
+            100% { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); transform: scale(1); }
+        }
+
+        .start-prompt {
+            color: var(--light-text);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
             width: 100%;
-            height: 150px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 18px;
-            border-radius: 5px;
-            border: 2px solid #ddd;
-            resize: none;
+            max-width: 420px;
+            height: 5px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
         }
-        
-        textarea:focus {
-            outline: none;
-            border-color: #4a90e2;
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 3px;
+            transition: width 0.3s ease;
         }
-        
+
+        /* ---- Virtual Keyboard ---- */
+        .keyboard-container {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 1.2rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.02);
+            overflow-x: auto;
+        }
+
         .keyboard {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-top: 20px;
+            gap: 4px;
+            min-width: 680px;
         }
-        
-        .keyboard-row {
+
+        .kb-row {
             display: flex;
-            margin: 2px 0;
+            gap: 4px;
         }
-        
-        .key {
-            width: 40px;
-            height: 40px;
-            margin: 2px;
+
+        .kb-key {
+            min-width: 42px;
+            height: 42px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: default;
+            transition: all 0.12s;
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
+            line-height: 1.1;
+        }
+
+        .kb-key .shift-char {
+            font-size: 0.58rem;
+            opacity: 0.45;
+            line-height: 1;
+        }
+
+        .kb-key.w1 { min-width: 64px; }
+        .kb-key.w2 { min-width: 84px; }
+        .kb-key.w3 { min-width: 56px; }
+        .kb-key.space-key { min-width: 250px; }
+
+        /* Finger zone colors */
+        .f-lp { background: #f0e4f8; }
+        .f-lr { background: #e1ecfa; }
+        .f-lm { background: #d9f2e8; }
+        .f-li { background: #f8f2db; }
+        .f-ri { background: #f8eadb; }
+        .f-rm { background: #d9f2e8; }
+        .f-rr { background: #e1ecfa; }
+        .f-rp { background: #f0e4f8; }
+        .f-th { background: #e2f5e2; }
+
+        /* Target highlight */
+        .kb-key.target {
+            background: var(--primary-color) !important;
+            color: white !important;
+            transform: scale(1.1);
+            box-shadow: 0 3px 14px rgba(106, 176, 76, 0.45);
+            border-color: var(--primary-color) !important;
+            z-index: 2;
+        }
+
+        .kb-key.target .shift-char {
+            opacity: 1;
+            color: rgba(255,255,255,0.85);
+        }
+
+        /* Press animation */
+        .kb-key.pressed {
+            transform: translateY(2px) scale(0.94);
+            box-shadow: none !important;
+            transition: all 0.06s;
+        }
+
+        /* Heatmap */
+        .kb-key.heat-1 { background: #fef3c7 !important; border-color: #fcd34d !important; }
+        .kb-key.heat-2 { background: #fdba74 !important; border-color: #f97316 !important; }
+        .kb-key.heat-3 { background: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+
+        /* ---- Weak Keys Panel ---- */
+        .weak-keys-panel {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 1.2rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .weak-keys-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            color: var(--dark-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .weak-key-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .weak-key-name {
+            min-width: 48px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 3px 8px;
+            background: #fde8e8;
+            border-radius: 6px;
+            color: #e74c3c;
+        }
+
+        .weak-key-bar {
+            flex: 1;
+            height: 7px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .weak-key-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #f97316, #ef4444);
+        }
+
+        .weak-key-rate {
+            font-size: 0.8rem;
+            color: var(--light-text);
+            min-width: 55px;
+            text-align: right;
+        }
+
+        /* ---- Controls ---- */
+        .controls-bar {
             display: flex;
             justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-weight: bold;
-            user-select: none;
-            transition: all 0.1s;
+            gap: 0.8rem;
+            flex-wrap: wrap;
         }
-        
-        .key.special {
-            width: auto;
-            padding: 0 10px;
+
+        .controls-bar .btn {
+            font-size: 0.9rem;
+            padding: 8px 20px;
         }
-        
-        .key.wide {
-            width: 90px;
-        }
-        
-        .key.space {
-            width: 300px;
-        }
-        
-        .key.active {
-            background-color: #4a90e2;
-            color: white;
-            transform: translateY(2px);
-            box-shadow: 0 0 2px rgba(0,0,0,0.3);
-        }
-        
-        .key.error {
-            background-color: #e74c3c;
-            color: white;
-        }
-        
-        .key.correct {
-            background-color: #2ecc71;
-            color: white;
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #4a90e2;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        button:hover {
-            background-color: #357ab8;
-        }
-        
-        select {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            font-size: 16px;
-        }
-        
-        #hints {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #fffde7;
-            border-radius: 5px;
-            border-left: 4px solid #ffc107;
+
+        /* ---- Completion Overlay ---- */
+        .completion-overlay {
             display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .completion-overlay.show { display: flex; }
+
+        .completion-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            animation: slide-up 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slide-up {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .completion-card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark-text);
+        }
+
+        .completion-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 1.5rem;
+        }
+
+        .comp-stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .comp-stat-label {
+            font-size: 0.78rem;
+            color: var(--light-text);
+        }
+
+        .completion-weak-keys {
+            margin-bottom: 1.5rem;
+            min-height: 30px;
+        }
+
+        .comp-wrong-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 3px;
+            background: #fde8e8;
+            color: #e74c3c;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.82rem;
+        }
+
+        .comp-perfect {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 768px) {
+            .page-title { font-size: 1.4rem; }
+            .stats-bar { gap: 1.2rem; }
+            .stat-value { font-size: 1.1rem; }
+            .current-key-display .key-label { font-size: 2.2rem; padding: 10px 24px; }
+            .keyboard { min-width: 580px; }
+            .kb-key { min-width: 34px; height: 34px; font-size: 0.62rem; }
+            .kb-key.w1 { min-width: 52px; }
+            .kb-key.w2 { min-width: 68px; }
+            .kb-key.w3 { min-width: 46px; }
+            .kb-key.space-key { min-width: 190px; }
+            .mode-btn { font-size: 0.78rem; padding: 6px 12px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>键盘刻意练习</h1>
-        
-        <div class="stats">
-            <div>
-                <h3>WPM</h3>
-                <p id="wpm">0</p>
+
+    <header>
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="picture/icon.png" alt="Logo">
+                <span>Haunfly</span>
+            </a>
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+            <nav class="nav-links">
+                <a href="index.html">主页</a>
+                <a href="blog.html">博客</a>
+                <a href="tool.html" class="active">工具</a>
+                <a href="about.html">关于</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="practice-wrapper">
+        <h1 class="page-title">键位练习</h1>
+        <p class="page-subtitle">熟悉每个键的位置，提高盲打准确率</p>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector" id="mode-selector">
+            <button class="mode-btn active" data-mode="homeRow">基础行</button>
+            <button class="mode-btn" data-mode="topRow">上行</button>
+            <button class="mode-btn" data-mode="bottomRow">下行</button>
+            <button class="mode-btn" data-mode="numberRow">数字行</button>
+            <button class="mode-btn" data-mode="shiftCombo">Shift 组合</button>
+            <button class="mode-btn" data-mode="funcKeys">功能键</button>
+            <button class="mode-btn" data-mode="allKeys">全键混合</button>
+            <button class="mode-btn" data-mode="smart">
+                <i class="fas fa-brain" style="margin-right: 4px;"></i>智能模式
+            </button>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-accuracy">-</div>
+                <div class="stat-label">准确率</div>
             </div>
-            <div>
-                <h3>准确率</h3>
-                <p id="accuracy">100%</p>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-progress">0/0</div>
+                <div class="stat-label">进度</div>
             </div>
-            <div>
-                <h3>时间</h3>
-                <p id="time">00:00</p>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-time">0:00</div>
+                <div class="stat-label">用时</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-kpm">-</div>
+                <div class="stat-label">键/分</div>
             </div>
         </div>
-        
-        <div class="exercise">
-            <h2>练习内容</h2>
-            <div class="target-text" id="target-text"></div>
-            
-            <div class="input-area">
-                <textarea id="user-input" placeholder="开始输入..."></textarea>
+
+        <!-- Practice Area -->
+        <div class="practice-area" id="practice-area" tabindex="0">
+            <div class="key-queue-wrapper">
+                <div id="done-keys" style="display:flex;gap:4px;"></div>
+                <div class="queue-separator" id="queue-sep" style="display:none;"></div>
+                <div id="upcoming-keys" style="display:flex;gap:4px;"></div>
             </div>
-            
-            <div id="hints">
-                <h3>键位提示</h3>
-                <p id="hint-text">注意正确的手指姿势，让手指自然放在键盘上。</p>
+            <div class="current-key-display" id="current-key-display">
+                <span class="start-prompt">点击此处并按下任意键开始</span>
             </div>
-        </div>
-        
-        <div class="keyboard">
-            <div class="keyboard-row">
-                <div class="key" data-key="`">~<br>`</div>
-                <div class="key" data-key="1">!<br>1</div>
-                <div class="key" data-key="2">@<br>2</div>
-                <div class="key" data-key="3">#<br>3</div>
-                <div class="key" data-key="4">$<br>4</div>
-                <div class="key" data-key="5">%<br>5</div>
-                <div class="key" data-key="6">^<br>6</div>
-                <div class="key" data-key="7">&<br>7</div>
-                <div class="key" data-key="8">*<br>8</div>
-                <div class="key" data-key="9">(<br>9</div>
-                <div class="key" data-key="0">)<br>0</div>
-                <div class="key" data-key="-">_<br>-</div>
-                <div class="key" data-key="="">+<br>=</div>
-                <div class="key special" data-key="Backspace">Backspace</div>
-            </div>
-            <div class="keyboard-row">
-                <div class="key special" data-key="Tab">Tab</div>
-                <div class="key" data-key="q">Q</div>
-                <div class="key" data-key="w">W</div>
-                <div class="key" data-key="e">E</div>
-                <div class="key" data-key="r">R</div>
-                <div class="key" data-key="t">T</div>
-                <div class="key" data-key="y">Y</div>
-                <div class="key" data-key="u">U</div>
-                <div class="key" data-key="i">I</div>
-                <div class="key" data-key="o">O</div>
-                <div class="key" data-key="p">P</div>
-                <div class="key" data-key="[">{<br>[</div>
-                <div class="key" data-key="]">}<br>]</div>
-                <div class="key" data-key="\\">|<br>\</div>
-            </div>
-            <div class="keyboard-row">
-                <div class="key special" data-key="CapsLock">Caps</div>
-                <div class="key" data-key="a">A</div>
-                <div class="key" data-key="s">S</div>
-                <div class="key" data-key="d">D</div>
-                <div class="key" data-key="f">F</div>
-                <div class="key" data-key="g">G</div>
-                <div class="key" data-key="h">H</div>
-                <div class="key" data-key="j">J</div>
-                <div class="key" data-key="k">K</div>
-                <div class="key" data-key="l">L</div>
-                <div class="key" data-key=";">:<br>;</div>
-                <div class="key" data-key="'">"<br>'</div>
-                <div class="key special" data-key="Enter">Enter</div>
-            </div>
-            <div class="keyboard-row">
-                <div class="key special" data-key="Shift">Shift</div>
-                <div class="key" data-key="z">Z</div>
-                <div class="key" data-key="x">X</div>
-                <div class="key" data-key="c">C</div>
-                <div class="key" data-key="v">V</div>
-                <div class="key" data-key="b">B</div>
-                <div class="key" data-key="n">N</div>
-                <div class="key" data-key="m">M</div>
-                <div class="key" data-key=",">&lt;<br>,</div>
-                <div class="key" data-key=".">><br>.</div>
-                <div class="key" data-key="/">?<br>/</div>
-                <div class="key special" data-key="Shift">Shift</div>
-            </div>
-            <div class="keyboard-row">
-                <div class="key special" data-key="Control">Ctrl</div>
-                <div class="key special" data-key="Meta">Win</div>
-                <div class="key special" data-key="Alt">Alt</div>
-                <div class="key space" data-key=" ">Space</div>
-                <div class="key special" data-key="Alt">Alt</div>
-                <div class="key special" data-key="Meta">Win</div>
-                <div class="key special" data-key="Control">Ctrl</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width:0%"></div>
             </div>
         </div>
-        
-        <div class="controls">
-            <select id="exercise-type">
-                <option value="code">编程代码</option>
-                <option value="symbols">符号练习</option>
-                <option value="brackets">括号练习</option>
-                <option value="operators">运算符练习</option>
-                <option value="functions">函数练习</option>
-                <option value="keywords">关键字练习</option>
-            </select>
-            <button id="show-hints">显示提示</button>
-            <button id="new-exercise">新练习</button>
+
+        <!-- Virtual Keyboard -->
+        <div class="keyboard-container">
+            <div class="keyboard" id="virtual-keyboard"></div>
+        </div>
+
+        <!-- Weak Keys Panel -->
+        <div class="weak-keys-panel" id="weak-keys-panel" style="display:none;">
+            <div class="weak-keys-title">
+                <i class="fas fa-exclamation-triangle" style="color:#f97316;"></i>
+                需要加强的键位
+            </div>
+            <div id="weak-keys-list"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-bar">
+            <button class="btn" onclick="startNewPractice()">
+                <i class="fas fa-redo"></i> 新一轮
+            </button>
+            <button class="btn btn-outline" id="btn-heatmap" onclick="toggleHeatmap()">
+                <i class="fas fa-fire"></i> 弱键热力图
+            </button>
+            <button class="btn btn-outline" onclick="resetAllData()">
+                <i class="fas fa-trash-alt"></i> 重置数据
+            </button>
+        </div>
+    </main>
+
+    <!-- Completion Overlay -->
+    <div class="completion-overlay" id="completion-overlay">
+        <div class="completion-card">
+            <h2>练习完成</h2>
+            <div class="completion-stats">
+                <div>
+                    <div class="comp-stat-value" id="comp-accuracy">100%</div>
+                    <div class="comp-stat-label">准确率</div>
+                </div>
+                <div>
+                    <div class="comp-stat-value" id="comp-time">0:00</div>
+                    <div class="comp-stat-label">用时</div>
+                </div>
+                <div>
+                    <div class="comp-stat-value" id="comp-kpm">0</div>
+                    <div class="comp-stat-label">键/分</div>
+                </div>
+            </div>
+            <div class="completion-weak-keys" id="comp-weak-keys"></div>
+            <button class="btn" onclick="closeCompletion()">继续练习</button>
         </div>
     </div>
-    
+
+    <footer>
+        <div class="container">
+            <p style="color: var(--light-text); font-size: 0.9rem;">&copy; 2026 Haunfly. Keep Building.</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
     <script>
-        // 练习文本库
-        const exerciseTexts = {
-            code: [
-                `function calculateSum(arr) {\n    let sum = 0;\n    for (let i = 0; i < arr.length; i++) {\n        sum += arr[i];\n    }\n    return sum;\n}`,
-                `const user = {\n    name: "John",\n    age: 30,\n    isAdmin: false,\n    roles: ["user", "editor"]\n};`,
-                `class Circle {\n    constructor(radius) {\n        this.radius = radius;\n    }\n    \n    getArea() {\n        return Math.PI * this.radius * this.radius;\n    }\n}`,
-                `import React, { useState, useEffect } from 'react';\n\nfunction App() {\n    const [count, setCount] = useState(0);\n    \n    useEffect(() => {\n        document.title = 'Count: ' + count;\n    }, [count]);\n    \n    return (\n        <div>\n            <p>You clicked {count} times</p>\n            <button onClick={() => setCount(count + 1)}>\n                Click me\n            </button>\n        </div>\n    );\n}`
-            ],
-            symbols: [
-                `!@#$%^&*()_+{}|:"<>?~\`-=[]\\;',./`,
-                `/* ! */ && || <= >= != == === !== ? : + - * / % ^ & | ~ << >> >>> = += -= *= /= %= &= |= ^= <<= >>= >>>=`,
-                `{{ }} [[ ]] (( )) /* */ // <!-- --> <> </ /> ** ++ -- :: .. ... ?? ?. ?.()`,
-                `{ } [ ] ( ) < > " ' \` ; : , . / \\ | ! ? @ # $ % ^ & * - + = _ ~`
-            ],
-            brackets: [
-                `if (condition) { runThis(); } else { runThat(); }`,
-                `function nested() { if (x > 0) { for (let i = 0; i < 10; i++) { console.log(i); } } }`,
-                `const arr = [1, 2, [3, 4, [5, 6]], { a: 7, b: { c: 8 } }];`,
-                `<div><span>{user.firstName} {user.lastName}</span></div>`
-            ],
-            operators: [
-                `a = b + c * d / e - f % g;`,
-                `if (a > b && c < d || e === f && g !== h) { }`,
-                `x += 5; y -= 3; z *= 2; w /= 4; v %= 3; a <<= 1; b >>= 1;`,
-                `let result = condition ? 'yes' : 'no'; result = a ?? b; property = obj?.prop;`
-            ],
-            functions: [
-                `function handleSubmit(event) {\n    event.preventDefault();\n    const data = new FormData(event.target);\n    submitForm(data);\n}`,
-                `const fetchData = async () => {\n    try {\n        const response = await fetch(url);\n        const data = await response.json();\n        return data;\n    } catch (error) {\n        console.error(error);\n    }\n}`,
-                `map(item => item.id).filter(id => id > 100).reduce((acc, val) => acc + val, 0)`,
-                `addEventListener('click', function(e) {\n    if (e.target.matches('.button')) {\n        console.log('Button clicked');\n    }\n});`
-            ],
-            keywords: [
-                `const let var function class extends implements interface type return if else for while do switch case break continue try catch finally throw import export default from as`,
-                `async await yield static get set super this new delete typeof instanceof void in of`,
-                `public private protected abstract readonly virtual override sealed partial namespace using`,
-                `null undefined true false NaN Infinity globalThis arguments constructor prototype __proto__`
-            ]
-        };
+    // =========================================================
+    //  键位练习 - 全键位覆盖 & 智能弱键强化
+    // =========================================================
 
-        // 获取DOM元素
-        const targetText = document.getElementById('target-text');
-        const userInput = document.getElementById('user-input');
-        const wpmDisplay = document.getElementById('wpm');
-        const accuracyDisplay = document.getElementById('accuracy');
-        const timeDisplay = document.getElementById('time');
-        const exerciseType = document.getElementById('exercise-type');
-        const newExerciseBtn = document.getElementById('new-exercise');
-        const hintsBtn = document.getElementById('show-hints');
-        const hintsDiv = document.getElementById('hints');
-        const hintText = document.getElementById('hint-text');
-        
-        // 初始状态
-        let startTime = null;
-        let timer = null;
-        let totalKeystrokes = 0;
-        let incorrectKeystrokes = 0;
-        let previousLength = 0; // 用于跟踪上一次输入的长度
-        
-        // 加载新练习
-        function loadNewExercise() {
-            const selectedType = exerciseType.value;
-            const texts = exerciseTexts[selectedType];
-            const randomText = texts[Math.floor(Math.random() * texts.length)];
-            targetText.textContent = randomText;
-            userInput.value = '';
-            previousLength = 0;
-            
-            resetStats();
-        }
-        
-        // 重置统计
-        function resetStats() {
-            startTime = null;
-            clearInterval(timer);
-            timer = null;
-            totalKeystrokes = 0;
-            incorrectKeystrokes = 0;
-            wpmDisplay.textContent = '0';
-            accuracyDisplay.textContent = '100%';
-            timeDisplay.textContent = '00:00';
-            
-            // 重置键盘显示
-            document.querySelectorAll('.key').forEach(key => {
-                key.classList.remove('active', 'correct', 'error');
-            });
-        }
-        
-        // 开始计时器
-        function startTimer() {
-            startTime = new Date();
-            timer = setInterval(updateTimer, 1000);
-        }
-        
-        // 更新计时器
-        function updateTimer() {
-            const now = new Date();
-            const diff = Math.floor((now - startTime) / 1000); // 秒
-            const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
-            const seconds = (diff % 60).toString().padStart(2, '0');
-            timeDisplay.textContent = `${minutes}:${seconds}`;
-            
-            updateWPM();
-        }
-        
-        // 更新WPM
-        function updateWPM() {
-            if (!startTime) return;
-            
-            const now = new Date();
-            const timeElapsed = (now - startTime) / 1000 / 60; // 分钟
-            const words = userInput.value.length / 5; // 约5个字符为1个单词
-            const wpm = Math.round(words / timeElapsed);
-            
-            wpmDisplay.textContent = wpm;
-        }
-        
-        // 更新准确率
-        function updateAccuracy() {
-            if (totalKeystrokes === 0) return;
-            
-            const accuracy = Math.round(((totalKeystrokes - incorrectKeystrokes) / totalKeystrokes) * 100);
-            accuracyDisplay.textContent = `${accuracy}%`;
-        }
-        
-        // 处理键盘输入
-        userInput.addEventListener('input', function() {
-            if (!startTime && userInput.value.length > 0) {
-                startTimer();
-            }
-            
-            // 检查新输入的字符正确性
-            checkNewInput();
-            updateWPM();
-        });
+    // ===== Constants =====
+    const SEQ_LEN = 25;
+    const STORAGE_KEY = 'keyboard_practice_stats';
+    const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta']);
 
-        // 检查新输入的字符
-        function checkNewInput() {
-            const targetContent = targetText.textContent;
-            const userContent = userInput.value;
-            const currentLength = userContent.length;
-            
-            // 如果是删除操作，不需要处理高亮
-            if (currentLength < previousLength) {
-                previousLength = currentLength;
-                return;
-            }
-            
-            // 只处理最新输入的字符
-            if (currentLength > 0 && currentLength > previousLength) {
-                const newChar = userContent[currentLength - 1];
-                const expectedChar = targetContent[currentLength - 1];
-                
-                // 高亮按键
-                highlightKey(newChar, newChar === expectedChar);
-                
-                // 更新错误统计
-                if (newChar !== expectedChar) {
-                    incorrectKeystrokes++;
-                    updateAccuracy();
-                }
-            }
-            
-            previousLength = currentLength;
-        }
-        
-        // 高亮键盘按键
-        function highlightKey(char, isCorrect) {
-            const key = char.toLowerCase();
-            const keyElement = document.querySelector(`[data-key="${key}"]`);
-            
-            if (keyElement) {
-                // 移除所有其他键的高亮
-                document.querySelectorAll('.key').forEach(k => {
-                    k.classList.remove('active', 'correct', 'error');
-                });
-                
-                // 添加当前键的高亮
-                if (isCorrect) {
-                    keyElement.classList.add('correct');
-                    setTimeout(() => {
-                        keyElement.classList.remove('correct');
-                    }, 150); // 缩短高亮时间
-                } else {
-                    keyElement.classList.add('error');
-                    setTimeout(() => {
-                        keyElement.classList.remove('error');
-                    }, 150); // 缩短高亮时间
-                }
-            }
-        }
-        
-        userInput.addEventListener('keydown', function(e) {
-            totalKeystrokes++;
-            
-            // 显示按键动画
-            const key = e.key.toLowerCase();
-            const keyElements = document.querySelectorAll(`[data-key="${key}"], [data-key="${e.code}"]`);
-            
-            // 移除所有其他键的高亮
-            document.querySelectorAll('.key').forEach(k => {
-                k.classList.remove('active');
-            });
-            
-            keyElements.forEach(keyElement => {
-                if (keyElement) {
-                    keyElement.classList.add('active');
-                    setTimeout(() => {
-                        keyElement.classList.remove('active');
-                    }, 100);
-                }
-            });
-            
-            // 检查是否完成练习
-            const targetContent = targetText.textContent;
-            if (userInput.value.length === targetContent.length - 1) {
-                clearInterval(timer);
-                showCompletionMessage();
-            }
+    // Display name mapping for special keys
+    const DISPLAY_NAME = {
+        ' ': 'Space', 'Control': 'Ctrl', 'Backspace': 'Back',
+        'CapsLock': 'Caps', 'Tab': 'Tab', 'Enter': 'Enter',
+        'Shift': 'Shift', 'Alt': 'Alt'
+    };
+
+    // Shift-symbol → base key (for keyboard highlight)
+    const SHIFT_BASE = {
+        '~':'`','!':'1','@':'2','#':'3','$':'4','%':'5',
+        '^':'6','&':'7','*':'8','(':'9',')':'0','_':'-',
+        '+':'=','{':'[','}':']','|':'\\',':':';','"':"'",
+        '<':',','>':'.','?':'/'
+    };
+
+    // ===== Key Pools =====
+    const POOLS = {
+        homeRow:    ['a','s','d','f','g','h','j','k','l',';',"'"],
+        topRow:     ['q','w','e','r','t','y','u','i','o','p','[',']','\\'],
+        bottomRow:  ['z','x','c','v','b','n','m',',','.','/'],
+        numberRow:  ['`','1','2','3','4','5','6','7','8','9','0','-','='],
+        shiftCombo: [
+            '~','!','@','#','$','%','^','&','*','(',')','_','+',
+            '{','}','|',':','"','<','>','?',
+            ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+        ],
+        funcKeys:   ['Tab','CapsLock','Shift','Control','Alt','Enter','Backspace',' ']
+    };
+
+    function getAllKeys() {
+        return [
+            ...POOLS.homeRow, ...POOLS.topRow, ...POOLS.bottomRow,
+            ...POOLS.numberRow, ...POOLS.shiftCombo, ...POOLS.funcKeys
+        ];
+    }
+
+    // ===== Keyboard Layout Definition =====
+    // [dataKey, label, shiftLabel, fingerClass, widthClass]
+    const KB_ROWS = [
+        [ // Number row
+            ['`','`','~','f-lp',''],['1','1','!','f-lp',''],['2','2','@','f-lr',''],
+            ['3','3','#','f-lm',''],['4','4','$','f-li',''],['5','5','%','f-li',''],
+            ['6','6','^','f-ri',''],['7','7','&','f-ri',''],['8','8','*','f-rm',''],
+            ['9','9','(','f-rr',''],['0','0',')','f-rp',''],['-','-','_','f-rp',''],
+            ['=','=','+','f-rp',''],['Backspace','Back','','f-rp','w2']
+        ],
+        [ // Top row
+            ['Tab','Tab','','f-lp','w1'],['q','Q','','f-lp',''],['w','W','','f-lr',''],
+            ['e','E','','f-lm',''],['r','R','','f-li',''],['t','T','','f-li',''],
+            ['y','Y','','f-ri',''],['u','U','','f-ri',''],['i','I','','f-rm',''],
+            ['o','O','','f-rr',''],['p','P','','f-rp',''],['[','[','{','f-rp',''],
+            [']',']','}','f-rp',''],['\\','\\','|','f-rp','w1']
+        ],
+        [ // Home row
+            ['CapsLock','Caps','','f-lp','w2'],['a','A','','f-lp',''],['s','S','','f-lr',''],
+            ['d','D','','f-lm',''],['f','F','','f-li',''],['g','G','','f-li',''],
+            ['h','H','','f-ri',''],['j','J','','f-ri',''],['k','K','','f-rm',''],
+            ['l','L','','f-rr',''],[';',';',':','f-rp',''],["'","'",'"','f-rp',''],
+            ['Enter','Enter','','f-rp','w2']
+        ],
+        [ // Bottom row
+            ['Shift','Shift','','f-lp','w2'],['z','Z','','f-lp',''],['x','X','','f-lr',''],
+            ['c','C','','f-lm',''],['v','V','','f-li',''],['b','B','','f-li',''],
+            ['n','N','','f-ri',''],['m','M','','f-ri',''],[',',',','<','f-rm',''],
+            ['.','.','>' ,'f-rr',''],['/','/','?','f-rp',''],['Shift','Shift','','f-rp','w2']
+        ],
+        [ // Bottom controls
+            ['Control','Ctrl','','f-lp','w3'],['Meta','Win','','f-lp','w3'],
+            ['Alt','Alt','','f-th','w3'],[' ','Space','','f-th','space-key'],
+            ['Alt','Alt','','f-th','w3'],['Meta','Win','','f-rp','w3'],
+            ['Control','Ctrl','','f-rp','w3']
+        ]
+    ];
+
+    // ===== State =====
+    let mode = 'homeRow';
+    let seq = [];
+    let idx = 0;
+    let results = [];       // { key, correct }
+    let t0 = null;          // start timestamp
+    let timerID = null;
+    let active = false;
+    let heatmapOn = false;
+    const keyElMap = {};    // dataKey → [elements]
+
+    // ===== localStorage helpers =====
+    function loadStats() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        catch { return {}; }
+    }
+    function saveStats(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+    function recordResult(key, ok) {
+        const s = loadStats();
+        if (!s[key]) s[key] = { total: 0, errors: 0 };
+        s[key].total++;
+        if (!ok) s[key].errors++;
+        saveStats(s);
+    }
+
+    // ===== Sequence Generation =====
+    function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function genSeq(m) {
+        if (m === 'smart') return genSmart();
+        if (m === 'allKeys') return genBalanced();
+        const pool = POOLS[m];
+        return Array.from({ length: SEQ_LEN }, () => pickRandom(pool));
+    }
+
+    function genBalanced() {
+        const names = ['homeRow','topRow','bottomRow','numberRow','shiftCombo','funcKeys'];
+        return Array.from({ length: SEQ_LEN }, () => {
+            const pool = POOLS[pickRandom(names)];
+            return pickRandom(pool);
         });
-        
-        // 显示完成信息
-        function showCompletionMessage() {
-            const now = new Date();
-            const timeElapsed = (now - startTime) / 1000 / 60; // 分钟
-            const words = userInput.value.length / 5;
-            const wpm = Math.round(words / timeElapsed);
-            const accuracy = Math.round(((totalKeystrokes - incorrectKeystrokes) / totalKeystrokes) * 100);
-            
-            alert(`练习完成！
-WPM: ${wpm}
-准确率: ${accuracy}%
-时间: ${timeDisplay.textContent}`);
-        }
-        
-        // 事件监听器
-        newExerciseBtn.addEventListener('click', loadNewExercise);
-        
-        // 切换提示显示
-        hintsBtn.addEventListener('click', function() {
-            if (hintsDiv.style.display === 'block') {
-                hintsDiv.style.display = 'none';
-                hintsBtn.textContent = '显示提示';
+    }
+
+    function genSmart() {
+        const stats = loadStats();
+        const all = getAllKeys();
+        const items = all.map(key => {
+            const s = stats[key];
+            let w;
+            if (s && s.total >= 5) {
+                w = 1 + (s.errors / s.total) * 5;
             } else {
-                hintsDiv.style.display = 'block';
-                hintsBtn.textContent = '隐藏提示';
-                
-                // 根据练习类型更新提示
-                switch (exerciseType.value) {
-                    case 'code':
-                        hintText.textContent = '记住编程常用组合键：Ctrl+C, Ctrl+V, Ctrl+Z, Ctrl+S。注意花括号、分号和缩进。';
-                        break;
-                    case 'symbols':
-                        hintText.textContent = '特殊符号通常在键盘顶部数字键的Shift位置。锻炼小指头和无名指的灵活性。';
-                        break;
-                    case 'brackets':
-                        hintText.textContent = '括号要成对输入，注意匹配 {}、[]、() 的位置和手指协调。';
-                        break;
-                    case 'operators':
-                        hintText.textContent = '运算符通常需要Shift键配合，尝试不看键盘找到 +、-、*、/、= 等符号。';
-                        break;
-                    case 'functions':
-                        hintText.textContent = '函数中包含各种括号和缩进，注意保持正确的代码格式。';
-                        break;
-                    case 'keywords':
-                        hintText.textContent = '熟记常用关键字的拼写，这些词在编程中高频出现。';
-                        break;
-                }
+                w = 2;
+            }
+            return { key, w };
+        });
+        const total = items.reduce((s, i) => s + i.w, 0);
+        return Array.from({ length: SEQ_LEN }, () => {
+            let r = Math.random() * total;
+            for (const it of items) { r -= it.w; if (r <= 0) return it.key; }
+            return items[items.length - 1].key;
+        });
+    }
+
+    // ===== Display Helpers =====
+    function esc(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function displayName(key) {
+        return DISPLAY_NAME[key] || key;
+    }
+
+    // ===== Build Virtual Keyboard =====
+    function buildKeyboard() {
+        const el = document.getElementById('virtual-keyboard');
+        let html = '';
+        KB_ROWS.forEach(row => {
+            html += '<div class="kb-row">';
+            row.forEach(([dk, label, slabel, fc, wc]) => {
+                const cls = ['kb-key', fc, wc].filter(Boolean).join(' ');
+                const sh = slabel ? `<span class="shift-char">${esc(slabel)}</span>` : '';
+                html += `<div class="${cls}" data-key="${esc(dk)}">${sh}${esc(label)}</div>`;
+            });
+            html += '</div>';
+        });
+        el.innerHTML = html;
+
+        // Build element lookup map
+        Object.keys(keyElMap).forEach(k => delete keyElMap[k]);
+        el.querySelectorAll('.kb-key').forEach(e => {
+            const k = e.dataset.key;
+            (keyElMap[k] || (keyElMap[k] = [])).push(e);
+        });
+    }
+
+    function getKeyEls(key) { return keyElMap[key] || []; }
+
+    // ===== Keyboard Highlighting =====
+    function clearTarget() {
+        document.querySelectorAll('.kb-key.target').forEach(e => e.classList.remove('target'));
+    }
+
+    function highlightTarget(targetKey) {
+        clearTarget();
+        if (!targetKey) return;
+
+        let base = targetKey;
+        let needShift = false;
+
+        if (targetKey.length === 1 && targetKey >= 'A' && targetKey <= 'Z') {
+            base = targetKey.toLowerCase();
+            needShift = true;
+        } else if (SHIFT_BASE[targetKey]) {
+            base = SHIFT_BASE[targetKey];
+            needShift = true;
+        }
+
+        getKeyEls(base).forEach(e => e.classList.add('target'));
+        if (needShift) getKeyEls('Shift').forEach(e => e.classList.add('target'));
+    }
+
+    function flashPress(eventKey) {
+        let base = eventKey;
+        if (eventKey.length === 1 && eventKey >= 'A' && eventKey <= 'Z') base = eventKey.toLowerCase();
+        else if (SHIFT_BASE[eventKey]) base = SHIFT_BASE[eventKey];
+
+        getKeyEls(base).forEach(e => {
+            e.classList.add('pressed');
+            setTimeout(() => e.classList.remove('pressed'), 130);
+        });
+        // Also flash shift/ctrl/alt if pressed
+        if (eventKey === 'Shift' || eventKey === 'Control' || eventKey === 'Alt') {
+            getKeyEls(eventKey).forEach(e => {
+                e.classList.add('pressed');
+                setTimeout(() => e.classList.remove('pressed'), 130);
+            });
+        }
+    }
+
+    // ===== Heatmap =====
+    function updateHeatmap() {
+        document.querySelectorAll('.kb-key').forEach(e => {
+            e.classList.remove('heat-1','heat-2','heat-3');
+        });
+        if (!heatmapOn) return;
+        const stats = loadStats();
+        document.querySelectorAll('.kb-key').forEach(e => {
+            const s = stats[e.dataset.key];
+            if (s && s.total >= 5) {
+                const r = s.errors / s.total;
+                if (r > 0.30) e.classList.add('heat-3');
+                else if (r > 0.15) e.classList.add('heat-2');
+                else if (r > 0.05) e.classList.add('heat-1');
             }
         });
-        
-        exerciseType.addEventListener('change', loadNewExercise);
-        
-        // 初始加载
-        loadNewExercise();
+    }
+
+    // ===== Render Queue =====
+    function renderQueue() {
+        const doneEl = document.getElementById('done-keys');
+        const upEl = document.getElementById('upcoming-keys');
+        const sep = document.getElementById('queue-sep');
+
+        let doneHtml = '';
+        const start = Math.max(0, idx - 6);
+        for (let i = start; i < idx; i++) {
+            const r = results[i];
+            const c = r.correct ? 'done-correct' : 'done-wrong';
+            doneHtml += `<span class="queue-key ${c}">${esc(displayName(r.key))}</span>`;
+        }
+        doneEl.innerHTML = doneHtml;
+
+        let upHtml = '';
+        const end = Math.min(seq.length, idx + 7);
+        for (let i = idx + 1; i < end; i++) {
+            const opacity = 1 - (i - idx - 1) * 0.12;
+            upHtml += `<span class="queue-key upcoming" style="opacity:${Math.max(0.2, opacity)}">${esc(displayName(seq[i]))}</span>`;
+        }
+        upEl.innerHTML = upHtml;
+
+        sep.style.display = (doneHtml || upHtml) ? '' : 'none';
+    }
+
+    function renderCurrent() {
+        const el = document.getElementById('current-key-display');
+        if (idx >= seq.length) {
+            el.innerHTML = '<span class="start-prompt">已完成</span>';
+            return;
+        }
+        el.innerHTML = `<span class="key-label">${esc(displayName(seq[idx]))}</span>`;
+    }
+
+    function updateProgress() {
+        const pct = seq.length ? (idx / seq.length) * 100 : 0;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('stat-progress').textContent = `${idx}/${seq.length}`;
+    }
+
+    function updateAccuracy() {
+        if (!results.length) { document.getElementById('stat-accuracy').textContent = '-'; return; }
+        const ok = results.filter(r => r.correct).length;
+        document.getElementById('stat-accuracy').textContent = Math.round(ok / results.length * 100) + '%';
+    }
+
+    function updateTimer() {
+        if (!t0) return;
+        const s = (Date.now() - t0) / 1000;
+        const m = Math.floor(s / 60);
+        const ss = Math.floor(s % 60);
+        document.getElementById('stat-time').textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+        if (s > 0 && results.length) {
+            document.getElementById('stat-kpm').textContent = Math.round(results.length / (s / 60));
+        }
+    }
+
+    // ===== Weak Keys Panel =====
+    function renderWeakKeys() {
+        const stats = loadStats();
+        const panel = document.getElementById('weak-keys-panel');
+        const list = document.getElementById('weak-keys-list');
+
+        const weak = Object.entries(stats)
+            .filter(([, s]) => s.total >= 5 && s.errors > 0)
+            .map(([k, s]) => ({ key: k, rate: s.errors / s.total, total: s.total }))
+            .sort((a, b) => b.rate - a.rate)
+            .slice(0, 5);
+
+        if (!weak.length) { panel.style.display = 'none'; return; }
+        panel.style.display = '';
+
+        list.innerHTML = weak.map(w => {
+            const pct = Math.round(w.rate * 100);
+            return `<div class="weak-key-item">
+                <span class="weak-key-name">${esc(displayName(w.key))}</span>
+                <div class="weak-key-bar"><div class="weak-key-fill" style="width:${pct}%"></div></div>
+                <span class="weak-key-rate">${pct}% 错</span>
+            </div>`;
+        }).join('');
+    }
+
+    // ===== Input Handling =====
+    document.addEventListener('keydown', function(e) {
+        if (!active) return;
+        e.preventDefault();
+
+        const target = seq[idx];
+        const pressed = e.key;
+
+        // Ignore modifier-only presses when target is not a modifier
+        if (!MODIFIERS.has(target) && MODIFIERS.has(pressed)) {
+            flashPress(pressed);
+            return;
+        }
+
+        flashPress(pressed);
+
+        const ok = pressed === target;
+
+        // Flash animation
+        const label = document.querySelector('#current-key-display .key-label');
+        if (label) {
+            label.classList.remove('correct-flash','wrong-flash');
+            void label.offsetWidth;
+            label.classList.add(ok ? 'correct-flash' : 'wrong-flash');
+        }
+
+        results.push({ key: target, correct: ok });
+        recordResult(target, ok);
+        idx++;
+
+        updateAccuracy();
+        updateProgress();
+        renderQueue();
+
+        if (idx >= seq.length) {
+            completePractice();
+        } else {
+            renderCurrent();
+            highlightTarget(seq[idx]);
+        }
+    });
+
+    // ===== Practice Flow =====
+    function startNewPractice() {
+        seq = genSeq(mode);
+        idx = 0;
+        results = [];
+        t0 = Date.now();
+        active = true;
+
+        if (timerID) clearInterval(timerID);
+        timerID = setInterval(updateTimer, 500);
+
+        document.getElementById('stat-accuracy').textContent = '-';
+        document.getElementById('stat-kpm').textContent = '-';
+        document.getElementById('stat-time').textContent = '0:00';
+
+        const area = document.getElementById('practice-area');
+        area.style.opacity = '0.6';
+        setTimeout(() => area.style.opacity = '1', 80);
+
+        renderCurrent();
+        renderQueue();
+        updateProgress();
+        highlightTarget(seq[idx]);
+        updateHeatmap();
+        renderWeakKeys();
+
+        area.focus();
+    }
+
+    function completePractice() {
+        active = false;
+        if (timerID) { clearInterval(timerID); timerID = null; }
+        updateTimer();
+        clearTarget();
+        renderCurrent();
+
+        const okCount = results.filter(r => r.correct).length;
+        const acc = Math.round(okCount / results.length * 100);
+        const elapsed = (Date.now() - t0) / 1000;
+        const kpm = Math.round(results.length / (elapsed / 60));
+        const m = Math.floor(elapsed / 60);
+        const ss = Math.floor(elapsed % 60);
+
+        document.getElementById('comp-accuracy').textContent = acc + '%';
+        document.getElementById('comp-time').textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+        document.getElementById('comp-kpm').textContent = kpm;
+
+        // Wrong keys in this round
+        const wrong = {};
+        results.forEach(r => { if (!r.correct) wrong[r.key] = (wrong[r.key] || 0) + 1; });
+        const compWeak = document.getElementById('comp-weak-keys');
+        const entries = Object.entries(wrong).sort((a,b) => b[1] - a[1]);
+
+        if (entries.length) {
+            compWeak.innerHTML =
+                '<p style="font-size:0.85rem;color:var(--light-text);margin-bottom:6px;">本轮错误键：</p>' +
+                entries.map(([k, n]) => `<span class="comp-wrong-tag">${esc(displayName(k))} &times;${n}</span>`).join('');
+        } else {
+            compWeak.innerHTML = '<p class="comp-perfect">全部正确！</p>';
+        }
+
+        document.getElementById('completion-overlay').classList.add('show');
+        updateHeatmap();
+        renderWeakKeys();
+    }
+
+    function closeCompletion() {
+        document.getElementById('completion-overlay').classList.remove('show');
+        startNewPractice();
+    }
+
+    // ===== Mode Selection =====
+    document.getElementById('mode-selector').addEventListener('click', function(e) {
+        const btn = e.target.closest('.mode-btn');
+        if (!btn) return;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mode = btn.dataset.mode;
+        startNewPractice();
+    });
+
+    // ===== Controls =====
+    function toggleHeatmap() {
+        heatmapOn = !heatmapOn;
+        const btn = document.getElementById('btn-heatmap');
+        btn.classList.toggle('btn-outline', !heatmapOn);
+        updateHeatmap();
+    }
+
+    function resetAllData() {
+        if (!confirm('确定要清除所有练习记录吗？此操作不可撤销。')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        updateHeatmap();
+        renderWeakKeys();
+    }
+
+    // ===== Init =====
+    buildKeyboard();
+    renderWeakKeys();
+    startNewPractice();
     </script>
 </body>
 </html>
