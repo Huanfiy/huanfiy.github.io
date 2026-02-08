@@ -52,42 +52,12 @@
             <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.9rem;">生活</button>
         </div>
 
-        <div class="grid-3">
-            <!-- 文章 1 -->
-            <article class="card blog-card" data-aos="fade-up" onclick="loadMarkdown('posts/git_use.md')" style="cursor: pointer;">
-                <img src="https://source.unsplash.com/random/400x250?code" alt="Git">
-                <div class="blog-meta">
-                    <span><i class="far fa-calendar"></i> 2024-05-10</span>
-                    <span class="blog-tag">Git</span>
-                </div>
-                <h3 class="blog-title">Git 常用命令总结</h3>
-                <p style="color: var(--light-text); font-size: 0.95rem; margin-bottom: 1rem;">版本控制是开发的基石，这里整理了一些我日常最常用的 Git 命令。</p>
-                <div style="margin-top: auto; color: var(--primary-color); font-weight: 600;">阅读全文</div>
-            </article>
-
-            <!-- 文章 2 -->
-            <article class="card blog-card" data-aos="fade-up" data-aos-delay="100" onclick="loadMarkdown('posts/tmux_guide.md')" style="cursor: pointer;">
-                <img src="https://source.unsplash.com/random/400x250?terminal" alt="Tmux">
-                <div class="blog-meta">
-                    <span><i class="far fa-calendar"></i> 2024-05-15</span>
-                    <span class="blog-tag">Linux</span>
-                </div>
-                <h3 class="blog-title">Tmux 终端复用美化指南</h3>
-                <p style="color: var(--light-text); font-size: 0.95rem; margin-bottom: 1rem;">让你的终端既高效又美观，打造舒适的开发环境。</p>
-                <div style="margin-top: auto; color: var(--primary-color); font-weight: 600;">阅读全文</div>
-            </article>
-
-            <!-- 文章 3 (示例占位) -->
-            <article class="card blog-card" data-aos="fade-up" data-aos-delay="200">
-                <img src="https://source.unsplash.com/random/400x250?keyboard" alt="Code">
-                <div class="blog-meta">
-                    <span><i class="far fa-calendar"></i> 2024-06-01</span>
-                    <span class="blog-tag">随笔</span>
-                </div>
-                <h3 class="blog-title">重构个人网站的心路历程</h3>
-                <p style="color: var(--light-text); font-size: 0.95rem; margin-bottom: 1rem;">为什么选择罗小黑风格？如何用现代化 CSS 重写老旧代码？</p>
-                <div style="margin-top: auto; color: var(--primary-color); font-weight: 600;">阅读全文</div>
-            </article>
+        <div class="grid-3" id="blog-cards-grid">
+            <!-- 文章卡片由 JS 从 posts.json 动态渲染 -->
+            <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
+                <p style="color: var(--light-text); margin-top: 1rem;">加载文章列表...</p>
+            </div>
         </div>
     </main>
 
@@ -112,39 +82,99 @@
     <script>
         AOS.init({ duration: 800, once: true });
 
+        // === 默认配图：基于 tag 生成 SVG 渐变图 ===
+        const TAG_GRADIENTS = {
+            'Git':   ['#667eea', '#764ba2'],
+            'Linux': ['#11998e', '#38ef7d'],
+            '随笔':  ['#ee9ca7', '#ffdde1'],
+            '前端':  ['#f7971e', '#ffd200'],
+            '后端':  ['#4facfe', '#00f2fe'],
+        };
+        const DEFAULT_GRADIENT = ['#6ab04c', '#7ed6df'];
+
+        function getCoverUrl(post) {
+            if (post.cover) return post.cover;
+            const [c1, c2] = TAG_GRADIENTS[post.tag] || DEFAULT_GRADIENT;
+            const label = post.tag || 'Blog';
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250">
+                <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/>
+                </linearGradient></defs>
+                <rect width="400" height="250" fill="url(#g)"/>
+                <text x="200" y="135" text-anchor="middle" fill="white" font-size="28"
+                      font-family="sans-serif" opacity="0.6">${label}</text>
+            </svg>`;
+            return 'data:image/svg+xml,' + encodeURIComponent(svg);
+        }
+
+        // === 动态渲染文章卡片 ===
+        function renderBlogCards(posts) {
+            const grid = document.getElementById('blog-cards-grid');
+            if (!posts.length) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--light-text);">暂无文章</div>';
+                return;
+            }
+            grid.innerHTML = posts.map((post, i) => `
+                <article class="card blog-card" data-aos="fade-up" data-aos-delay="${i * 100}"
+                         onclick="loadMarkdown('${post.file}')" style="cursor:pointer;">
+                    <img src="${getCoverUrl(post)}" alt="${post.tag || '文章'}">
+                    <div class="blog-meta">
+                        <span><i class="far fa-calendar"></i> ${post.date}</span>
+                        ${post.tag ? `<span class="blog-tag">${post.tag}</span>` : ''}
+                    </div>
+                    <h3 class="blog-title">${post.title}</h3>
+                    <p style="color:var(--light-text);font-size:0.95rem;margin-bottom:1rem;">${post.summary || ''}</p>
+                    <div style="margin-top:auto;color:var(--primary-color);font-weight:600;">阅读全文</div>
+                </article>
+            `).join('');
+            AOS.refresh();
+        }
+
+        // 页面加载时拉取文章清单
+        fetch('posts/posts.json')
+            .then(r => { if (!r.ok) throw new Error('加载失败'); return r.json(); })
+            .then(posts => renderBlogCards(posts))
+            .catch(() => {
+                document.getElementById('blog-cards-grid').innerHTML =
+                    '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:red;"><i class="fas fa-exclamation-triangle"></i> 文章列表加载失败，请刷新重试</div>';
+            });
+
+        // === 剥离 Front Matter ===
+        function stripFrontMatter(text) {
+            if (!text.startsWith('---')) return text;
+            const end = text.indexOf('\n---', 3);
+            if (end === -1) return text;
+            return text.substring(end + 4).trimStart();
+        }
+
+        // === 加载并渲染 Markdown 文章 ===
         function loadMarkdown(file) {
-            // 显示加载状态
             const contentDiv = document.getElementById('markdown-content');
-            contentDiv.innerHTML = '<div style="text-align:center; padding: 2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>加载中...</p></div>';
-            
-            // 切换视图
+            contentDiv.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>加载中...</p></div>';
+
             document.getElementById('blog-list-view').style.display = 'none';
             document.getElementById('blog-detail-view').style.display = 'block';
-            
-            // 滚动到顶部
             window.scrollTo(0, 0);
 
-            // 检查 marked 库是否已加载
             if (typeof marked === 'undefined') {
-                contentDiv.innerHTML = `<div style="text-align:center; color:red; padding: 2rem;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                contentDiv.innerHTML = `<div style="text-align:center;color:red;padding:2rem;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;"></i>
                     <p>Markdown 解析库加载失败</p>
-                    <p style="font-size: 0.9rem; color: var(--light-text);">请检查网络连接后刷新页面</p>
+                    <p style="font-size:0.9rem;color:var(--light-text);">请检查网络连接后刷新页面</p>
                 </div>`;
                 return;
             }
 
-            // Fetch 并渲染
             fetch(file)
                 .then(response => {
                     if (!response.ok) throw new Error('文章加载失败');
                     return response.text();
                 })
                 .then(text => {
-                    contentDiv.innerHTML = marked.parse(text);
+                    contentDiv.innerHTML = marked.parse(stripFrontMatter(text));
                 })
                 .catch(error => {
-                    contentDiv.innerHTML = `<div style="text-align:center; color:red;">
+                    contentDiv.innerHTML = `<div style="text-align:center;color:red;">
                         <i class="fas fa-exclamation-triangle"></i> 文章加载出错: ${error.message}
                     </div>`;
                 });
@@ -153,7 +183,6 @@
         function closeMarkdown() {
             document.getElementById('blog-detail-view').style.display = 'none';
             document.getElementById('blog-list-view').style.display = 'block';
-            // 重新触发 AOS
             setTimeout(() => AOS.refresh(), 100);
         }
     </script>
