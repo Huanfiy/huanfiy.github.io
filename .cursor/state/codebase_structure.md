@@ -1,6 +1,6 @@
 # 项目代码结构与状态 (Codebase Structure)
 
-> 最后更新时间: 2026-01-04
+> 最后更新时间: 2026-02-08
 > 描述: 个人网站重构版代码结构
 
 ## 1. 目录结构
@@ -9,12 +9,16 @@
 /
 ├── index.html          # [首页] 个人展示、核心导航入口
 ├── blog.html           # [博客] 文章列表、Markdown 渲染页
-├── tool.html           # [工具] 在线工具箱 (图片转ICO, 链接转换等)
+├── tool.html           # [工具] 在线工具箱入口 (图片转ICO内嵌, 其余链接至 tools/)
 ├── about.html          # [关于] 个人介绍、经历、技能
 ├── css/
 │   └── style.css       # [核心样式] 包含全站变量、组件、响应式规则
 ├── js/
 │   └── script.js       # [交互脚本] 移动端菜单、平滑滚动等通用逻辑
+├── tools/              # [工具页] 独立工具页面
+│   ├── esp32_pinmapper.html  # ESP32-S3 引脚映射器
+│   ├── keyboard.html         # 键位练习工具
+│   └── buy.html              # 淘宝链接转换器
 ├── posts/              # [内容] Markdown 格式的博客文章
 │   ├── git_use.md
 │   └── tmux_look.md
@@ -40,7 +44,7 @@
     - 支持拖拽上传、预览、调整大小 (64x64)、生成下载。
     - 代码内嵌于 `tool.html` 及 `js/script.js`。
 - **外部工具链接**:
-    - 提供入口跳转至旧版或独立的工具页 (如 `esp32_pinmapper.html`)。
+    - 提供入口跳转至 `tools/` 目录下的独立工具页 (如 `tools/esp32_pinmapper.html`)。
 
 ### 2.3 样式架构
 - **CSS 变量**: 详见 `design_system.md`。
