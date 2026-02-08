@@ -21,7 +21,7 @@
 │   └── buy.html              # 淘宝链接转换器
 ├── posts/              # [内容] Markdown 格式的博客文章
 │   ├── git_use.md
-│   └── tmux_look.md
+│   └── tmux_guide.md
 ├── picture/            # [资源] 图片资源
 ├── run.sh              # [运维] 自动部署脚本 (rsync)
 └── README.md           # 项目说明
