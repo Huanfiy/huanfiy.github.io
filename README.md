@@ -6,7 +6,7 @@
 
 - **博客系统** — Markdown 驱动，客户端渲染，文章存放于 `posts/` 目录
 - **工具箱** — 图片转 ICO、ESP32-S3 引脚映射器、键位练习、链接转换器
-- **个人展示** — 首页、关于、联系页面，响应式布局
+- **个人展示** — 首页、关于页面，响应式布局
 
 ## 设计风格
 
@@ -26,7 +26,6 @@
 ├── blog.html             # 博客
 ├── tool.html             # 工具箱（含图片转 ICO）
 ├── about.html            # 关于
-├── contact.html          # 联系
 ├── css/style.css         # 全局样式
 ├── js/script.js          # 通用脚本
 ├── posts/                # Markdown 博客文章
