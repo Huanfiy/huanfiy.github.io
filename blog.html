@@ -117,7 +117,7 @@
             grid.innerHTML = posts.map((post, i) => `
                 <article class="card blog-card" data-aos="fade-up" data-aos-delay="${i * 100}"
                          onclick="loadMarkdown('${post.file}')" style="cursor:pointer;">
-                    <img src="${getCoverUrl(post)}" alt="${post.tag || '文章'}">
+                    <img src="${getCoverUrl(post)}" alt="${post.tag || '文章'}" class="${post.coverFit === 'contain' ? 'contain' : ''}">
                     <div class="blog-meta">
                         <span><i class="far fa-calendar"></i> ${post.date}</span>
                         ${post.tag ? `<span class="blog-tag">${post.tag}</span>` : ''}
