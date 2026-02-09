@@ -313,6 +313,12 @@ header .container {
     object-fit: cover;
     border-radius: var(--radius-md);
     margin-bottom: 15px;
+    background: #f0f0f0;
+}
+
+.blog-card img.contain {
+    object-fit: contain;
+    padding: 10px;
 }
 
 .blog-meta {

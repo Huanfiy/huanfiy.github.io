@@ -5,7 +5,8 @@
     "date": "2024-05-15",
     "tag": "Linux",
     "summary": "让你的终端既高效又美观，打造舒适的开发环境。",
-    "cover": ""
+    "cover": "picture/tmux-logo-medium.png",
+    "coverFit": "contain"
   },
   {
     "file": "posts/git_use.md",
