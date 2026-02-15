@@ -3,6 +3,8 @@ title: Tmux 终端复用美化指南
 date: 2024-05-15
 tag: Linux
 summary: 让你的终端既高效又美观，打造舒适的开发环境。
+cover: picture/tmux-logo-medium.png
+coverFit: contain
 ---
 
 # tmux 使用指南

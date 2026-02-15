@@ -3,6 +3,7 @@ title: 给注意力装防火墙：我的消费决策规则
 date: 2026-02-11
 tag: 感悟
 summary: 与其和促销活动即兴对线，不如提前写好规则，保护时间和注意力。
+cover: picture/icon-insight.png
 ---
 
 # 给注意力装防火墙

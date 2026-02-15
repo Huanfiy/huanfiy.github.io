@@ -3,6 +3,7 @@ title: 嵌入式调试方法论：参考系、验证链路与提效闭环
 date: 2026-02-14
 tag: 调试
 summary: 调试效率不只靠经验，更靠可复用的参考系与验证链路设计。
+cover: picture/icon-debug.png
 ---
 
 # 嵌入式调试方法论
