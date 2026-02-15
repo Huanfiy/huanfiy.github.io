@@ -3,6 +3,7 @@ title: Cortex-M Fault 排查实战：从 CFSR/BFSR 到定位闭环
 date: 2026-02-15
 tag: 嵌入式
 summary: 用一套可复用的流程，快速定位 Cortex-M 上的总线错误和异常现场。
+cover: picture/icon-embedded.png
 ---
 
 # Cortex-M Fault 排查实战

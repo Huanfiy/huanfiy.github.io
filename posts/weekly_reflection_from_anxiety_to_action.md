@@ -3,6 +3,7 @@ title: 从焦虑到行动：我的周复盘方法
 date: 2026-02-12
 tag: 成长
 summary: 当焦虑来自生存与进步压力时，用可执行的复盘机制把注意力拉回行动。
+cover: picture/icon-growth.png
 ---
 
 # 从焦虑到行动

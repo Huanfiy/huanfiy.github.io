@@ -3,6 +3,7 @@ title: 嵌入式代码质量基线：可维护、可移植、可验证
 date: 2026-02-13
 tag: 工程实践
 summary: 从编码风格到错误处理，建立一条工程可落地的嵌入式代码质量基线。
+cover: picture/icon-practice.png
 ---
 
 # 嵌入式代码质量基线
