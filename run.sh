@@ -30,7 +30,7 @@ print_help() {
 用法: ./run.sh <command>
 
 可用命令:
-  deploy        部署到远程服务器
+  deploy [--gen] 部署到远程服务器（默认不改本地 posts.json；传 --gen 才会先执行生成）
   gen           扫描 posts/*.md 生成文章清单 posts/posts.json
   test [port]   启动本地测试服务器 (默认端口: 8080)
   help          显示帮助信息
@@ -56,7 +56,7 @@ do_gen() {
         found=1
 
         awk '
-        BEGIN { in_fm=0; fm_count=0; title=""; date=""; tag=""; summary=""; cover=""; body="" }
+        BEGIN { in_fm=0; fm_count=0; title=""; date=""; tag=""; summary=""; cover=""; coverFit=""; publish="true"; body="" }
 
         /^---[[:space:]]*$/ {
             fm_count++
@@ -71,6 +71,8 @@ do_gen() {
             else if (/^tag:/) { sub(/^tag:[[:space:]]*/, ""); tag = $0 }
             else if (/^summary:/) { sub(/^summary:[[:space:]]*/, ""); summary = $0 }
             else if (/^cover:/) { sub(/^cover:[[:space:]]*/, ""); cover = $0 }
+            else if (/^coverFit:/) { sub(/^coverFit:[[:space:]]*/, ""); coverFit = $0 }
+            else if (/^publish:/) { sub(/^publish:[[:space:]]*/, ""); publish = $0 }
             next
         }
 
@@ -85,13 +87,16 @@ do_gen() {
         }
 
         END {
+            p = tolower(publish)
+            if (p == "false" || p == "0" || p == "no") exit
             if (summary == "" && body != "") summary = substr(body, 1, 100)
             # 转义 JSON 特殊字符
             gsub(/\\/, "\\\\", title);   gsub(/"/, "\\\"", title)
             gsub(/\\/, "\\\\", summary); gsub(/"/, "\\\"", summary)
             gsub(/\\/, "\\\\", tag);     gsub(/"/, "\\\"", tag)
             gsub(/\\/, "\\\\", cover);   gsub(/"/, "\\\"", cover)
-            printf "%s\t%s\t%s\t%s\t%s\t%s\n", date, title, tag, summary, cover, FILENAME
+            gsub(/\\/, "\\\\", coverFit); gsub(/"/, "\\\"", coverFit)
+            printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", date, title, tag, summary, cover, coverFit, FILENAME
         }
         ' "${md_file}" >> "${tmp_file}"
     done
@@ -110,12 +115,17 @@ do_gen() {
         if (!first) print ","
         first = 0
         print "  {"
-        printf "    \"file\": \"%s\",\n", $6
+        printf "    \"file\": \"%s\",\n", $7
         printf "    \"title\": \"%s\",\n", $2
         printf "    \"date\": \"%s\",\n", $1
         printf "    \"tag\": \"%s\",\n", $3
         printf "    \"summary\": \"%s\",\n", $4
-        printf "    \"cover\": \"%s\"\n", $5
+        if ($6 != "") {
+            printf "    \"cover\": \"%s\",\n", $5
+            printf "    \"coverFit\": \"%s\"\n", $6
+        } else {
+            printf "    \"cover\": \"%s\"\n", $5
+        }
         printf "  }"
     }
     END { print "\n]" }
@@ -128,8 +138,36 @@ do_gen() {
 }
 
 do_deploy() {
-    # 部署前自动生成文章清单
-    do_gen
+    local run_gen=0
+    local arg=""
+    for arg in "$@"; do
+        case "${arg}" in
+            --gen)
+                run_gen=1
+                ;;
+            --no-gen)
+                run_gen=0
+                ;;
+            -h|--help)
+                echo "用法: ./run.sh deploy [--gen]"
+                echo "  --gen     部署前先执行一次 ./run.sh gen（会更新本地 posts/posts.json）"
+                echo "  默认行为  不修改本地 posts/posts.json，直接部署当前工作区内容"
+                return 0
+                ;;
+            *)
+                echo "❌ deploy 不支持参数: ${arg}"
+                echo "用法: ./run.sh deploy [--gen]"
+                return 1
+                ;;
+        esac
+    done
+
+    if [ "${run_gen}" -eq 1 ]; then
+        echo "ℹ️  已启用 --gen：部署前将更新 posts/posts.json"
+        do_gen
+    else
+        echo "ℹ️  默认跳过 gen：保持本地 posts/posts.json 不变"
+    fi
 
     # 构建排除参数字符串
     local exclude_params=""
