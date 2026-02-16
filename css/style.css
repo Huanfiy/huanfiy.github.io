@@ -450,6 +450,192 @@ footer {
 }
 
 /* =========================================
+   兴趣爱好 - 画廊与阅读
+   ========================================= */
+.interest-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding-bottom: 2rem;
+}
+
+.interest-media-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.interest-media-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.interest-media-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+.interest-video-card {
+    cursor: default;
+}
+
+.interest-video-card video {
+    width: 100%;
+    max-height: 300px;
+    display: block;
+    background: #111;
+}
+
+.interest-caption {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    color: var(--light-text);
+    margin: 0;
+}
+
+.interest-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--light-text);
+}
+
+.interest-empty p {
+    margin: 0.5rem 0;
+}
+
+.interest-book-card {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.interest-book-card img {
+    width: 100px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.interest-book-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.interest-book-info h4 {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.interest-book-author {
+    font-size: 0.9rem;
+    color: var(--light-text);
+    margin-bottom: 0.8rem;
+}
+
+.interest-book-review {
+    font-size: 0.95rem;
+    color: var(--dark-text);
+    line-height: 1.6;
+}
+
+.interest-platforms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 2rem;
+}
+
+.interest-platform-card {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 14px 20px;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    color: var(--dark-text);
+}
+
+.interest-platform-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.interest-platform-card .platform-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.interest-platform-card .platform-name {
+    font-weight: 600;
+}
+
+.interest-platform-card .platform-desc {
+    font-size: 0.85rem;
+    color: var(--light-text);
+}
+
+/* Lightbox 图片放大 */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px 20px;
+}
+
+.lightbox img {
+    max-width: 95%;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 2.5rem;
+    color: white;
+    cursor: pointer;
+    opacity: 0.8;
+    line-height: 1;
+}
+
+.lightbox-close:hover {
+    opacity: 1;
+}
+
+.lightbox-caption {
+    margin-top: 1rem;
+    color: rgba(255,255,255,0.9);
+    font-size: 1rem;
+    text-align: center;
+    max-width: 80%;
+}
+
+/* =========================================
    Responsive
    ========================================= */
 @media (max-width: 768px) {
