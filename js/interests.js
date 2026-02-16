@@ -132,6 +132,32 @@
         }
     };
 
+    window.showToast = function (msg) {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+
+        toast.textContent = msg || '当前还没内容哦~';
+
+        clearTimeout(toast._hideTimer);
+        clearTimeout(toast._cleanupTimer);
+
+        toast.classList.remove('toast-show', 'toast-hide');
+
+        // Force reflow so repeated taps can replay fade animation on mobile browsers.
+        void toast.offsetWidth;
+
+        toast.classList.add('toast-show');
+
+        toast._hideTimer = setTimeout(function () {
+            toast.classList.remove('toast-show');
+            toast.classList.add('toast-hide');
+
+            toast._cleanupTimer = setTimeout(function () {
+                toast.classList.remove('toast-hide');
+            }, 340);
+        }, 1800);
+    };
+
     window.closeLightbox = function (event) {
         if (event && event.target !== event.currentTarget && !event.target.classList.contains('lightbox-close')) return;
         const lb = document.getElementById('lightbox');

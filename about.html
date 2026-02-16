@@ -92,13 +92,13 @@
                     <h4>科技制作</h4>
                     <p style="font-size: 0.9rem; color: var(--light-text);">把想法做成可运行实物</p>
                 </div>
-                <div class="card" style="align-items: center; text-align: center;">
-                    <i class="fas fa-gamepad" style="font-size: 2rem; color: #a55eea; margin-bottom: 1rem;"></i>
+                <div class="card" style="align-items: center; text-align: center; cursor: pointer;" onclick="showToast('当前还没内容哦~')">
+                    <i class="fas fa-gamepad" style="font-size: 2rem; color: var(--dark-text); margin-bottom: 1rem;"></i>
                     <h4>游戏</h4>
                     <p style="font-size: 0.9rem; color: var(--light-text);">作为放松和节奏切换方式</p>
                 </div>
-                <div class="card" style="align-items: center; text-align: center;">
-                    <i class="fas fa-cube" style="font-size: 2rem; color: #f7b731; margin-bottom: 1rem;"></i>
+                <div class="card" style="align-items: center; text-align: center; cursor: pointer;" onclick="showToast('当前还没内容哦~')">
+                    <i class="fas fa-cube" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
                     <h4>3D 建模与打印</h4>
                     <p style="font-size: 0.9rem; color: var(--light-text);">工业建模 + FDM 打印实践</p>
                 </div>
@@ -132,6 +132,9 @@
                 <div id="platforms-list" class="interest-platforms"></div>
             </div>
         </section>
+
+        <!-- 轻提示 Toast -->
+        <div id="toast" class="toast" aria-live="polite"></div>
 
         <!-- 图片放大 Lightbox -->
         <div id="lightbox" class="lightbox" style="display: none;" onclick="closeLightbox(event)">

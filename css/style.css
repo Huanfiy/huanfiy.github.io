@@ -635,6 +635,65 @@ footer {
     max-width: 80%;
 }
 
+/* Toast 轻提示 - 罗小黑风格 */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    bottom: calc(env(safe-area-inset-bottom) + 22px);
+    transform: translate3d(-50%, 12px, 0);
+    width: max-content;
+    max-width: min(420px, calc(100vw - 40px));
+    min-height: 44px;
+    padding: 10px 20px 10px 34px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(45, 52, 54, 0.12);
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(239, 250, 242, 0.95));
+    color: var(--dark-text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 10px 24px rgba(45, 52, 54, 0.14), 0 0 0 1px rgba(126, 214, 223, 0.2) inset;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 9990;
+    will-change: opacity, transform;
+    transition:
+        opacity 0.32s ease,
+        transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1),
+        visibility 0s linear 0.32s;
+}
+
+.toast::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #b8f0f5 0%, #7ed6df 45%, #6ab04c 100%);
+    box-shadow: 0 0 0 3px rgba(126, 214, 223, 0.18);
+}
+
+.toast.toast-show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate3d(-50%, 0, 0);
+    transition-delay: 0s, 0s, 0s;
+}
+
+.toast.toast-hide {
+    opacity: 0;
+    transform: translate3d(-50%, 8px, 0);
+}
+
 /* =========================================
    Responsive
    ========================================= */
@@ -667,4 +726,19 @@ footer {
     }
     
     .hero-content h1 { font-size: 2rem; }
+
+    .toast {
+        max-width: calc(100vw - 24px);
+        padding: 10px 14px 10px 30px;
+        font-size: 0.9rem;
+        border-radius: 16px;
+        bottom: 16px;
+        bottom: calc(env(safe-area-inset-bottom) + 12px);
+    }
+
+    .toast::before {
+        left: 12px;
+        width: 9px;
+        height: 9px;
+    }
 }
