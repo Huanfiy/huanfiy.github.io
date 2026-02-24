@@ -433,6 +433,130 @@
             text-align: right;
         }
 
+        /* ---- Session Stats Panel ---- */
+        .session-stats-panel {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 1.2rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .session-stats-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.9rem;
+        }
+
+        .session-range-group {
+            display: inline-flex;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            overflow: hidden;
+            background: #f7f8fa;
+        }
+
+        .range-btn {
+            border: none;
+            background: transparent;
+            color: var(--light-text);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 5px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .range-btn:hover { color: var(--primary-color); }
+
+        .range-btn.active {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .session-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.65rem;
+            margin-bottom: 1rem;
+        }
+
+        .summary-card {
+            background: #f8faf9;
+            border: 1px solid #ebf0ed;
+            border-radius: 10px;
+            padding: 0.68rem 0.75rem;
+        }
+
+        .summary-value {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            line-height: 1.1;
+        }
+
+        .summary-label {
+            margin-top: 2px;
+            color: var(--light-text);
+            font-size: 0.74rem;
+        }
+
+        .trend-card {
+            border: 1px solid #edf2ef;
+            border-radius: 12px;
+            padding: 0.7rem 0.75rem 0.85rem;
+            background: linear-gradient(180deg, #fcfefc 0%, #f8fcfa 100%);
+        }
+
+        .trend-legend {
+            display: flex;
+            align-items: center;
+            gap: 0.95rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.45rem;
+            color: var(--light-text);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.acc { background: #16a34a; }
+        .legend-dot.kpm { background: #2563eb; }
+
+        .trend-chart {
+            width: 100%;
+            min-height: 220px;
+        }
+
+        .trend-chart svg {
+            width: 100%;
+            height: 220px;
+            display: block;
+        }
+
+        .trend-empty {
+            margin: 0.55rem 0 0.2rem;
+            color: var(--light-text);
+            font-size: 0.82rem;
+            text-align: center;
+        }
+
         /* ---- Controls ---- */
         .controls-bar {
             display: flex;
@@ -541,6 +665,8 @@
             .kb-key.w3 { min-width: 46px; }
             .kb-key.space-key { min-width: 190px; }
             .mode-btn { font-size: 0.78rem; padding: 6px 12px; }
+            .session-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .range-btn { font-size: 0.72rem; padding: 4px 10px; }
         }
     </style>
 </head>
@@ -626,6 +752,47 @@
             <div id="weak-keys-list"></div>
         </div>
 
+        <!-- Session Stats Panel -->
+        <div class="session-stats-panel" id="session-stats-panel" style="display:none;">
+            <div class="session-stats-header">
+                <div class="weak-keys-title" style="margin-bottom:0;">
+                    <i class="fas fa-chart-line" style="color:#2563eb;"></i>
+                    进步统计
+                </div>
+                <div class="session-range-group" id="session-range-group">
+                    <button class="range-btn active" data-range="20">近20轮</button>
+                    <button class="range-btn" data-range="50">近50轮</button>
+                    <button class="range-btn" data-range="all">全部</button>
+                </div>
+            </div>
+            <div class="session-summary-grid">
+                <div class="summary-card">
+                    <div class="summary-value" id="sum-total-sessions">0</div>
+                    <div class="summary-label">总轮次</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="sum-best-accuracy">-</div>
+                    <div class="summary-label">最佳准确率</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="sum-best-kpm">-</div>
+                    <div class="summary-label">最佳键/分</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="sum-recent-accuracy">-</div>
+                    <div class="summary-label">近7轮平均准确率</div>
+                </div>
+            </div>
+            <div class="trend-card">
+                <div class="trend-legend">
+                    <span class="legend-item"><span class="legend-dot acc"></span>准确率（%）</span>
+                    <span class="legend-item"><span class="legend-dot kpm"></span>键/分（KPM）</span>
+                </div>
+                <div class="trend-chart" id="trend-chart"></div>
+                <p class="trend-empty" id="trend-empty" style="display:none;">至少完成 2 轮后显示进步曲线</p>
+            </div>
+        </div>
+
         <!-- Controls -->
         <div class="controls-bar">
             <button class="btn" onclick="startNewPractice()">
@@ -634,9 +801,19 @@
             <button class="btn btn-outline" id="btn-heatmap" onclick="toggleHeatmap()">
                 <i class="fas fa-fire"></i> 弱键热力图
             </button>
+            <button class="btn btn-outline" id="btn-stats-panel" onclick="toggleStatsPanel()">
+                <i class="fas fa-chart-line"></i> 进步统计
+            </button>
+            <button class="btn btn-outline" onclick="exportStatsData()">
+                <i class="fas fa-file-export"></i> 导出统计
+            </button>
+            <button class="btn btn-outline" onclick="pickImportStatsFile()">
+                <i class="fas fa-file-import"></i> 导入统计
+            </button>
             <button class="btn btn-outline" onclick="resetAllData()">
                 <i class="fas fa-trash-alt"></i> 重置数据
             </button>
+            <input id="stats-import-file" type="file" accept=".json,application/json" style="display:none;">
         </div>
     </main>
 
@@ -680,6 +857,10 @@
     const BASE_SEQ_LEN = 25;
     const MAX_SEQ_LEN = 100;
     const STORAGE_KEY = 'keyboard_practice_stats';
+    const SESSION_STORAGE_KEY = 'keyboard_practice_sessions';
+    const SESSION_META_STORAGE_KEY = 'keyboard_practice_session_meta';
+    const SESSION_META_VERSION = 1;
+    const SESSION_RENDER_MAX_POINTS = 240;
     const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta']);
     const WEIGHT_CONFIG = {
         longTermFactor: 4.2,
@@ -722,6 +903,15 @@
             ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
         ],
         funcKeys:   ['Tab','CapsLock','Shift','Control','Alt','Enter','Backspace',' ']
+    };
+    const MODE_LABELS = {
+        homeRow: '基础行',
+        topRow: '上行',
+        bottomRow: '下行',
+        numberRow: '数字行',
+        shiftCombo: 'Shift 组合',
+        funcKeys: '功能键',
+        allKeys: '全键混合'
     };
 
     function getAllKeys() {
@@ -786,6 +976,9 @@
     let timerID = null;
     let active = false;
     let heatmapOn = false;
+    let statsPanelOpen = false;
+    let sessionRange = '20';
+    let statsResizeTimer = null;
     const keyElMap = {};    // dataKey → [elements]
 
     // ===== localStorage helpers =====
@@ -797,6 +990,308 @@
         catch { return {}; }
     }
     function saveStats(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+    function toFiniteNumber(v, fallback = 0) {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : fallback;
+    }
+
+    function clamp(v, min, max) {
+        return Math.min(max, Math.max(min, v));
+    }
+
+    function formatDuration(totalSec) {
+        const sec = Math.max(0, Math.floor(toFiniteNumber(totalSec, 0)));
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function normalizeSessionMeta(raw) {
+        const item = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+        return {
+            version: SESSION_META_VERSION,
+            totalSessions: Math.max(0, Math.floor(toFiniteNumber(item.totalSessions, 0))),
+            bestKpm: Math.max(0, Math.round(toFiniteNumber(item.bestKpm, 0))),
+            bestAccuracy: clamp(Math.round(toFiniteNumber(item.bestAccuracy, 0)), 0, 100)
+        };
+    }
+
+    function loadSessionMeta() {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(SESSION_META_STORAGE_KEY));
+            return normalizeSessionMeta(parsed);
+        } catch {
+            return normalizeSessionMeta({});
+        }
+    }
+
+    function saveSessionMeta(meta) {
+        try {
+            localStorage.setItem(SESSION_META_STORAGE_KEY, JSON.stringify(normalizeSessionMeta(meta)));
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function normalizeWrongByKey(raw) {
+        const out = {};
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+        Object.entries(raw).forEach(([k, v]) => {
+            const n = Math.max(0, Math.floor(toFiniteNumber(v, 0)));
+            if (n > 0) out[k] = n;
+        });
+        return out;
+    }
+
+    function normalizeSessionRecord(raw) {
+        const item = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+        const modeName = (typeof item.mode === 'string' && (item.mode === 'allKeys' || Object.prototype.hasOwnProperty.call(POOLS, item.mode)))
+            ? item.mode
+            : 'homeRow';
+        return {
+            timestamp: Math.max(0, Math.floor(toFiniteNumber(item.timestamp, 0))),
+            mode: modeName,
+            targetLen: Math.max(0, Math.floor(toFiniteNumber(item.targetLen, 0))),
+            attempts: Math.max(0, Math.floor(toFiniteNumber(item.attempts, 0))),
+            accuracy: clamp(Math.round(toFiniteNumber(item.accuracy, 0)), 0, 100),
+            kpm: Math.max(0, Math.round(toFiniteNumber(item.kpm, 0))),
+            elapsedSec: Math.max(0, toFiniteNumber(item.elapsedSec, 0)),
+            wrongByKey: normalizeWrongByKey(item.wrongByKey)
+        };
+    }
+
+    function loadSessionHistory() {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY));
+            if (!Array.isArray(parsed)) return [];
+            return parsed
+                .map(normalizeSessionRecord)
+                .filter(item => item.timestamp > 0);
+        } catch {
+            return [];
+        }
+    }
+
+    function saveSessionHistory(history) {
+        try {
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(Array.isArray(history) ? history : []));
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function syncSessionMetaWithHistory() {
+        const history = loadSessionHistory();
+        if (!history.length) {
+            saveSessionMeta({ version: SESSION_META_VERSION, totalSessions: 0, bestKpm: 0, bestAccuracy: 0 });
+            return;
+        }
+        let bestKpm = 0;
+        let bestAccuracy = 0;
+        history.forEach(item => {
+            if (item.kpm > bestKpm) bestKpm = item.kpm;
+            if (item.accuracy > bestAccuracy) bestAccuracy = item.accuracy;
+        });
+        saveSessionMeta({
+            version: SESSION_META_VERSION,
+            totalSessions: history.length,
+            bestKpm,
+            bestAccuracy
+        });
+    }
+
+    function appendSessionRecord(payload) {
+        const history = loadSessionHistory();
+        const next = normalizeSessionRecord(payload);
+        if (!next.timestamp) next.timestamp = Date.now();
+        history.push(next);
+        if (!saveSessionHistory(history)) return false;
+
+        const prevMeta = loadSessionMeta();
+        return saveSessionMeta({
+            version: SESSION_META_VERSION,
+            totalSessions: history.length,
+            bestKpm: Math.max(prevMeta.bestKpm, next.kpm),
+            bestAccuracy: Math.max(prevMeta.bestAccuracy, next.accuracy)
+        });
+    }
+
+    function normalizeImportedKeyStats(raw) {
+        const source = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+        const out = {};
+        const isLikelyKeyStatsItem = value => {
+            if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+            const fields = ['total', 'errors', 'streakWrong', 'reinforceDebt', 'lastSeenAt'];
+            return fields.some(name => Object.prototype.hasOwnProperty.call(value, name));
+        };
+        Object.entries(source).forEach(([key, value]) => {
+            if (!key || typeof key !== 'string') return;
+            if (!isLikelyKeyStatsItem(value)) return;
+            out[key] = normalizeKeyStats(value);
+        });
+        return out;
+    }
+
+    function extractImportPayload(raw) {
+        const obj = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+        const hasStructuredPayload =
+            Object.prototype.hasOwnProperty.call(obj, 'keyStats') ||
+            Object.prototype.hasOwnProperty.call(obj, 'sessions') ||
+            Object.prototype.hasOwnProperty.call(obj, STORAGE_KEY) ||
+            Object.prototype.hasOwnProperty.call(obj, SESSION_STORAGE_KEY);
+
+        const keyStatsRaw =
+            (obj.keyStats && typeof obj.keyStats === 'object' && !Array.isArray(obj.keyStats)) ? obj.keyStats :
+            (obj[STORAGE_KEY] && typeof obj[STORAGE_KEY] === 'object' && !Array.isArray(obj[STORAGE_KEY])) ? obj[STORAGE_KEY] :
+            (!hasStructuredPayload ? obj : {});
+
+        const sessionsRaw =
+            Array.isArray(obj.sessions) ? obj.sessions :
+            Array.isArray(obj[SESSION_STORAGE_KEY]) ? obj[SESSION_STORAGE_KEY] :
+            [];
+
+        const metaRaw =
+            (obj.sessionMeta && typeof obj.sessionMeta === 'object' && !Array.isArray(obj.sessionMeta)) ? obj.sessionMeta :
+            (obj[SESSION_META_STORAGE_KEY] && typeof obj[SESSION_META_STORAGE_KEY] === 'object' && !Array.isArray(obj[SESSION_META_STORAGE_KEY])) ? obj[SESSION_META_STORAGE_KEY] :
+            {};
+
+        return {
+            keyStats: normalizeImportedKeyStats(keyStatsRaw),
+            sessions: sessionsRaw.map(normalizeSessionRecord).filter(item => item.timestamp > 0),
+            meta: normalizeSessionMeta(metaRaw)
+        };
+    }
+
+    function buildSessionMetaFromHistory(history, fallbackMeta) {
+        let bestKpm = 0;
+        let bestAccuracy = 0;
+        history.forEach(item => {
+            if (item.kpm > bestKpm) bestKpm = item.kpm;
+            if (item.accuracy > bestAccuracy) bestAccuracy = item.accuracy;
+        });
+        const fb = normalizeSessionMeta(fallbackMeta);
+        return normalizeSessionMeta({
+            version: SESSION_META_VERSION,
+            totalSessions: history.length,
+            bestKpm: Math.max(bestKpm, fb.bestKpm),
+            bestAccuracy: Math.max(bestAccuracy, fb.bestAccuracy)
+        });
+    }
+
+    function formatExportTimeName(d = new Date()) {
+        const pad2 = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+    }
+
+    function exportStatsData() {
+        try {
+            const payload = {
+                schemaVersion: 1,
+                source: 'huanfly-keyboard-practice',
+                exportedAt: new Date().toISOString(),
+                keyStats: loadStats(),
+                sessions: loadSessionHistory(),
+                sessionMeta: loadSessionMeta()
+            };
+            const json = JSON.stringify(payload, null, 2);
+            const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `keyboard-practice-stats-${formatExportTimeName()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error(err);
+            alert('导出失败：当前浏览器不支持或数据异常。');
+        }
+    }
+
+    function pickImportStatsFile() {
+        const input = document.getElementById('stats-import-file');
+        if (!input) return;
+        input.value = '';
+        input.click();
+    }
+
+    function writeImportedData(payload) {
+        const backup = {
+            keyStats: localStorage.getItem(STORAGE_KEY),
+            sessions: localStorage.getItem(SESSION_STORAGE_KEY),
+            sessionMeta: localStorage.getItem(SESSION_META_STORAGE_KEY)
+        };
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.keyStats));
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload.sessions));
+            localStorage.setItem(SESSION_META_STORAGE_KEY, JSON.stringify(payload.meta));
+            return true;
+        } catch (err) {
+            console.error(err);
+            try {
+                if (backup.keyStats === null) localStorage.removeItem(STORAGE_KEY);
+                else localStorage.setItem(STORAGE_KEY, backup.keyStats);
+                if (backup.sessions === null) localStorage.removeItem(SESSION_STORAGE_KEY);
+                else localStorage.setItem(SESSION_STORAGE_KEY, backup.sessions);
+                if (backup.sessionMeta === null) localStorage.removeItem(SESSION_META_STORAGE_KEY);
+                else localStorage.setItem(SESSION_META_STORAGE_KEY, backup.sessionMeta);
+            } catch (rollbackErr) {
+                console.error('rollback failed', rollbackErr);
+            }
+            return false;
+        }
+    }
+
+    function handleImportStatsFile(event) {
+        const input = event.target;
+        const file = input && input.files && input.files[0];
+        if (!file) return;
+
+        if (!confirm('导入将覆盖当前统计数据，是否继续？')) {
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const raw = JSON.parse(String(reader.result || '{}'));
+                const imported = extractImportPayload(raw);
+                const hasKeyStats = Object.keys(imported.keyStats).length > 0;
+                const hasSessions = imported.sessions.length > 0;
+                if (!hasKeyStats && !hasSessions) {
+                    alert('导入失败：文件中未检测到可用统计数据。');
+                    return;
+                }
+
+                imported.meta = buildSessionMetaFromHistory(imported.sessions, imported.meta);
+                const ok = writeImportedData(imported);
+                if (!ok) {
+                    alert('导入失败：浏览器本地存储空间不足，或写入时发生异常。');
+                    return;
+                }
+
+                updateHeatmap();
+                renderWeakKeys();
+                renderSessionStatsPanel();
+                alert(`导入成功：键位统计 ${Object.keys(imported.keyStats).length} 项，轮次记录 ${imported.sessions.length} 条。`);
+            } catch (err) {
+                console.error(err);
+                alert('导入失败：JSON 格式无效或数据结构不支持。');
+            } finally {
+                input.value = '';
+            }
+        };
+        reader.onerror = () => {
+            alert('导入失败：文件读取错误。');
+            input.value = '';
+        };
+        reader.readAsText(file, 'utf-8');
+    }
 
     function normalizeKeyStats(raw) {
         const item = (raw && typeof raw === 'object') ? raw : {};
@@ -1156,6 +1651,162 @@
         }).join('');
     }
 
+    function averageAccuracy(history, count = 7) {
+        if (!history.length) return null;
+        const samples = history.slice(-Math.max(1, count));
+        const sum = samples.reduce((acc, item) => acc + item.accuracy, 0);
+        return Math.round(sum / samples.length);
+    }
+
+    function pickSessionsByRange(history, range) {
+        if (range === 'all') return history;
+        const n = Math.max(1, Math.floor(toFiniteNumber(range, 20)));
+        return history.slice(-n);
+    }
+
+    function downsampleSessions(history, maxPoints = SESSION_RENDER_MAX_POINTS) {
+        if (history.length <= maxPoints) return history;
+        const sampled = [];
+        const step = (history.length - 1) / (maxPoints - 1);
+        for (let i = 0; i < maxPoints; i++) {
+            const idx = Math.min(history.length - 1, Math.round(i * step));
+            const picked = history[idx];
+            if (!sampled.length || sampled[sampled.length - 1] !== picked) sampled.push(picked);
+        }
+        if (sampled[sampled.length - 1] !== history[history.length - 1]) {
+            sampled.push(history[history.length - 1]);
+        }
+        return sampled;
+    }
+
+    function formatShortDate(ts) {
+        const d = new Date(ts);
+        if (Number.isNaN(d.getTime())) return '-';
+        const hh = d.getHours().toString().padStart(2, '0');
+        const mm = d.getMinutes().toString().padStart(2, '0');
+        return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
+    }
+
+    function buildLinePath(values, xAt, yAt) {
+        if (!values.length) return '';
+        let path = '';
+        for (let i = 0; i < values.length; i++) {
+            const cmd = i === 0 ? 'M' : 'L';
+            path += `${cmd} ${xAt(i).toFixed(2)} ${yAt(values[i]).toFixed(2)} `;
+        }
+        return path.trim();
+    }
+
+    function renderTrendChart(history) {
+        const chart = document.getElementById('trend-chart');
+        const empty = document.getElementById('trend-empty');
+        if (!chart || !empty) return;
+
+        if (history.length < 2) {
+            chart.innerHTML = '';
+            empty.style.display = '';
+            return;
+        }
+
+        empty.style.display = 'none';
+        const data = downsampleSessions(history);
+        const width = Math.max(420, chart.clientWidth || 640);
+        const height = 220;
+        const pad = { top: 14, right: 34, bottom: 28, left: 34 };
+        const innerW = Math.max(40, width - pad.left - pad.right);
+        const innerH = Math.max(40, height - pad.top - pad.bottom);
+        const size = Math.max(1, data.length - 1);
+        const xAt = i => pad.left + (i / size) * innerW;
+
+        const accValues = data.map(item => clamp(item.accuracy, 0, 100));
+        const kpmValues = data.map(item => Math.max(0, item.kpm));
+        const kpmPeak = Math.max(20, ...kpmValues);
+        const kpmMax = Math.ceil(kpmPeak / 10) * 10;
+
+        const yAccAt = v => pad.top + (1 - clamp(v, 0, 100) / 100) * innerH;
+        const yKpmAt = v => {
+            const pct = kpmMax <= 0 ? 0 : clamp(v, 0, kpmMax) / kpmMax;
+            return pad.top + (1 - pct) * innerH;
+        };
+
+        const accPath = buildLinePath(accValues, xAt, yAccAt);
+        const kpmPath = buildLinePath(kpmValues, xAt, yKpmAt);
+        const lastX = xAt(data.length - 1);
+        const lastAccY = yAccAt(accValues[accValues.length - 1]);
+        const lastKpmY = yKpmAt(kpmValues[kpmValues.length - 1]);
+
+        let grid = '';
+        for (let i = 0; i <= 4; i++) {
+            const t = i / 4;
+            const y = pad.top + t * innerH;
+            const accTick = Math.round((1 - t) * 100);
+            const kpmTick = Math.round((1 - t) * kpmMax);
+            grid += `
+                <line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${(width - pad.right).toFixed(2)}" y2="${y.toFixed(2)}" stroke="#e8ecea" stroke-width="1"/>
+                <text x="${(pad.left - 6).toFixed(2)}" y="${(y + 3).toFixed(2)}" text-anchor="end" font-size="10" fill="#8b98a7">${accTick}</text>
+                <text x="${(width - pad.right + 6).toFixed(2)}" y="${(y + 3).toFixed(2)}" text-anchor="start" font-size="10" fill="#8b98a7">${kpmTick}</text>
+            `;
+        }
+
+        const startLabel = formatShortDate(data[0].timestamp);
+        const endLabel = formatShortDate(data[data.length - 1].timestamp);
+
+        chart.innerHTML = `
+            <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="练习进步曲线">
+                <defs>
+                    <linearGradient id="accLine" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#16a34a"/>
+                        <stop offset="100%" stop-color="#22c55e"/>
+                    </linearGradient>
+                    <linearGradient id="kpmLine" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#2563eb"/>
+                        <stop offset="100%" stop-color="#3b82f6"/>
+                    </linearGradient>
+                </defs>
+                ${grid}
+                <path d="${accPath}" fill="none" stroke="url(#accLine)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="${kpmPath}" fill="none" stroke="url(#kpmLine)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="${lastX.toFixed(2)}" cy="${lastAccY.toFixed(2)}" r="3.5" fill="#16a34a"/>
+                <circle cx="${lastX.toFixed(2)}" cy="${lastKpmY.toFixed(2)}" r="3.5" fill="#2563eb"/>
+                <text x="${pad.left}" y="${height - 8}" font-size="10" fill="#8b98a7">${startLabel}</text>
+                <text x="${width - pad.right}" y="${height - 8}" text-anchor="end" font-size="10" fill="#8b98a7">${endLabel}</text>
+            </svg>
+        `;
+    }
+
+    function renderSessionStatsPanel() {
+        const history = loadSessionHistory();
+        const meta = loadSessionMeta();
+
+        const total = Math.max(history.length, meta.totalSessions);
+        const bestAccuracyComputed = history.reduce((m, item) => Math.max(m, item.accuracy), 0);
+        const bestKpmComputed = history.reduce((m, item) => Math.max(m, item.kpm), 0);
+        const bestAccuracy = Math.max(meta.bestAccuracy, bestAccuracyComputed);
+        const bestKpm = Math.max(meta.bestKpm, bestKpmComputed);
+        const recentAcc = averageAccuracy(history, 7);
+        const latest = history[history.length - 1];
+        const latestMode = latest ? (MODE_LABELS[latest.mode] || latest.mode) : '';
+
+        const totalEl = document.getElementById('sum-total-sessions');
+        totalEl.textContent = total;
+        totalEl.title = latestMode ? `最近模式：${latestMode}` : '';
+        document.getElementById('sum-best-accuracy').textContent = bestAccuracy > 0 ? `${bestAccuracy}%` : '-';
+        document.getElementById('sum-best-kpm').textContent = bestKpm > 0 ? String(bestKpm) : '-';
+        document.getElementById('sum-recent-accuracy').textContent = recentAcc === null ? '-' : `${recentAcc}%`;
+
+        const visibleHistory = pickSessionsByRange(history, sessionRange);
+        renderTrendChart(visibleHistory);
+    }
+
+    function toggleStatsPanel() {
+        statsPanelOpen = !statsPanelOpen;
+        const panel = document.getElementById('session-stats-panel');
+        const btn = document.getElementById('btn-stats-panel');
+        panel.style.display = statsPanelOpen ? '' : 'none';
+        btn.classList.toggle('btn-outline', !statsPanelOpen);
+        if (statsPanelOpen) renderSessionStatsPanel();
+    }
+
     function setCurrentErrorState(isError) {
         currentTargetHasError = isError;
         const label = document.querySelector('#current-key-display .key-label');
@@ -1283,11 +1934,9 @@
         const acc = results.length ? Math.round(okCount / results.length * 100) : 100;
         const elapsed = (Date.now() - t0) / 1000;
         const kpm = elapsed > 0 ? Math.round(results.length / (elapsed / 60)) : 0;
-        const m = Math.floor(elapsed / 60);
-        const ss = Math.floor(elapsed % 60);
 
         document.getElementById('comp-accuracy').textContent = acc + '%';
-        document.getElementById('comp-time').textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+        document.getElementById('comp-time').textContent = formatDuration(elapsed);
         document.getElementById('comp-kpm').textContent = kpm;
 
         // Wrong keys in this round
@@ -1303,6 +1952,21 @@
         } else {
             compWeak.innerHTML = '<p class="comp-perfect">全部正确！</p>';
         }
+
+        const sessionSaved = appendSessionRecord({
+            timestamp: Date.now(),
+            mode,
+            targetLen: seq.length,
+            attempts: results.length,
+            accuracy: acc,
+            kpm,
+            elapsedSec: elapsed,
+            wrongByKey: wrong
+        });
+        if (!sessionSaved) {
+            console.warn('session stats not saved (storage may be full)');
+        }
+        if (statsPanelOpen) renderSessionStatsPanel();
 
         document.getElementById('completion-overlay').classList.add('show');
         updateHeatmap();
@@ -1324,6 +1988,26 @@
         startNewPractice();
     });
 
+    document.getElementById('session-range-group').addEventListener('click', function(e) {
+        const btn = e.target.closest('.range-btn');
+        if (!btn) return;
+        const range = btn.dataset.range;
+        if (!range || range === sessionRange) return;
+        sessionRange = range;
+        document.querySelectorAll('#session-range-group .range-btn').forEach(el => {
+            el.classList.toggle('active', el === btn);
+        });
+        if (statsPanelOpen) renderSessionStatsPanel();
+    });
+
+    document.getElementById('stats-import-file').addEventListener('change', handleImportStatsFile);
+
+    window.addEventListener('resize', function() {
+        if (!statsPanelOpen) return;
+        if (statsResizeTimer) clearTimeout(statsResizeTimer);
+        statsResizeTimer = setTimeout(renderSessionStatsPanel, 140);
+    });
+
     // ===== Controls =====
     function toggleHeatmap() {
         heatmapOn = !heatmapOn;
@@ -1335,13 +2019,18 @@
     function resetAllData() {
         if (!confirm('确定要清除所有练习记录吗？此操作不可撤销。')) return;
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        localStorage.removeItem(SESSION_META_STORAGE_KEY);
         updateHeatmap();
         renderWeakKeys();
+        renderSessionStatsPanel();
     }
 
     // ===== Init =====
+    syncSessionMetaWithHistory();
     buildKeyboard();
     renderWeakKeys();
+    renderSessionStatsPanel();
     startNewPractice();
     </script>
 </body>
