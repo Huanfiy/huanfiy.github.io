@@ -156,6 +156,20 @@
             color: var(--light-text);
         }
 
+        .queue-key.upcoming.reinforced {
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fdba74;
+            box-shadow: inset 0 0 0 1px rgba(251, 146, 60, 0.2);
+        }
+
+        .queue-key.upcoming.reinforced::after {
+            content: '*';
+            font-size: 0.62rem;
+            margin-left: 3px;
+            opacity: 0.8;
+        }
+
         /* Current Key */
         .current-key-display {
             min-height: 90px;
@@ -194,6 +208,17 @@
             animation: wrong-flash 0.4s ease;
         }
 
+        .current-key-display .key-label.error-state {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 8px 28px rgba(231, 76, 60, 0.46);
+            transform: scale(1.08);
+            animation: error-hold-pulse 0.9s ease-in-out infinite;
+        }
+
+        .current-key-display .key-label.error-state.wrong-flash {
+            animation: wrong-flash 0.4s ease;
+        }
+
         @keyframes correct-flash {
             0% { background: linear-gradient(135deg, #2ecc71, #27ae60); transform: scale(1.1); }
             100% { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); transform: scale(1); }
@@ -203,6 +228,11 @@
             0%, 30% { background: linear-gradient(135deg, #e74c3c, #c0392b); transform: scale(0.93); }
             60% { transform: scale(1.06); }
             100% { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); transform: scale(1); }
+        }
+
+        @keyframes error-hold-pulse {
+            0%, 100% { transform: scale(1.06); }
+            50% { transform: scale(1.12); }
         }
 
         .start-prompt {
@@ -301,6 +331,14 @@
             z-index: 2;
         }
 
+        .kb-key.target.target-wrong {
+            background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+            border-color: #dc2626 !important;
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.55);
+            transform: scale(1.14);
+            animation: kb-target-error-pulse 0.8s ease-in-out infinite;
+        }
+
         .kb-key.target .shift-char {
             opacity: 1;
             color: rgba(255,255,255,0.85);
@@ -311,6 +349,24 @@
             transform: translateY(2px) scale(0.94);
             box-shadow: none !important;
             transition: all 0.06s;
+        }
+
+        .kb-key.wrong-press {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25), 0 8px 16px rgba(239, 68, 68, 0.32) !important;
+            animation: kb-wrong-press 0.22s cubic-bezier(0.2, 0.9, 0.2, 1);
+            z-index: 3;
+        }
+
+        @keyframes kb-target-error-pulse {
+            0%, 100% { transform: scale(1.12); }
+            50% { transform: scale(1.17); }
+        }
+
+        @keyframes kb-wrong-press {
+            0% { transform: translateY(0) scale(1); }
+            40% { transform: translateY(-7px) scale(1.08); }
+            100% { transform: translateY(0) scale(1); }
         }
 
         /* Heatmap */
@@ -448,6 +504,13 @@
             min-height: 30px;
         }
 
+        .comp-tip {
+            margin-top: -0.2rem;
+            margin-bottom: 1rem;
+            color: var(--light-text);
+            font-size: 0.8rem;
+        }
+
         .comp-wrong-tag {
             display: inline-block;
             padding: 4px 10px;
@@ -501,7 +564,7 @@
 
     <main class="practice-wrapper">
         <h1 class="page-title">键位练习</h1>
-        <p class="page-subtitle">熟悉每个键的位置，提高盲打准确率</p>
+        <p class="page-subtitle">错则停留，直到打对；系统会持续强化你的弱键位</p>
 
         <!-- Mode Selector -->
         <div class="mode-selector" id="mode-selector">
@@ -512,9 +575,6 @@
             <button class="mode-btn" data-mode="shiftCombo">Shift 组合</button>
             <button class="mode-btn" data-mode="funcKeys">功能键</button>
             <button class="mode-btn" data-mode="allKeys">全键混合</button>
-            <button class="mode-btn" data-mode="smart">
-                <i class="fas fa-brain" style="margin-right: 4px;"></i>智能模式
-            </button>
         </div>
 
         <!-- Stats Bar -->
@@ -599,6 +659,7 @@
                 </div>
             </div>
             <div class="completion-weak-keys" id="comp-weak-keys"></div>
+            <p class="comp-tip">按 Space 可直接开始下一轮</p>
             <button class="btn" onclick="closeCompletion()">继续练习</button>
         </div>
     </div>
@@ -616,9 +677,23 @@
     // =========================================================
 
     // ===== Constants =====
-    const SEQ_LEN = 25;
+    const BASE_SEQ_LEN = 25;
+    const MAX_SEQ_LEN = 100;
     const STORAGE_KEY = 'keyboard_practice_stats';
     const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta']);
+    const WEIGHT_CONFIG = {
+        longTermFactor: 4.2,
+        streakFactor: 1.45,
+        debtFactor: 1.0,
+        streakCap: 5,
+        debtCap: 12
+    };
+    const REINFORCE_CONFIG = {
+        minGap: 3,
+        maxGap: 8,
+        maxPendingPerKey: 2,
+        maxQueueSize: 14
+    };
 
     // Display name mapping for special keys
     const DISPLAY_NAME = {
@@ -698,7 +773,15 @@
     let mode = 'homeRow';
     let seq = [];
     let idx = 0;
-    let results = [];       // { key, correct }
+    let results = [];       // all attempts: { key, correct }
+    let passedKeys = [];    // passed targets: { key, hadError }
+    let currentTargetMistakes = 0;
+    let currentTargetHasError = false;
+    let roundMistakes = 0;
+    let roundTargetLen = BASE_SEQ_LEN;
+    let reinforceQueue = [];         // { key, insertAt }
+    let reinforcedPositions = new Set();
+    let roundMistakeByKey = {};      // key -> count (round only)
     let t0 = null;          // start timestamp
     let timerID = null;
     let active = false;
@@ -707,56 +790,175 @@
 
     // ===== localStorage helpers =====
     function loadStats() {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        try {
+            const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            return (parsed && typeof parsed === 'object') ? parsed : {};
+        }
         catch { return {}; }
     }
     function saveStats(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
 
+    function normalizeKeyStats(raw) {
+        const item = (raw && typeof raw === 'object') ? raw : {};
+        const toNum = v => Number.isFinite(Number(v)) ? Number(v) : 0;
+        return {
+            total: Math.max(0, Math.floor(toNum(item.total))),
+            errors: Math.max(0, Math.floor(toNum(item.errors))),
+            streakWrong: Math.max(0, Math.floor(toNum(item.streakWrong))),
+            reinforceDebt: Math.max(0, toNum(item.reinforceDebt)),
+            lastSeenAt: Math.max(0, Math.floor(toNum(item.lastSeenAt)))
+        };
+    }
+
+    function errorRateOf(item) {
+        return item.total > 0 ? item.errors / item.total : 0;
+    }
+
+    function getModePool(m) {
+        if (m === 'allKeys') return Array.from(new Set(getAllKeys()));
+        return POOLS[m] || POOLS.homeRow;
+    }
+
+    function recencyFactor(lastSeenAt) {
+        if (!lastSeenAt) return 0.2;
+        const age = Date.now() - lastSeenAt;
+        if (age < 60 * 1000) return 1;
+        if (age < 5 * 60 * 1000) return 0.7;
+        if (age < 30 * 60 * 1000) return 0.45;
+        return 0.25;
+    }
+
     function recordResult(key, ok) {
         const s = loadStats();
-        if (!s[key]) s[key] = { total: 0, errors: 0 };
-        s[key].total++;
-        if (!ok) s[key].errors++;
+        const item = normalizeKeyStats(s[key]);
+        item.total++;
+        item.lastSeenAt = Date.now();
+
+        if (!ok) {
+            item.errors++;
+            item.streakWrong = Math.min(12, item.streakWrong + 1);
+            item.reinforceDebt = Math.min(28, item.reinforceDebt + 1.2 + item.streakWrong * 0.85);
+        } else {
+            item.streakWrong = 0;
+            item.reinforceDebt = Math.max(0, item.reinforceDebt - 1.4);
+        }
+
+        s[key] = item;
         saveStats(s);
     }
 
     // ===== Sequence Generation =====
-    function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-    function genSeq(m) {
-        if (m === 'smart') return genSmart();
-        if (m === 'allKeys') return genBalanced();
-        const pool = POOLS[m];
-        return Array.from({ length: SEQ_LEN }, () => pickRandom(pool));
+    function weightForKey(key, statsMap) {
+        const item = normalizeKeyStats(statsMap[key]);
+        const longTerm = errorRateOf(item) * WEIGHT_CONFIG.longTermFactor;
+        const recent = recencyFactor(item.lastSeenAt);
+        const shortTerm = Math.min(item.streakWrong, WEIGHT_CONFIG.streakCap) * WEIGHT_CONFIG.streakFactor * recent;
+        const debtTerm = Math.min(item.reinforceDebt, WEIGHT_CONFIG.debtCap) * WEIGHT_CONFIG.debtFactor * Math.max(recent, 0.35);
+        const roundBoost = Math.min(7, (roundMistakeByKey[key] || 0) * 1.6);
+        return 1 + longTerm + shortTerm + debtTerm + roundBoost;
     }
 
-    function genBalanced() {
-        const names = ['homeRow','topRow','bottomRow','numberRow','shiftCombo','funcKeys'];
-        return Array.from({ length: SEQ_LEN }, () => {
-            const pool = POOLS[pickRandom(names)];
-            return pickRandom(pool);
+    function pickWeighted(pool, statsMap, prevKey) {
+        const items = pool.map(key => {
+            let w = weightForKey(key, statsMap);
+            if (prevKey && key === prevKey) w *= 0.82;
+            return { key, w: Math.max(0.1, w) };
         });
+        const total = items.reduce((sum, it) => sum + it.w, 0);
+        let r = Math.random() * total;
+        for (const it of items) {
+            r -= it.w;
+            if (r <= 0) return it.key;
+        }
+        return items[items.length - 1].key;
     }
 
-    function genSmart() {
-        const stats = loadStats();
-        const all = getAllKeys();
-        const items = all.map(key => {
-            const s = stats[key];
-            let w;
-            if (s && s.total >= 5) {
-                w = 1 + (s.errors / s.total) * 5;
-            } else {
-                w = 2;
+    function genSeq(m, length = BASE_SEQ_LEN) {
+        const pool = getModePool(m);
+        const statsMap = loadStats();
+        const out = [];
+        let prev = null;
+        for (let i = 0; i < length; i++) {
+            const nextKey = pickWeighted(pool, statsMap, prev);
+            out.push(nextKey);
+            prev = nextKey;
+        }
+        return out;
+    }
+
+    function ensureSequenceLength(targetLen) {
+        const wanted = Math.min(MAX_SEQ_LEN, Math.max(BASE_SEQ_LEN, targetLen));
+        if (seq.length >= wanted) return;
+        const pool = getModePool(mode);
+        const statsMap = loadStats();
+        let prev = seq.length ? seq[seq.length - 1] : null;
+        while (seq.length < wanted) {
+            const nextKey = pickWeighted(pool, statsMap, prev);
+            seq.push(nextKey);
+            prev = nextKey;
+        }
+    }
+
+    function computeGrowthStep(mistakes) {
+        return 1 + Math.min(2, Math.floor(mistakes / 8));
+    }
+
+    function applyTieredLengthGrowth() {
+        roundMistakes++;
+        const step = computeGrowthStep(roundMistakes);
+        roundTargetLen = Math.min(MAX_SEQ_LEN, roundTargetLen + step);
+        ensureSequenceLength(roundTargetLen);
+    }
+
+    function pendingCountForKey(key) {
+        return reinforceQueue.filter(item => item.key === key).length;
+    }
+
+    function scheduleImmediateReinforce(key) {
+        if (pendingCountForKey(key) >= REINFORCE_CONFIG.maxPendingPerKey) return;
+        if (reinforceQueue.length >= REINFORCE_CONFIG.maxQueueSize) return;
+
+        const insertCount = Math.min(2, 1 + Math.floor(currentTargetMistakes / 2));
+        for (let n = 0; n < insertCount; n++) {
+            if (reinforceQueue.length >= REINFORCE_CONFIG.maxQueueSize) break;
+            if (pendingCountForKey(key) >= REINFORCE_CONFIG.maxPendingPerKey) break;
+
+            const gapBase = REINFORCE_CONFIG.minGap + Math.floor(Math.random() * (REINFORCE_CONFIG.maxGap - REINFORCE_CONFIG.minGap + 1));
+            const insertAt = Math.min(roundTargetLen - 1, idx + gapBase + n * 2);
+            if (insertAt <= idx) continue;
+
+            const hasNearDuplicate = reinforceQueue.some(item =>
+                item.key === key && Math.abs(item.insertAt - insertAt) <= 1
+            );
+            if (hasNearDuplicate) continue;
+
+            reinforceQueue.push({ key, insertAt });
+        }
+        reinforceQueue.sort((a, b) => a.insertAt - b.insertAt);
+    }
+
+    function refreshFutureSequence() {
+        if (!active || idx >= seq.length - 1) return;
+        ensureSequenceLength(roundTargetLen);
+        const pool = getModePool(mode);
+        const statsMap = loadStats();
+        reinforcedPositions = new Set();
+        reinforceQueue = reinforceQueue.filter(item => item.insertAt > idx);
+        let prev = seq[idx];
+        for (let i = idx + 1; i < seq.length; i++) {
+            const forcedIndex = reinforceQueue.findIndex(item => item.insertAt <= i && item.key !== prev);
+            if (forcedIndex !== -1) {
+                const forced = reinforceQueue.splice(forcedIndex, 1)[0];
+                seq[i] = forced.key;
+                reinforcedPositions.add(i);
+                prev = forced.key;
+                continue;
             }
-            return { key, w };
-        });
-        const total = items.reduce((s, i) => s + i.w, 0);
-        return Array.from({ length: SEQ_LEN }, () => {
-            let r = Math.random() * total;
-            for (const it of items) { r -= it.w; if (r <= 0) return it.key; }
-            return items[items.length - 1].key;
-        });
+            const nextKey = pickWeighted(pool, statsMap, prev);
+            seq[i] = nextKey;
+            prev = nextKey;
+        }
     }
 
     // ===== Display Helpers =====
@@ -795,7 +997,7 @@
 
     // ===== Keyboard Highlighting =====
     function clearTarget() {
-        document.querySelectorAll('.kb-key.target').forEach(e => e.classList.remove('target'));
+        document.querySelectorAll('.kb-key').forEach(e => e.classList.remove('target', 'target-wrong'));
     }
 
     function highlightTarget(targetKey) {
@@ -813,26 +1015,41 @@
             needShift = true;
         }
 
-        getKeyEls(base).forEach(e => e.classList.add('target'));
-        if (needShift) getKeyEls('Shift').forEach(e => e.classList.add('target'));
+        const addTargetState = el => {
+            el.classList.add('target');
+            if (currentTargetHasError) el.classList.add('target-wrong');
+        };
+
+        getKeyEls(base).forEach(addTargetState);
+        if (needShift) getKeyEls('Shift').forEach(addTargetState);
     }
 
-    function flashPress(eventKey) {
+    function flashPress(eventKey, isWrong = false) {
         let base = eventKey;
         if (eventKey.length === 1 && eventKey >= 'A' && eventKey <= 'Z') base = eventKey.toLowerCase();
         else if (SHIFT_BASE[eventKey]) base = SHIFT_BASE[eventKey];
 
-        getKeyEls(base).forEach(e => {
-            e.classList.add('pressed');
-            setTimeout(() => e.classList.remove('pressed'), 130);
-        });
-        // Also flash shift/ctrl/alt if pressed
-        if (eventKey === 'Shift' || eventKey === 'Control' || eventKey === 'Alt') {
-            getKeyEls(eventKey).forEach(e => {
-                e.classList.add('pressed');
-                setTimeout(() => e.classList.remove('pressed'), 130);
+        const els = [];
+        const addUnique = (arr) => {
+            arr.forEach(el => {
+                if (!els.includes(el)) els.push(el);
             });
+        };
+        addUnique(getKeyEls(base));
+        if (eventKey === 'Shift' || eventKey === 'Control' || eventKey === 'Alt') {
+            addUnique(getKeyEls(eventKey));
         }
+
+        els.forEach(e => {
+            e.classList.remove('pressed', 'wrong-press');
+            void e.offsetWidth;
+            e.classList.add('pressed');
+            if (isWrong) e.classList.add('wrong-press');
+            setTimeout(() => e.classList.remove('pressed'), 130);
+            if (isWrong) {
+                setTimeout(() => e.classList.remove('wrong-press'), 240);
+            }
+        });
     }
 
     // ===== Heatmap =====
@@ -843,9 +1060,9 @@
         if (!heatmapOn) return;
         const stats = loadStats();
         document.querySelectorAll('.kb-key').forEach(e => {
-            const s = stats[e.dataset.key];
-            if (s && s.total >= 5) {
-                const r = s.errors / s.total;
+            const item = normalizeKeyStats(stats[e.dataset.key]);
+            if (item.total >= 5) {
+                const r = errorRateOf(item);
                 if (r > 0.30) e.classList.add('heat-3');
                 else if (r > 0.15) e.classList.add('heat-2');
                 else if (r > 0.05) e.classList.add('heat-1');
@@ -860,11 +1077,11 @@
         const sep = document.getElementById('queue-sep');
 
         let doneHtml = '';
-        const start = Math.max(0, idx - 6);
-        for (let i = start; i < idx; i++) {
-            const r = results[i];
-            const c = r.correct ? 'done-correct' : 'done-wrong';
-            doneHtml += `<span class="queue-key ${c}">${esc(displayName(r.key))}</span>`;
+        const start = Math.max(0, passedKeys.length - 6);
+        for (let i = start; i < passedKeys.length; i++) {
+            const done = passedKeys[i];
+            const c = done.hadError ? 'done-wrong' : 'done-correct';
+            doneHtml += `<span class="queue-key ${c}">${esc(displayName(done.key))}</span>`;
         }
         doneEl.innerHTML = doneHtml;
 
@@ -872,7 +1089,8 @@
         const end = Math.min(seq.length, idx + 7);
         for (let i = idx + 1; i < end; i++) {
             const opacity = 1 - (i - idx - 1) * 0.12;
-            upHtml += `<span class="queue-key upcoming" style="opacity:${Math.max(0.2, opacity)}">${esc(displayName(seq[i]))}</span>`;
+            const reinforced = reinforcedPositions.has(i) ? ' reinforced' : '';
+            upHtml += `<span class="queue-key upcoming${reinforced}" style="opacity:${Math.max(0.2, opacity)}">${esc(displayName(seq[i]))}</span>`;
         }
         upEl.innerHTML = upHtml;
 
@@ -885,7 +1103,8 @@
             el.innerHTML = '<span class="start-prompt">已完成</span>';
             return;
         }
-        el.innerHTML = `<span class="key-label">${esc(displayName(seq[idx]))}</span>`;
+        const errorCls = currentTargetHasError ? ' error-state' : '';
+        el.innerHTML = `<span class="key-label${errorCls}">${esc(displayName(seq[idx]))}</span>`;
     }
 
     function updateProgress() {
@@ -918,8 +1137,9 @@
         const list = document.getElementById('weak-keys-list');
 
         const weak = Object.entries(stats)
-            .filter(([, s]) => s.total >= 5 && s.errors > 0)
-            .map(([k, s]) => ({ key: k, rate: s.errors / s.total, total: s.total }))
+            .map(([k, s]) => ({ key: k, item: normalizeKeyStats(s) }))
+            .filter((entry) => entry.item.total >= 5 && entry.item.errors > 0)
+            .map(({ key, item }) => ({ key, rate: errorRateOf(item), total: item.total }))
             .sort((a, b) => b.rate - a.rate)
             .slice(0, 5);
 
@@ -936,9 +1156,35 @@
         }).join('');
     }
 
+    function setCurrentErrorState(isError) {
+        currentTargetHasError = isError;
+        const label = document.querySelector('#current-key-display .key-label');
+        if (label) label.classList.toggle('error-state', isError);
+    }
+
+    function flashCurrentLabel(ok) {
+        const label = document.querySelector('#current-key-display .key-label');
+        if (!label) return;
+        label.classList.remove('correct-flash', 'wrong-flash');
+        void label.offsetWidth;
+        label.classList.add(ok ? 'correct-flash' : 'wrong-flash');
+        setTimeout(() => label.classList.remove(ok ? 'correct-flash' : 'wrong-flash'), ok ? 360 : 420);
+    }
+
     // ===== Input Handling =====
     document.addEventListener('keydown', function(e) {
+        const overlayShown = document.getElementById('completion-overlay').classList.contains('show');
+        if (overlayShown && (e.code === 'Space' || e.key === ' ')) {
+            e.preventDefault();
+            closeCompletion();
+            return;
+        }
+
         if (!active) return;
+        if (e.code === 'Space' && e.repeat) {
+            e.preventDefault();
+            return;
+        }
         e.preventDefault();
 
         const target = seq[idx];
@@ -950,21 +1196,31 @@
             return;
         }
 
-        flashPress(pressed);
-
         const ok = pressed === target;
-
-        // Flash animation
-        const label = document.querySelector('#current-key-display .key-label');
-        if (label) {
-            label.classList.remove('correct-flash','wrong-flash');
-            void label.offsetWidth;
-            label.classList.add(ok ? 'correct-flash' : 'wrong-flash');
-        }
+        flashPress(pressed, !ok);
 
         results.push({ key: target, correct: ok });
         recordResult(target, ok);
-        idx++;
+
+        if (ok) {
+            setCurrentErrorState(false);
+            flashCurrentLabel(true);
+            passedKeys.push({ key: target, hadError: currentTargetMistakes > 0 });
+            currentTargetMistakes = 0;
+            if (roundMistakeByKey[target]) {
+                roundMistakeByKey[target] = Math.max(0, roundMistakeByKey[target] - 1);
+            }
+            idx++;
+        } else {
+            currentTargetMistakes++;
+            roundMistakeByKey[target] = (roundMistakeByKey[target] || 0) + 1;
+            applyTieredLengthGrowth();
+            scheduleImmediateReinforce(target);
+            setCurrentErrorState(true);
+            flashCurrentLabel(false);
+        }
+
+        refreshFutureSequence();
 
         updateAccuracy();
         updateProgress();
@@ -973,16 +1229,24 @@
         if (idx >= seq.length) {
             completePractice();
         } else {
-            renderCurrent();
+            if (ok) renderCurrent();
             highlightTarget(seq[idx]);
         }
     });
 
     // ===== Practice Flow =====
     function startNewPractice() {
-        seq = genSeq(mode);
+        roundMistakes = 0;
+        roundTargetLen = BASE_SEQ_LEN;
+        reinforceQueue = [];
+        reinforcedPositions = new Set();
+        roundMistakeByKey = {};
+        seq = genSeq(mode, roundTargetLen);
         idx = 0;
         results = [];
+        passedKeys = [];
+        currentTargetMistakes = 0;
+        currentTargetHasError = false;
         t0 = Date.now();
         active = true;
 
@@ -1012,12 +1276,13 @@
         if (timerID) { clearInterval(timerID); timerID = null; }
         updateTimer();
         clearTarget();
+        setCurrentErrorState(false);
         renderCurrent();
 
         const okCount = results.filter(r => r.correct).length;
-        const acc = Math.round(okCount / results.length * 100);
+        const acc = results.length ? Math.round(okCount / results.length * 100) : 100;
         const elapsed = (Date.now() - t0) / 1000;
-        const kpm = Math.round(results.length / (elapsed / 60));
+        const kpm = elapsed > 0 ? Math.round(results.length / (elapsed / 60)) : 0;
         const m = Math.floor(elapsed / 60);
         const ss = Math.floor(elapsed % 60);
 
