@@ -518,7 +518,7 @@
             align-items: center;
             gap: 0.95rem;
             flex-wrap: wrap;
-            margin-bottom: 0.45rem;
+            margin-bottom: 0.5rem;
             color: var(--light-text);
             font-size: 0.78rem;
             font-weight: 700;
@@ -536,8 +536,33 @@
             border-radius: 50%;
         }
 
+        .legend-dot.growth { background: #7c3aed; }
         .legend-dot.acc { background: #16a34a; }
         .legend-dot.kpm { background: #2563eb; }
+
+        .trend-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .trend-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #eef4f8;
+            color: #4e6274;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+
+        .trend-scope {
+            margin: 0 0 0.55rem;
+            color: var(--light-text);
+            font-size: 0.77rem;
+        }
 
         .trend-chart {
             width: 100%;
@@ -555,6 +580,13 @@
             color: var(--light-text);
             font-size: 0.82rem;
             text-align: center;
+        }
+
+        .trend-insight {
+            margin: 0.65rem 0 0.15rem;
+            color: #516170;
+            font-size: 0.8rem;
+            line-height: 1.55;
         }
 
         /* ---- Controls ---- */
@@ -772,24 +804,29 @@
                 </div>
                 <div class="summary-card">
                     <div class="summary-value" id="sum-best-accuracy">-</div>
-                    <div class="summary-label">最佳准确率</div>
+                    <div class="summary-label">当前进步指数</div>
                 </div>
                 <div class="summary-card">
                     <div class="summary-value" id="sum-best-kpm">-</div>
-                    <div class="summary-label">最佳键/分</div>
+                    <div class="summary-label">近7轮有效键/分</div>
                 </div>
                 <div class="summary-card">
                     <div class="summary-value" id="sum-recent-accuracy">-</div>
-                    <div class="summary-label">近7轮平均准确率</div>
+                    <div class="summary-label">稳定性（近10轮）</div>
                 </div>
             </div>
             <div class="trend-card">
                 <div class="trend-legend">
-                    <span class="legend-item"><span class="legend-dot acc"></span>准确率（%）</span>
-                    <span class="legend-item"><span class="legend-dot kpm"></span>键/分（KPM）</span>
+                    <span class="legend-item"><span class="legend-dot growth"></span>综合进步指数（准确率 × 速度）</span>
+                </div>
+                <p class="trend-scope" id="trend-scope">统计范围：-</p>
+                <div class="trend-meta">
+                    <span class="trend-pill" id="trend-meta-acc">准确率均线：-</span>
+                    <span class="trend-pill" id="trend-meta-kpm">速度均线：-</span>
                 </div>
                 <div class="trend-chart" id="trend-chart"></div>
                 <p class="trend-empty" id="trend-empty" style="display:none;">至少完成 2 轮后显示进步曲线</p>
+                <p class="trend-insight" id="trend-insight">提示：指数以你早期练习作为基线，100 代表起点水平。</p>
             </div>
         </div>
 
@@ -1651,11 +1688,28 @@
         }).join('');
     }
 
-    function averageAccuracy(history, count = 7) {
-        if (!history.length) return null;
-        const samples = history.slice(-Math.max(1, count));
-        const sum = samples.reduce((acc, item) => acc + item.accuracy, 0);
-        return Math.round(sum / samples.length);
+    function averageFromArray(values) {
+        if (!Array.isArray(values) || !values.length) return null;
+        return values.reduce((acc, n) => acc + n, 0) / values.length;
+    }
+
+    function medianOf(values) {
+        if (!Array.isArray(values) || !values.length) return null;
+        const sorted = values.slice().sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
+        return sorted[mid];
+    }
+
+    function emaSeries(values, period = 7) {
+        if (!Array.isArray(values) || !values.length) return [];
+        const p = Math.max(2, Math.floor(period));
+        const alpha = 2 / (p + 1);
+        const out = [values[0]];
+        for (let i = 1; i < values.length; i++) {
+            out.push(alpha * values[i] + (1 - alpha) * out[i - 1]);
+        }
+        return out;
     }
 
     function pickSessionsByRange(history, range) {
@@ -1679,6 +1733,86 @@
         return sampled;
     }
 
+    function effectiveKpmOf(item) {
+        const acc = clamp(toFiniteNumber(item.accuracy, 0), 0, 100) / 100;
+        const kpm = Math.max(0, toFiniteNumber(item.kpm, 0));
+        return kpm * acc * acc;
+    }
+
+    function buildProgressModel(history, baselineOverride = null) {
+        if (!history.length) return null;
+        const effective = history.map(effectiveKpmOf);
+        const baseSeed = effective.slice(0, Math.min(10, effective.length)).filter(v => v > 0);
+        const baseRaw = medianOf(baseSeed) || effective[0] || 1;
+        const baselineEffectiveKpm = Math.max(1, toFiniteNumber(baselineOverride, baseRaw));
+        const indexRaw = effective.map(v => Math.max(0, (v / baselineEffectiveKpm) * 100));
+        const indexEma = emaSeries(indexRaw, 7);
+        const accEma = emaSeries(history.map(item => item.accuracy), 7);
+        const kpmEma = emaSeries(history.map(item => item.kpm), 7);
+        return {
+            history,
+            effective,
+            baselineEffectiveKpm,
+            indexRaw,
+            indexEma,
+            accEma,
+            kpmEma
+        };
+    }
+
+    function compareRecent(values, preferredWindow = 7) {
+        if (!Array.isArray(values) || values.length < 4) return null;
+        const win = Math.min(preferredWindow, Math.floor(values.length / 2));
+        if (win < 2) return null;
+        const recent = averageFromArray(values.slice(-win));
+        const prev = averageFromArray(values.slice(-(win * 2), -win));
+        if (recent === null || prev === null) return null;
+        return { recent, prev };
+    }
+
+    function computeStability(effectiveSeries) {
+        if (!effectiveSeries.length) return null;
+        const mean = averageFromArray(effectiveSeries);
+        if (!mean || mean <= 0) return { score: 100, label: '稳定' };
+        const variance = effectiveSeries.reduce((acc, value) => acc + Math.pow(value - mean, 2), 0) / effectiveSeries.length;
+        const std = Math.sqrt(variance);
+        const cv = std / mean;
+        const score = clamp(Math.round((1 - Math.min(cv, 0.45) / 0.45) * 100), 0, 100);
+        const label = score >= 80 ? '稳定' : (score >= 60 ? '可控' : '波动偏大');
+        return { score, label };
+    }
+
+    function buildTrendInsight(model) {
+        if (!model || model.history.length < 4) {
+            return '继续完成几轮练习后，会生成更稳定的进步解读。';
+        }
+
+        const idxCmp = compareRecent(model.indexEma, 7);
+        const accCmp = compareRecent(model.accEma, 7);
+        const kpmCmp = compareRecent(model.kpmEma, 7);
+        if (!idxCmp || !accCmp || !kpmCmp) {
+            return '当前样本较少，建议继续练习，观察指数是否持续高于 100。';
+        }
+
+        const idxDeltaPct = idxCmp.prev > 0 ? ((idxCmp.recent - idxCmp.prev) / idxCmp.prev) * 100 : 0;
+        const accDelta = accCmp.recent - accCmp.prev;
+        const kpmDeltaPct = kpmCmp.prev > 0 ? ((kpmCmp.recent - kpmCmp.prev) / kpmCmp.prev) * 100 : 0;
+
+        if (idxDeltaPct >= 8 && accDelta >= -0.4) {
+            return `稳步上升：综合指数较前一阶段提升 ${idxDeltaPct.toFixed(1)}%，训练方向有效。`;
+        }
+        if (kpmDeltaPct > 5 && accDelta < -1.2) {
+            return `速度提升明显（+${kpmDeltaPct.toFixed(1)}%），但准确率回落，建议放慢一点巩固手感。`;
+        }
+        if (accDelta > 1.2 && kpmDeltaPct < 1) {
+            return `准确率在提升（+${accDelta.toFixed(1)}%），速度增长较缓，已进入“先稳后快”阶段。`;
+        }
+        if (idxDeltaPct <= -5) {
+            return `近期状态有波动（${idxDeltaPct.toFixed(1)}%），可缩短训练时长、提高频率来恢复节奏。`;
+        }
+        return `状态平稳：综合指数变化 ${idxDeltaPct.toFixed(1)}%，建议继续保持当前练习节奏。`;
+    }
+
     function formatShortDate(ts) {
         const d = new Date(ts);
         if (Number.isNaN(d.getTime())) return '-';
@@ -1697,77 +1831,93 @@
         return path.trim();
     }
 
-    function renderTrendChart(history) {
+    function buildAreaPath(values, xAt, yAt, yBase) {
+        if (!values.length) return '';
+        let path = `M ${xAt(0).toFixed(2)} ${yBase.toFixed(2)} `;
+        for (let i = 0; i < values.length; i++) {
+            path += `L ${xAt(i).toFixed(2)} ${yAt(values[i]).toFixed(2)} `;
+        }
+        path += `L ${xAt(values.length - 1).toFixed(2)} ${yBase.toFixed(2)} Z`;
+        return path;
+    }
+
+    function renderTrendChart(model) {
         const chart = document.getElementById('trend-chart');
         const empty = document.getElementById('trend-empty');
         if (!chart || !empty) return;
 
-        if (history.length < 2) {
+        if (!model || model.history.length < 2) {
             chart.innerHTML = '';
             empty.style.display = '';
             return;
         }
 
         empty.style.display = 'none';
-        const data = downsampleSessions(history);
+        const points = model.history.map((item, i) => ({
+            timestamp: item.timestamp,
+            index: model.indexEma[i]
+        }));
+        const data = downsampleSessions(points);
+        const values = data.map(item => item.index);
         const width = Math.max(420, chart.clientWidth || 640);
         const height = 220;
-        const pad = { top: 14, right: 34, bottom: 28, left: 34 };
+        const pad = { top: 16, right: 30, bottom: 28, left: 38 };
         const innerW = Math.max(40, width - pad.left - pad.right);
         const innerH = Math.max(40, height - pad.top - pad.bottom);
         const size = Math.max(1, data.length - 1);
         const xAt = i => pad.left + (i / size) * innerW;
 
-        const accValues = data.map(item => clamp(item.accuracy, 0, 100));
-        const kpmValues = data.map(item => Math.max(0, item.kpm));
-        const kpmPeak = Math.max(20, ...kpmValues);
-        const kpmMax = Math.ceil(kpmPeak / 10) * 10;
-
-        const yAccAt = v => pad.top + (1 - clamp(v, 0, 100) / 100) * innerH;
-        const yKpmAt = v => {
-            const pct = kpmMax <= 0 ? 0 : clamp(v, 0, kpmMax) / kpmMax;
-            return pad.top + (1 - pct) * innerH;
-        };
-
-        const accPath = buildLinePath(accValues, xAt, yAccAt);
-        const kpmPath = buildLinePath(kpmValues, xAt, yKpmAt);
-        const lastX = xAt(data.length - 1);
-        const lastAccY = yAccAt(accValues[accValues.length - 1]);
-        const lastKpmY = yKpmAt(kpmValues[kpmValues.length - 1]);
+        const vMin = Math.min(100, ...values);
+        const vMax = Math.max(120, ...values);
+        const yMin = Math.max(40, Math.floor((vMin - 10) / 10) * 10);
+        const yMax = Math.max(yMin + 40, Math.ceil((vMax + 10) / 10) * 10);
+        const ySpan = Math.max(1, yMax - yMin);
+        const yAt = v => pad.top + (1 - (clamp(v, yMin, yMax) - yMin) / ySpan) * innerH;
+        const yBase = pad.top + innerH;
 
         let grid = '';
-        for (let i = 0; i <= 4; i++) {
-            const t = i / 4;
+        const ticks = 4;
+        for (let i = 0; i <= ticks; i++) {
+            const t = i / ticks;
             const y = pad.top + t * innerH;
-            const accTick = Math.round((1 - t) * 100);
-            const kpmTick = Math.round((1 - t) * kpmMax);
+            const tick = Math.round(yMax - t * ySpan);
             grid += `
                 <line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${(width - pad.right).toFixed(2)}" y2="${y.toFixed(2)}" stroke="#e8ecea" stroke-width="1"/>
-                <text x="${(pad.left - 6).toFixed(2)}" y="${(y + 3).toFixed(2)}" text-anchor="end" font-size="10" fill="#8b98a7">${accTick}</text>
-                <text x="${(width - pad.right + 6).toFixed(2)}" y="${(y + 3).toFixed(2)}" text-anchor="start" font-size="10" fill="#8b98a7">${kpmTick}</text>
+                <text x="${(pad.left - 8).toFixed(2)}" y="${(y + 3).toFixed(2)}" text-anchor="end" font-size="10" fill="#8b98a7">${tick}</text>
             `;
         }
 
+        const refs = [100, 120, 140].filter(v => v >= yMin && v <= yMax).map(v => `
+            <line x1="${pad.left}" y1="${yAt(v).toFixed(2)}" x2="${(width - pad.right).toFixed(2)}" y2="${yAt(v).toFixed(2)}"
+                stroke="${v === 100 ? '#9ca3af' : '#d1d5db'}" stroke-width="${v === 100 ? '1.2' : '1'}" stroke-dasharray="5 4"/>
+            <text x="${(width - pad.right + 4).toFixed(2)}" y="${(yAt(v) + 3).toFixed(2)}" font-size="10" fill="#8b98a7">${v}</text>
+        `).join('');
+
+        const linePath = buildLinePath(values, xAt, yAt);
+        const areaPath = buildAreaPath(values, xAt, yAt, yBase);
+        const lastValue = values[values.length - 1];
+        const lastX = xAt(values.length - 1);
+        const lastY = yAt(lastValue);
         const startLabel = formatShortDate(data[0].timestamp);
         const endLabel = formatShortDate(data[data.length - 1].timestamp);
-
         chart.innerHTML = `
-            <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="练习进步曲线">
+            <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="综合进步指数曲线">
                 <defs>
-                    <linearGradient id="accLine" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="#16a34a"/>
-                        <stop offset="100%" stop-color="#22c55e"/>
+                    <linearGradient id="growthLine" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#7c3aed"/>
+                        <stop offset="100%" stop-color="#a855f7"/>
                     </linearGradient>
-                    <linearGradient id="kpmLine" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="#2563eb"/>
-                        <stop offset="100%" stop-color="#3b82f6"/>
+                    <linearGradient id="growthArea" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(168, 85, 247, 0.28)"/>
+                        <stop offset="100%" stop-color="rgba(168, 85, 247, 0.02)"/>
                     </linearGradient>
                 </defs>
                 ${grid}
-                <path d="${accPath}" fill="none" stroke="url(#accLine)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="${kpmPath}" fill="none" stroke="url(#kpmLine)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="${lastX.toFixed(2)}" cy="${lastAccY.toFixed(2)}" r="3.5" fill="#16a34a"/>
-                <circle cx="${lastX.toFixed(2)}" cy="${lastKpmY.toFixed(2)}" r="3.5" fill="#2563eb"/>
+                ${refs}
+                <path d="${areaPath}" fill="url(#growthArea)"/>
+                <path d="${linePath}" fill="none" stroke="url(#growthLine)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="${lastX.toFixed(2)}" cy="${lastY.toFixed(2)}" r="3.7" fill="#7c3aed"/>
+                <text x="${(lastX + 8).toFixed(2)}" y="${(lastY - 8).toFixed(2)}" font-size="10" fill="#6d28d9">当前 ${lastValue.toFixed(1)}</text>
                 <text x="${pad.left}" y="${height - 8}" font-size="10" fill="#8b98a7">${startLabel}</text>
                 <text x="${width - pad.right}" y="${height - 8}" text-anchor="end" font-size="10" fill="#8b98a7">${endLabel}</text>
             </svg>
@@ -1775,27 +1925,52 @@
     }
 
     function renderSessionStatsPanel() {
-        const history = loadSessionHistory();
-        const meta = loadSessionMeta();
+        const rawHistory = loadSessionHistory().slice().sort((a, b) => a.timestamp - b.timestamp);
+        const modeHistory = rawHistory.filter(item => item.mode === mode);
+        const scopedHistory = modeHistory.length >= 2 ? modeHistory : rawHistory;
+        const scopeText = modeHistory.length >= 2
+            ? `统计范围：当前模式（${MODE_LABELS[mode] || mode}）`
+            : '统计范围：全模式（当前模式样本不足）';
 
-        const total = Math.max(history.length, meta.totalSessions);
-        const bestAccuracyComputed = history.reduce((m, item) => Math.max(m, item.accuracy), 0);
-        const bestKpmComputed = history.reduce((m, item) => Math.max(m, item.kpm), 0);
-        const bestAccuracy = Math.max(meta.bestAccuracy, bestAccuracyComputed);
-        const bestKpm = Math.max(meta.bestKpm, bestKpmComputed);
-        const recentAcc = averageAccuracy(history, 7);
-        const latest = history[history.length - 1];
-        const latestMode = latest ? (MODE_LABELS[latest.mode] || latest.mode) : '';
-
+        const fullModel = buildProgressModel(scopedHistory);
+        const visibleHistory = pickSessionsByRange(scopedHistory, sessionRange);
+        const visibleModel = buildProgressModel(visibleHistory, fullModel ? fullModel.baselineEffectiveKpm : null);
         const totalEl = document.getElementById('sum-total-sessions');
-        totalEl.textContent = total;
-        totalEl.title = latestMode ? `最近模式：${latestMode}` : '';
-        document.getElementById('sum-best-accuracy').textContent = bestAccuracy > 0 ? `${bestAccuracy}%` : '-';
-        document.getElementById('sum-best-kpm').textContent = bestKpm > 0 ? String(bestKpm) : '-';
-        document.getElementById('sum-recent-accuracy').textContent = recentAcc === null ? '-' : `${recentAcc}%`;
+        totalEl.textContent = scopedHistory.length;
+        totalEl.title = rawHistory.length > scopedHistory.length ? `全部模式累计 ${rawHistory.length} 轮` : '';
 
-        const visibleHistory = pickSessionsByRange(history, sessionRange);
-        renderTrendChart(visibleHistory);
+        const currentIndex = visibleModel ? visibleModel.indexEma[visibleModel.indexEma.length - 1] : null;
+        document.getElementById('sum-best-accuracy').textContent = currentIndex === null ? '-' : `${Math.round(currentIndex)}`;
+
+        const recentEffective = visibleModel ? averageFromArray(visibleModel.effective.slice(-7)) : null;
+        document.getElementById('sum-best-kpm').textContent = recentEffective === null ? '-' : recentEffective.toFixed(1);
+
+        const stability = visibleModel ? computeStability(visibleModel.effective.slice(-10)) : null;
+        const stabilityEl = document.getElementById('sum-recent-accuracy');
+        stabilityEl.textContent = stability ? `${stability.score}分` : '-';
+        stabilityEl.title = stability ? stability.label : '';
+
+        document.getElementById('trend-scope').textContent = scopeText;
+
+        if (visibleModel) {
+            const accLast = visibleModel.accEma[visibleModel.accEma.length - 1];
+            const kpmLast = visibleModel.kpmEma[visibleModel.kpmEma.length - 1];
+            const accCompare = compareRecent(visibleModel.accEma, 7);
+            const kpmCompare = compareRecent(visibleModel.kpmEma, 7);
+            const accDelta = accCompare ? (accCompare.recent - accCompare.prev) : null;
+            const kpmDelta = kpmCompare && kpmCompare.prev > 0 ? ((kpmCompare.recent - kpmCompare.prev) / kpmCompare.prev) * 100 : null;
+            const accDeltaText = accDelta === null ? '' : `（${accDelta >= 0 ? '+' : ''}${accDelta.toFixed(1)}）`;
+            const kpmDeltaText = kpmDelta === null ? '' : `（${kpmDelta >= 0 ? '+' : ''}${kpmDelta.toFixed(1)}%）`;
+            document.getElementById('trend-meta-acc').textContent = `准确率均线：${accLast.toFixed(1)}% ${accDeltaText}`;
+            document.getElementById('trend-meta-kpm').textContent = `速度均线：${kpmLast.toFixed(1)} ${kpmDeltaText}`;
+            document.getElementById('trend-insight').textContent = buildTrendInsight(visibleModel);
+        } else {
+            document.getElementById('trend-meta-acc').textContent = '准确率均线：-';
+            document.getElementById('trend-meta-kpm').textContent = '速度均线：-';
+            document.getElementById('trend-insight').textContent = '提示：指数以你早期练习作为基线，100 代表起点水平。';
+        }
+
+        renderTrendChart(visibleModel);
     }
 
     function toggleStatsPanel() {
@@ -1918,6 +2093,7 @@
         highlightTarget(seq[idx]);
         updateHeatmap();
         renderWeakKeys();
+        if (statsPanelOpen) renderSessionStatsPanel();
 
         area.focus();
     }
