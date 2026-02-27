@@ -37,6 +37,9 @@
                 <a href="blog.html" class="active">博客</a>
                 <a href="tool.html">工具</a>
                 <a href="about.html">关于</a>
+                <button class="theme-toggle" aria-label="切换主题" title="切换主题">
+                    <i class="fas fa-moon"></i>
+                </button>
             </nav>
         </div>
     </header>
@@ -45,6 +48,12 @@
     <main id="blog-list-view" class="container" style="padding-top: 2rem;">
         <h2 class="section-title" data-aos="fade-up">最新文章</h2>
         
+        <!-- 搜索框 -->
+        <div style="max-width: 500px; margin: 0 auto 2rem; position: relative;" data-aos="fade-up">
+            <input type="text" id="blog-search-input" placeholder="搜索文章标题、简介或标签..." style="width: 100%; padding: 12px 20px 12px 40px; border-radius: 50px; border: 2px solid var(--border-color); font-size: 1rem; background: var(--card-bg); color: var(--dark-text); outline: none; transition: all 0.3s; box-sizing: border-box;">
+            <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--light-text);"></i>
+        </div>
+
         <!-- 文章分类标签 (示例) -->
         <div class="flex justify-center gap-4 mb-8" data-aos="fade-up" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 3rem;">
             <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.9rem;">全部</button>
@@ -135,14 +144,30 @@
             AOS.refresh();
         }
 
+        let allPosts = [];
+
         // 页面加载时拉取文章清单
         fetch('posts/posts.json')
             .then(r => { if (!r.ok) throw new Error('加载失败'); return r.json(); })
-            .then(posts => renderBlogCards(posts))
+            .then(posts => {
+                allPosts = posts;
+                renderBlogCards(posts);
+            })
             .catch(() => {
                 document.getElementById('blog-cards-grid').innerHTML =
                     '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:red;"><i class="fas fa-exclamation-triangle"></i> 文章列表加载失败，请刷新重试</div>';
             });
+
+        // 搜索功能
+        document.getElementById('blog-search-input').addEventListener('input', function(e) {
+            const keyword = e.target.value.toLowerCase();
+            const filtered = allPosts.filter(post => 
+                (post.title && post.title.toLowerCase().includes(keyword)) ||
+                (post.tag && post.tag.toLowerCase().includes(keyword)) ||
+                (post.summary && post.summary.toLowerCase().includes(keyword))
+            );
+            renderBlogCards(filtered);
+        });
 
         // === 剥离 Front Matter ===
         function stripFrontMatter(text) {

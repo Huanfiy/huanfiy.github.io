@@ -66,16 +66,37 @@
     }
 }
 
-/* 黑暗模式支持 (预留) */
-@media (prefers-color-scheme: dark) {
-    /* :root {
-        --bg-color: #1e272e;
-        --card-bg: #2d3436;
-        --dark-text: #dfe6e9;
-        --light-text: #b2bec3;
-    } */
-    /* 暂时保持清新亮色风格，黑暗模式可后续开启 */
+/* 黑暗模式支持 */
+[data-theme="dark"] {
+    --bg-color: #1e272e;
+    --card-bg: #2d3436;
+    --dark-text: #dfe6e9;
+    --light-text: #b2bec3;
+    --border-color: #4b6584;
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 15px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.4);
 }
+
+.theme-toggle {
+    background: none;
+    border: none;
+    color: var(--dark-text);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.theme-toggle:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
 
 /* =========================================
    全局重置 & 基础样式
@@ -692,6 +713,11 @@ footer {
 .toast.toast-hide {
     opacity: 0;
     transform: translate3d(-50%, 8px, 0);
+}
+
+#blog-search-input:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(106, 176, 76, 0.1) !important;
 }
 
 /* =========================================
