@@ -73,7 +73,7 @@
             <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.9rem;">生活</button>
         </div>
 
-        <div class="grid-3" id="blog-cards-grid">
+        <div class="grid-3 blog-list" id="blog-cards-grid">
             <!-- 文章卡片由 JS 从 posts.json 动态渲染 -->
             <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
                 <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
@@ -137,20 +137,24 @@
         function renderBlogCards(posts) {
             const grid = document.getElementById('blog-cards-grid');
             if (!posts.length) {
-                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--light-text);">暂无文章</div>';
+                grid.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--light-text);">暂无文章</div>';
                 return;
             }
             grid.innerHTML = posts.map((post, i) => `
                 <article class="card blog-card" data-aos="fade-up" data-aos-delay="${i * 100}"
                          onclick="loadMarkdown('${post.file}')" style="cursor:pointer;">
-                    <img src="${getCoverUrl(post)}" alt="${post.tag || '文章'}" class="${post.coverFit === 'contain' ? 'contain' : ''}">
-                    <div class="blog-meta">
-                        <span><i class="far fa-calendar"></i> ${post.date}</span>
-                        ${post.tag ? `<span class="blog-tag">${post.tag}</span>` : ''}
+                    <img src="${getCoverUrl(post)}" alt="${post.title || post.tag || '文章'}"
+                         class="${post.coverFit === 'contain' ? 'contain' : ''}"
+                         width="320" height="180" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async">
+                    <div class="blog-card-body">
+                        <div class="blog-meta">
+                            <span><i class="far fa-calendar"></i> ${post.date}</span>
+                            ${post.tag ? `<span class="blog-tag">${post.tag}</span>` : ''}
+                        </div>
+                        <h3 class="blog-title">${post.title}</h3>
+                        <p class="blog-summary">${post.summary || ''}</p>
+                        <div class="blog-readmore">阅读全文</div>
                     </div>
-                    <h3 class="blog-title">${post.title}</h3>
-                    <p style="color:var(--light-text);font-size:0.95rem;margin-bottom:1rem;">${post.summary || ''}</p>
-                    <div style="margin-top:auto;color:var(--primary-color);font-weight:600;">阅读全文</div>
                 </article>
             `).join('');
             AOS.refresh();
@@ -167,7 +171,7 @@
             })
             .catch(() => {
                 document.getElementById('blog-cards-grid').innerHTML =
-                    '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:red;"><i class="fas fa-exclamation-triangle"></i> 文章列表加载失败，请刷新重试</div>';
+                    '<div style="text-align:center;padding:2rem;color:red;"><i class="fas fa-exclamation-triangle"></i> 文章列表加载失败，请刷新重试</div>';
             });
 
         // 搜索功能
