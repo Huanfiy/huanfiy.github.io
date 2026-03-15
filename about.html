@@ -3,6 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     <title>关于我 - Huanfly</title>
     <link rel="icon" type="image/png" href="picture/icon.png">
     <link rel="stylesheet" href="css/style.css">
@@ -57,23 +69,23 @@
             <div style="position: relative; padding-left: 20px; border-left: 2px solid var(--border-color);">
                 
                 <div style="margin-bottom: 2rem; position: relative;">
-                    <div style="position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; background: var(--primary-color); border-radius: 50%; border: 3px solid white;"></div>
+                    <div style="position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; background: var(--primary-color); border-radius: 50%; border: 3px solid var(--card-bg);"></div>
                     <h3 style="font-size: 1.2rem;">童年到大学前</h3>
-                    <p style="color: #999; font-size: 0.9rem;">兴趣启蒙阶段</p>
+                    <p style="color: var(--light-text); font-size: 0.9rem;">兴趣启蒙阶段</p>
                     <p style="margin-top: 0.5rem; color: var(--light-text);">自小对科技产品兴趣浓厚，早期以简易电子玩具和物理课本实验复刻为主，慢慢建立了动手做东西的习惯。</p>
                 </div>
 
                 <div style="margin-bottom: 2rem; position: relative;">
-                    <div style="position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; background: var(--accent-color); border-radius: 50%; border: 3px solid white;"></div>
+                    <div style="position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; background: var(--accent-color); border-radius: 50%; border: 3px solid var(--card-bg);"></div>
                     <h3 style="font-size: 1.2rem;">大学阶段</h3>
-                    <p style="color: #999; font-size: 0.9rem;">社团实验室深耕</p>
+                    <p style="color: var(--light-text); font-size: 0.9rem;">社团实验室深耕</p>
                     <p style="margin-top: 0.5rem; color: var(--light-text);">长期泡在社团实验室，围绕无人机开发持续投入，逐步点亮嵌入式、3D 建模、控制/图像算法等技能树，也在多项竞赛中取得了不错成绩。</p>
                 </div>
 
                 <div style="margin-bottom: 2rem; position: relative;">
-                    <div style="position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; background: #2d98da; border-radius: 50%; border: 3px solid white;"></div>
+                    <div style="position: absolute; left: -26px; top: 5px; width: 14px; height: 14px; background: #2d98da; border-radius: 50%; border: 3px solid var(--card-bg);"></div>
                     <h3 style="font-size: 1.2rem;">当前阶段</h3>
-                    <p style="color: #999; font-size: 0.9rem;">主职 + 业余并行</p>
+                    <p style="color: var(--light-text); font-size: 0.9rem;">主职 + 业余并行</p>
                     <p style="margin-top: 0.5rem; color: var(--light-text);">目前主职持续深耕嵌入式软件开发；业余为了磨炼技术深度，选择 RT-Thread 方向开设技术小店，接单逐渐成为业余主旋律。</p>
                 </div>
             </div>
