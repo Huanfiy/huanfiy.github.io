@@ -70,9 +70,7 @@
             return;
         }
         gallery.innerHTML = items.map(function (item) {
-            const src = item.src || '';
-            const cap = (item.caption || '').replace(/"/g, '&quot;');
-            return '<div class="interest-media-card" onclick="openLightbox(\'' + src.replace(/'/g, "\\'") + '\', \'' + cap.replace(/'/g, "\\'") + '\')"><img src="' + src + '" alt="' + cap + '" loading="lazy"><p class="interest-caption">' + (item.caption || '') + '</p></div>';
+            return renderImageCard(item);
         }).join('');
     }
 
@@ -88,10 +86,37 @@
             const src = item.src || '';
             const cap = item.caption || '';
             if (type === 'video') {
-                return '<div class="interest-media-card interest-video-card"><video src="' + src + '" controls preload="metadata"></video><p class="interest-caption">' + cap + '</p></div>';
+                return '<div class="interest-media-card interest-video-card"><div class="interest-media-frame"><video src="' + src + '" controls preload="metadata"></video></div><p class="interest-caption">' + cap + '</p></div>';
             }
-            return '<div class="interest-media-card" onclick="openLightbox(\'' + src.replace(/'/g, "\\'") + '\', \'' + (cap || '').replace(/'/g, "\\'") + '\')"><img src="' + src + '" alt="' + cap + '" loading="lazy"><p class="interest-caption">' + cap + '</p></div>';
+            return renderImageCard(item);
         }).join('');
+    }
+
+    function renderImageCard(item) {
+        const src = item.src || '';
+        const cap = item.caption || '';
+        const objectPosition = normalizeObjectPosition(item.position);
+        return '<div class="interest-media-card" onclick="openLightbox(\'' + escapeJsString(src) + '\', \'' + escapeJsString(cap) + '\')"><div class="interest-media-frame"><img src="' + src + '" alt="' + escapeHtml(cap) + '" loading="lazy" decoding="async" style="object-position: ' + objectPosition + ';"></div><p class="interest-caption">' + escapeHtml(cap) + '</p></div>';
+    }
+
+    function normalizeObjectPosition(value) {
+        const cleaned = String(value || '').replace(/[^0-9a-zA-Z.%\s-]/g, '').trim();
+        return cleaned || 'center center';
+    }
+
+    function escapeJsString(value) {
+        return String(value || '')
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'");
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     function renderReading(data) {
