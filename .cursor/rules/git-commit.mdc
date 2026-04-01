@@ -5,7 +5,7 @@ alwaysApply: true
 # Git Commit 规范
 
 ## 1. 格式
-`<type>(<scope>): <subject>` (英文短句，单行)
+`<type>(<scope>): <subject>` (中文短句，单行)
 
 ## 2. Type
 - **feat**: 新功能 | **fix**: 修复 | **perf**: 性能
