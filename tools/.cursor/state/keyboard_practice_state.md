@@ -1,6 +1,6 @@
 # 键盘练习工具状态文档
 
-> 最后更新：2026-02-24  
+> 最后更新：2026-06-15  
 > 适用范围：`tools/keyboard.html`
 
 ## 1. 设计原则
@@ -37,11 +37,16 @@
 - 下方目标键：错误时 `target-wrong` 高亮保持，打对后恢复。
 - 下方实际按键：错误时触发 `wrong-press` 跳动提示（帮助识别“我按错了哪个键”）。
 
-### 3.4 强化引擎（混合策略）
+### 3.4 强化引擎（掌握度加权 + 稳定回灌）
 
-- 概率加权：基于长期错误率、短期连错、强化债务进行加权采样。
-- 即时回灌：错误键会在未来近距离窗口内被重新插入（受去重和上限控制）。
-- 本轮错键加成：同一轮内常错键额外加权，提升“体感强化”。
+- 概率加权：基于「衰减错误率(EWMA) + 反应延迟 + 短期连错 + 本轮错键加成」加权采样。
+  - 错误率用 EWMA 衰减（`errorAlpha`），跟踪当前水平而非历史包袱，弱键定位不再过期。
+  - 引入按键反应延迟（`emaLatency`）：又慢又准的键也会被加权重练，从「打字测试」升级为掌握度模型。
+  - 小样本置信度门控（`confSamples`）：样本不足时误差/延迟项趋零、回退到均匀探索，避免按错一次就被狂刷。
+  - 已移除「强化债务（reinforceDebt）」加权项，统一由 EWMA 错误率承担长期信号（旧字段仍兼容导入识别）。
+- 即时回灌（就地插入）：错误键在近距离窗口内 `splice` 插入，仅改插入点，**不重排整条未来序列**，保证预览稳定且省算。
+- 本轮错键加成：同一轮内常错键额外加权，提升「体感强化」。
+- 掌握度指标：`masteryOf` = 准确率 × 速度（0-100），样本不足返回 null。
 
 ### 3.5 轮次长度策略
 
@@ -55,14 +60,19 @@
 
 ### 3.7 数据持久化
 
-- 使用 `localStorage` 保存按键统计。
-- 兼容旧结构（`total/errors`）并扩展短期强化字段。
+- 按键统计采用「内存缓存 + 防抖落盘」：击键只改内存并标脏，落盘走防抖（800ms）与关键节点（轮次结束 `completePractice`、`beforeunload`、页面切后台），避免每次击键整盘 `JSON.parse` + `JSON.stringify`。
+- 兼容旧结构（`total/errors`）：缺 `emaError` 时用历史均值回填，迁移无突变；新增 `emaLatency`。
+- 弱键面板（`renderWeakKeys`）综合「错误为主、慢手为辅」排序，并展示掌握度与「偏慢」标记。
+- 会话历史本地存储上限 `MAX_STORED_SESSIONS = 2000`（追加与导入均裁剪），防止长期膨胀。
+- 导入直接写 `localStorage` 后调用 `reloadStatsCache()` 同步内存缓存。
 
 ## 4. 当前关键参数（实现侧）
 
 - 轮次长度：`BASE_SEQ_LEN = 25`，`MAX_SEQ_LEN = 100`
-- 权重项：`longTermFactor`、`streakFactor`、`debtFactor`、`streakCap`、`debtCap`
-- 即时回灌：`minGap`、`maxGap`、`maxPendingPerKey`、`maxQueueSize`
+- 权重项 `WEIGHT_CONFIG`：`errorFactor`、`latencyFactor`、`streakFactor`、`streakCap`、`roundBoostFactor`、`roundBoostCap`、`confSamples`
+- 统计模型 `STATS_MODEL`：`errorAlpha`、`latencyAlpha`、`latFloorMs`、`latCeilMs`、`latMaxValidMs`
+- 即时回灌 `REINFORCE_CONFIG`：`minGap`、`maxGap`、`maxPendingPerKey`、`maxAhead`
+- 存储上限：`MAX_STORED_SESSIONS = 2000`
 
 > 参数为当前手感版本，可继续基于真实练习数据做微调。
 
@@ -74,6 +84,8 @@
 
 ## 6. 后续可选优化
 
-- 增加“掌握度”指标（按键级别），补充准确率之外的学习曲线。
+- 转移/双字母（bigram）建模：当前为独立采样，可结合已有手指分区数据，有意制造/规避同指连击，更贴近真实打字难点（较大改造）。
+- 间隔重复调度：把粗糙的 `recencyFactor` 阶梯升级为 per-key SM-2 式调度，答对后按递增间隔复习（较大改造）。
 - 增加回灌强度档位（标准/增强），兼顾新手与高阶用户手感。
 - 在完成弹层展示“本轮回灌命中效果”，提升训练可解释性。
+- 引擎逻辑与 DOM/可视化的解耦目前为「纯逻辑函数集中、渲染层分离」的务实版；如需单测可进一步抽成独立 `Algo` 模块（注入 `now`）。
