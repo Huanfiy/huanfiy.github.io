@@ -1000,18 +1000,28 @@
     const SESSION_RENDER_MAX_POINTS = 240;
     const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta']);
     const WEIGHT_CONFIG = {
-        longTermFactor: 4.2,
-        streakFactor: 1.45,
-        debtFactor: 1.0,
+        errorFactor: 4.0,        // 长期(衰减)错误率权重
+        latencyFactor: 1.9,      // 反应延迟权重（慢但准的键也要练）
+        streakFactor: 1.35,      // 短期连错权重
         streakCap: 5,
-        debtCap: 12
+        roundBoostFactor: 1.6,   // 本轮内常错键加成
+        roundBoostCap: 7,
+        confSamples: 6           // 置信度饱和样本数（小样本回退到均匀探索）
+    };
+    const STATS_MODEL = {
+        errorAlpha: 0.18,        // 错误率 EWMA 平滑系数（越大越看重近期）
+        latencyAlpha: 0.25,      // 延迟 EWMA 平滑系数
+        latFloorMs: 260,         // 反应时间下限（视为“很快”）
+        latCeilMs: 1200,         // 反应时间上限（视为“很慢”）
+        latMaxValidMs: 5000      // 超过此值视为分心，不计入延迟
     };
     const REINFORCE_CONFIG = {
         minGap: 3,
         maxGap: 8,
-        maxPendingPerKey: 2,
-        maxQueueSize: 14
+        maxPendingPerKey: 2,     // 同一键在未打区段内最多并存几次回灌
+        maxAhead: 14             // 回灌不超过当前位置之后多少格
     };
+    const MAX_STORED_SESSIONS = 2000;  // 会话历史本地存储上限
 
     // Display name mapping for special keys
     const DISPLAY_NAME = {
@@ -1106,9 +1116,8 @@
     let currentTargetHasError = false;
     let roundMistakes = 0;
     let roundTargetLen = BASE_SEQ_LEN;
-    let reinforceQueue = [];         // { key, insertAt }
-    let reinforcedPositions = new Set();
     let roundMistakeByKey = {};      // key -> count (round only)
+    let targetShownAt = null;        // 当前目标键展示时刻（反应时延统计用）
     let t0 = null;          // start timestamp
     let timerID = null;
     let active = false;
@@ -1118,15 +1127,48 @@
     let statsResizeTimer = null;
     const keyElMap = {};    // dataKey → [elements]
 
-    // ===== localStorage helpers =====
-    function loadStats() {
+    // ===== Key-stats persistence (in-memory cache + debounced flush) =====
+    // 单一数据源：内存缓存。按键时只改内存并标脏，落盘走防抖/关键节点，
+    // 避免每次击键都做整盘 JSON.parse + JSON.stringify。
+    let keyStatsCache = null;
+    let keyStatsDirty = false;
+    let keyStatsFlushTimer = null;
+
+    function readKeyStatsFromStorage() {
         try {
             const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            return (parsed && typeof parsed === 'object') ? parsed : {};
-        }
-        catch { return {}; }
+            return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+        } catch { return {}; }
     }
-    function saveStats(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+    function loadStats() {
+        if (!keyStatsCache) keyStatsCache = readKeyStatsFromStorage();
+        return keyStatsCache;
+    }
+
+    function flushStats() {
+        if (!keyStatsDirty || !keyStatsCache) return;
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(keyStatsCache));
+            keyStatsDirty = false;
+        } catch (err) {
+            console.warn('key stats flush failed', err);
+        }
+    }
+
+    function markStatsDirty() {
+        keyStatsDirty = true;
+        if (keyStatsFlushTimer) return;
+        keyStatsFlushTimer = setTimeout(() => {
+            keyStatsFlushTimer = null;
+            flushStats();
+        }, 800);
+    }
+
+    function reloadStatsCache() {
+        keyStatsCache = readKeyStatsFromStorage();
+        keyStatsDirty = false;
+    }
 
     function toFiniteNumber(v, fallback = 0) {
         const n = Number(v);
@@ -1245,6 +1287,9 @@
         const next = normalizeSessionRecord(payload);
         if (!next.timestamp) next.timestamp = Date.now();
         history.push(next);
+        if (history.length > MAX_STORED_SESSIONS) {
+            history.splice(0, history.length - MAX_STORED_SESSIONS);
+        }
         if (!saveSessionHistory(history)) return false;
 
         const prevMeta = loadSessionMeta();
@@ -1297,7 +1342,7 @@
 
         return {
             keyStats: normalizeImportedKeyStats(keyStatsRaw),
-            sessions: sessionsRaw.map(normalizeSessionRecord).filter(item => item.timestamp > 0),
+            sessions: sessionsRaw.map(normalizeSessionRecord).filter(item => item.timestamp > 0).slice(-MAX_STORED_SESSIONS),
             meta: normalizeSessionMeta(metaRaw)
         };
     }
@@ -1412,6 +1457,7 @@
                     return;
                 }
 
+                reloadStatsCache();   // 导入直接写了 localStorage，需同步内存缓存
                 updateHeatmap();
                 renderWeakKeys();
                 renderSessionStatsPanel();
@@ -1433,17 +1479,44 @@
     function normalizeKeyStats(raw) {
         const item = (raw && typeof raw === 'object') ? raw : {};
         const toNum = v => Number.isFinite(Number(v)) ? Number(v) : 0;
+        const total = Math.max(0, Math.floor(toNum(item.total)));
+        const errors = Math.max(0, Math.floor(toNum(item.errors)));
+        // emaError: 衰减错误率。旧数据缺该字段时用历史均值回填，迁移无突变。
+        const hasEma = Number.isFinite(Number(item.emaError));
+        const emaError = clamp(hasEma ? toNum(item.emaError) : (total > 0 ? errors / total : 0), 0, 1);
         return {
-            total: Math.max(0, Math.floor(toNum(item.total))),
-            errors: Math.max(0, Math.floor(toNum(item.errors))),
+            total,
+            errors,
             streakWrong: Math.max(0, Math.floor(toNum(item.streakWrong))),
-            reinforceDebt: Math.max(0, toNum(item.reinforceDebt)),
-            lastSeenAt: Math.max(0, Math.floor(toNum(item.lastSeenAt)))
+            reinforceDebt: Math.max(0, toNum(item.reinforceDebt)),  // 旧字段，保留以兼容导入识别
+            lastSeenAt: Math.max(0, Math.floor(toNum(item.lastSeenAt))),
+            emaError,
+            emaLatency: Math.max(0, toNum(item.emaLatency))         // 正确按键的平滑反应时延(ms)
         };
     }
 
     function errorRateOf(item) {
         return item.total > 0 ? item.errors / item.total : 0;
+    }
+
+    // 置信度：样本越多越接近 1；小样本回退到均匀探索，避免按错一次就被狂刷
+    function confidenceOf(item) {
+        return clamp(item.total / WEIGHT_CONFIG.confSamples, 0, 1);
+    }
+
+    // 延迟弱度 0-1：越慢越接近 1（无有效延迟样本时为 0）
+    function latencyScoreOf(item) {
+        if (!(item.emaLatency > 0)) return 0;
+        const { latFloorMs, latCeilMs } = STATS_MODEL;
+        return clamp((item.emaLatency - latFloorMs) / (latCeilMs - latFloorMs), 0, 1);
+    }
+
+    // 掌握度 0-100：又快又准才高分；样本不足返回 null
+    function masteryOf(item) {
+        if (item.total < 3) return null;
+        const accPart = 1 - clamp(item.emaError, 0, 1);
+        const speedPart = 1 - latencyScoreOf(item);
+        return Math.round(clamp(accPart * (0.65 + 0.35 * speedPart), 0, 1) * 100);
     }
 
     function getModePool(m) {
@@ -1460,35 +1533,46 @@
         return 0.25;
     }
 
-    function recordResult(key, ok) {
+    function recordResult(key, ok, latencyMs) {
         const s = loadStats();
         const item = normalizeKeyStats(s[key]);
         item.total++;
         item.lastSeenAt = Date.now();
 
+        // 衰减错误率：每次击键都更新，让权重跟踪“当前水平”而非历史包袱
+        const ae = STATS_MODEL.errorAlpha;
+        item.emaError = clamp(ae * (ok ? 0 : 1) + (1 - ae) * item.emaError, 0, 1);
+
         if (!ok) {
             item.errors++;
             item.streakWrong = Math.min(12, item.streakWrong + 1);
-            item.reinforceDebt = Math.min(28, item.reinforceDebt + 1.2 + item.streakWrong * 0.85);
         } else {
             item.streakWrong = 0;
-            item.reinforceDebt = Math.max(0, item.reinforceDebt - 1.4);
+            const lat = Number(latencyMs);
+            if (Number.isFinite(lat) && lat > 0 && lat <= STATS_MODEL.latMaxValidMs) {
+                const al = STATS_MODEL.latencyAlpha;
+                item.emaLatency = item.emaLatency > 0
+                    ? al * lat + (1 - al) * item.emaLatency
+                    : lat;
+            }
         }
 
         s[key] = item;
-        saveStats(s);
+        markStatsDirty();
     }
 
     // ===== Sequence Generation =====
 
     function weightForKey(key, statsMap) {
         const item = normalizeKeyStats(statsMap[key]);
-        const longTerm = errorRateOf(item) * WEIGHT_CONFIG.longTermFactor;
+        const conf = confidenceOf(item);
         const recent = recencyFactor(item.lastSeenAt);
+        // 小样本时 conf 低 -> 误差/延迟项趋零，权重≈基线 1（均匀探索新键）
+        const errorTerm = item.emaError * conf * WEIGHT_CONFIG.errorFactor;
+        const latencyTerm = latencyScoreOf(item) * conf * WEIGHT_CONFIG.latencyFactor;
         const shortTerm = Math.min(item.streakWrong, WEIGHT_CONFIG.streakCap) * WEIGHT_CONFIG.streakFactor * recent;
-        const debtTerm = Math.min(item.reinforceDebt, WEIGHT_CONFIG.debtCap) * WEIGHT_CONFIG.debtFactor * Math.max(recent, 0.35);
-        const roundBoost = Math.min(7, (roundMistakeByKey[key] || 0) * 1.6);
-        return 1 + longTerm + shortTerm + debtTerm + roundBoost;
+        const roundBoost = Math.min(WEIGHT_CONFIG.roundBoostCap, (roundMistakeByKey[key] || 0) * WEIGHT_CONFIG.roundBoostFactor);
+        return 1 + errorTerm + latencyTerm + shortTerm + roundBoost;
     }
 
     function pickWeighted(pool, statsMap, prevKey) {
@@ -1506,6 +1590,11 @@
         return items[items.length - 1].key;
     }
 
+    // 序列元素为对象 { key, reinforced }，使回灌标记在 splice 后仍稳定跟随元素
+    function makeSeqItem(key, reinforced = false) {
+        return { key, reinforced };
+    }
+
     function genSeq(m, length = BASE_SEQ_LEN) {
         const pool = getModePool(m);
         const statsMap = loadStats();
@@ -1513,21 +1602,22 @@
         let prev = null;
         for (let i = 0; i < length; i++) {
             const nextKey = pickWeighted(pool, statsMap, prev);
-            out.push(nextKey);
+            out.push(makeSeqItem(nextKey));
             prev = nextKey;
         }
         return out;
     }
 
-    function ensureSequenceLength(targetLen) {
+    // 仅向尾部追加（长度成长用），不触碰已展示的预览区
+    function appendToSequence(targetLen) {
         const wanted = Math.min(MAX_SEQ_LEN, Math.max(BASE_SEQ_LEN, targetLen));
         if (seq.length >= wanted) return;
         const pool = getModePool(mode);
         const statsMap = loadStats();
-        let prev = seq.length ? seq[seq.length - 1] : null;
+        let prev = seq.length ? seq[seq.length - 1].key : null;
         while (seq.length < wanted) {
             const nextKey = pickWeighted(pool, statsMap, prev);
-            seq.push(nextKey);
+            seq.push(makeSeqItem(nextKey));
             prev = nextKey;
         }
     }
@@ -1540,56 +1630,38 @@
         roundMistakes++;
         const step = computeGrowthStep(roundMistakes);
         roundTargetLen = Math.min(MAX_SEQ_LEN, roundTargetLen + step);
-        ensureSequenceLength(roundTargetLen);
+        appendToSequence(roundTargetLen);
     }
 
-    function pendingCountForKey(key) {
-        return reinforceQueue.filter(item => item.key === key).length;
+    // 统计当前位置之后、尚未打到的区段里某键已有的回灌数量
+    function pendingReinforceCount(key) {
+        let n = 0;
+        for (let i = idx + 1; i < seq.length; i++) {
+            if (seq[i].reinforced && seq[i].key === key) n++;
+        }
+        return n;
     }
 
-    function scheduleImmediateReinforce(key) {
-        if (pendingCountForKey(key) >= REINFORCE_CONFIG.maxPendingPerKey) return;
-        if (reinforceQueue.length >= REINFORCE_CONFIG.maxQueueSize) return;
-
+    // 出错即在近距离窗口内就地 splice 插入回灌键：
+    // 只动插入点，未来其余预览保持稳定（取代旧的整段重排）
+    function insertReinforce(key) {
         const insertCount = Math.min(2, 1 + Math.floor(currentTargetMistakes / 2));
         for (let n = 0; n < insertCount; n++) {
-            if (reinforceQueue.length >= REINFORCE_CONFIG.maxQueueSize) break;
-            if (pendingCountForKey(key) >= REINFORCE_CONFIG.maxPendingPerKey) break;
+            if (seq.length >= MAX_SEQ_LEN) break;
+            if (pendingReinforceCount(key) >= REINFORCE_CONFIG.maxPendingPerKey) break;
 
-            const gapBase = REINFORCE_CONFIG.minGap + Math.floor(Math.random() * (REINFORCE_CONFIG.maxGap - REINFORCE_CONFIG.minGap + 1));
-            const insertAt = Math.min(roundTargetLen - 1, idx + gapBase + n * 2);
-            if (insertAt <= idx) continue;
+            const gap = REINFORCE_CONFIG.minGap +
+                Math.floor(Math.random() * (REINFORCE_CONFIG.maxGap - REINFORCE_CONFIG.minGap + 1));
+            let pos = Math.min(idx + gap + n * 2, idx + REINFORCE_CONFIG.maxAhead, seq.length);
+            if (pos < idx + 1) pos = idx + 1;
 
-            const hasNearDuplicate = reinforceQueue.some(item =>
-                item.key === key && Math.abs(item.insertAt - insertAt) <= 1
-            );
-            if (hasNearDuplicate) continue;
+            // 避免与相邻键相同造成连续同键
+            if (seq[pos - 1] && seq[pos - 1].key === key) pos++;
+            if (pos < seq.length && seq[pos].key === key) pos++;
+            pos = Math.min(pos, seq.length);
 
-            reinforceQueue.push({ key, insertAt });
-        }
-        reinforceQueue.sort((a, b) => a.insertAt - b.insertAt);
-    }
-
-    function refreshFutureSequence() {
-        if (!active || idx >= seq.length - 1) return;
-        ensureSequenceLength(roundTargetLen);
-        const pool = getModePool(mode);
-        const statsMap = loadStats();
-        reinforcedPositions = new Set();
-        reinforceQueue = reinforceQueue.filter(item => item.insertAt > idx);
-        let prev = seq[idx];
-        for (let i = idx + 1; i < seq.length; i++) {
-            const forcedIndex = reinforceQueue.findIndex(item => item.insertAt <= i && item.key !== prev);
-            if (forcedIndex !== -1) {
-                const forced = reinforceQueue.splice(forcedIndex, 1)[0];
-                seq[i] = forced.key;
-                reinforcedPositions.add(i);
-                prev = forced.key;
-                continue;
-            }
-            const nextKey = pickWeighted(pool, statsMap, prev);
-            seq[i] = nextKey;
-            prev = nextKey;
+            seq.splice(pos, 0, makeSeqItem(key, true));
+            roundTargetLen = Math.min(MAX_SEQ_LEN, Math.max(roundTargetLen, seq.length));
         }
     }
 
@@ -1721,8 +1793,8 @@
         const end = Math.min(seq.length, idx + 7);
         for (let i = idx + 1; i < end; i++) {
             const opacity = 1 - (i - idx - 1) * 0.12;
-            const reinforced = reinforcedPositions.has(i) ? ' reinforced' : '';
-            upHtml += `<span class="queue-key upcoming${reinforced}" style="opacity:${Math.max(0.2, opacity)}">${esc(displayName(seq[i]))}</span>`;
+            const reinforced = seq[i].reinforced ? ' reinforced' : '';
+            upHtml += `<span class="queue-key upcoming${reinforced}" style="opacity:${Math.max(0.2, opacity)}">${esc(displayName(seq[i].key))}</span>`;
         }
         upEl.innerHTML = upHtml;
 
@@ -1736,7 +1808,7 @@
             return;
         }
         const errorCls = currentTargetHasError ? ' error-state' : '';
-        el.innerHTML = `<span class="key-label${errorCls}">${esc(displayName(seq[idx]))}</span>`;
+        el.innerHTML = `<span class="key-label${errorCls}">${esc(displayName(seq[idx].key))}</span>`;
     }
 
     function updateProgress() {
@@ -1770,20 +1842,35 @@
 
         const weak = Object.entries(stats)
             .map(([k, s]) => ({ key: k, item: normalizeKeyStats(s) }))
-            .filter((entry) => entry.item.total >= 5 && entry.item.errors > 0)
-            .map(({ key, item }) => ({ key, rate: errorRateOf(item), total: item.total }))
-            .sort((a, b) => b.rate - a.rate)
-            .slice(0, 5);
+            .filter(({ item }) => item.total >= 5)
+            .map(({ key, item }) => {
+                const errScore = item.emaError;
+                const latScore = latencyScoreOf(item);
+                // 综合弱度：错误为主、慢手为辅
+                const weakness = errScore * 0.7 + latScore * 0.3;
+                return {
+                    key,
+                    weakness,
+                    errPct: Math.round(errorRateOf(item) * 100),
+                    mastery: masteryOf(item),
+                    slow: latScore >= 0.5 && errScore < 0.12
+                };
+            })
+            .filter(w => w.weakness > 0.05)
+            .sort((a, b) => b.weakness - a.weakness)
+            .slice(0, 6);
 
         if (!weak.length) { panel.style.display = 'none'; return; }
         panel.style.display = '';
 
         list.innerHTML = weak.map(w => {
-            const pct = Math.round(w.rate * 100);
+            const barPct = Math.round(clamp(w.weakness, 0, 1) * 100);
+            const tag = w.slow ? '偏慢' : `${w.errPct}% 错`;
+            const masteryText = w.mastery === null ? '' : ` · 掌握 ${w.mastery}`;
             return `<div class="weak-key-item">
                 <span class="weak-key-name">${esc(displayName(w.key))}</span>
-                <div class="weak-key-bar"><div class="weak-key-fill" style="width:${pct}%"></div></div>
-                <span class="weak-key-rate">${pct}% 错</span>
+                <div class="weak-key-bar"><div class="weak-key-fill" style="width:${barPct}%"></div></div>
+                <span class="weak-key-rate">${tag}${masteryText}</span>
             </div>`;
         }).join('');
     }
@@ -2113,7 +2200,7 @@
         }
         e.preventDefault();
 
-        const target = seq[idx];
+        const target = seq[idx].key;
         const pressed = e.key;
 
         // Ignore modifier-only presses when target is not a modifier
@@ -2123,10 +2210,14 @@
         }
 
         const ok = pressed === target;
+        // 仅一次命中（无中途出错）才计入纯反应时延，避免被纠错时间污染
+        const cleanLatency = (ok && currentTargetMistakes === 0 && targetShownAt)
+            ? Date.now() - targetShownAt
+            : null;
         flashPress(pressed, !ok);
 
         results.push({ key: target, correct: ok });
-        recordResult(target, ok);
+        recordResult(target, ok, cleanLatency);
 
         if (ok) {
             setCurrentErrorState(false);
@@ -2141,12 +2232,10 @@
             currentTargetMistakes++;
             roundMistakeByKey[target] = (roundMistakeByKey[target] || 0) + 1;
             applyTieredLengthGrowth();
-            scheduleImmediateReinforce(target);
+            insertReinforce(target);
             setCurrentErrorState(true);
             flashCurrentLabel(false);
         }
-
-        refreshFutureSequence();
 
         updateAccuracy();
         updateProgress();
@@ -2155,8 +2244,11 @@
         if (idx >= seq.length) {
             completePractice();
         } else {
-            if (ok) renderCurrent();
-            highlightTarget(seq[idx]);
+            if (ok) {
+                targetShownAt = Date.now();
+                renderCurrent();
+            }
+            highlightTarget(seq[idx].key);
         }
     });
 
@@ -2164,8 +2256,6 @@
     function startNewPractice() {
         roundMistakes = 0;
         roundTargetLen = BASE_SEQ_LEN;
-        reinforceQueue = [];
-        reinforcedPositions = new Set();
         roundMistakeByKey = {};
         seq = genSeq(mode, roundTargetLen);
         idx = 0;
@@ -2174,6 +2264,7 @@
         currentTargetMistakes = 0;
         currentTargetHasError = false;
         t0 = Date.now();
+        targetShownAt = t0;
         active = true;
 
         if (timerID) clearInterval(timerID);
@@ -2190,7 +2281,7 @@
         renderCurrent();
         renderQueue();
         updateProgress();
-        highlightTarget(seq[idx]);
+        highlightTarget(seq[idx].key);
         updateHeatmap();
         renderWeakKeys();
         if (statsPanelOpen) renderSessionStatsPanel();
@@ -2200,6 +2291,8 @@
 
     function completePractice() {
         active = false;
+        targetShownAt = null;
+        flushStats();   // 轮次边界落盘，保证统计不因防抖丢失
         if (timerID) { clearInterval(timerID); timerID = null; }
         updateTimer();
         clearTarget();
@@ -2294,9 +2387,12 @@
 
     function resetAllData() {
         if (!confirm('确定要清除所有练习记录吗？此操作不可撤销。')) return;
+        if (keyStatsFlushTimer) { clearTimeout(keyStatsFlushTimer); keyStatsFlushTimer = null; }
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(SESSION_STORAGE_KEY);
         localStorage.removeItem(SESSION_META_STORAGE_KEY);
+        keyStatsCache = {};
+        keyStatsDirty = false;
         updateHeatmap();
         renderWeakKeys();
         renderSessionStatsPanel();
@@ -2304,10 +2400,17 @@
 
     // ===== Init =====
     syncSessionMetaWithHistory();
+    loadStats();   // 预热内存缓存
     buildKeyboard();
     renderWeakKeys();
     renderSessionStatsPanel();
     startNewPractice();
+
+    // 离开/切后台时落盘，避免防抖窗口内的统计丢失
+    window.addEventListener('beforeunload', flushStats);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') flushStats();
+    });
     </script>
 </body>
 </html>
