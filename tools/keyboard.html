@@ -1930,7 +1930,9 @@
         if (!history.length) return null;
         const effective = history.map(effectiveKpmOf);
         const baseSeed = effective.slice(0, Math.min(10, effective.length)).filter(v => v > 0);
-        const baseRaw = medianOf(baseSeed) || effective[0] || 1;
+        // Fall back to the median of all positive sessions before the hard 1 floor,
+        // so an unusable early sample can't collapse the baseline and inflate the index.
+        const baseRaw = medianOf(baseSeed) || medianOf(effective.filter(v => v > 0)) || effective[0] || 1;
         const baselineEffectiveKpm = Math.max(1, toFiniteNumber(baselineOverride, baseRaw));
         const indexRaw = effective.map(v => Math.max(0, (v / baselineEffectiveKpm) * 100));
         const indexEma = emaSeries(indexRaw, 7);
@@ -2054,10 +2056,32 @@
         const size = Math.max(1, data.length - 1);
         const xAt = i => pad.left + (i / size) * innerW;
 
-        const vMin = Math.min(100, ...values);
-        const vMax = Math.max(120, ...values);
-        const yMin = Math.max(40, Math.floor((vMin - 10) / 10) * 10);
-        const yMax = Math.max(yMin + 40, Math.ceil((vMax + 10) / 10) * 10);
+        const vMin = Math.min(...values);
+        const vMax = Math.max(...values);
+        let lo = vMin;
+        let hi = vMax;
+        let span = hi - lo;
+        if (span < 1e-6) {
+            // Flat series: open up symmetric room so the line isn't pinned to an edge.
+            const room = Math.max(8, Math.abs(hi) * 0.08);
+            lo -= room;
+            hi += room;
+            span = hi - lo;
+        }
+        const padAmt = span * 0.2;
+        lo -= padAmt;
+        hi += padAmt;
+        // Keep the 100 baseline in view only when the data still lives near it.
+        if (vMax <= 200 && lo > 80) lo = 80;
+        lo = Math.max(0, lo);
+        // Round to a tidy 4-tick grid so axis labels stay readable at any magnitude.
+        const rawStep = Math.max(1e-6, (hi - lo) / 4);
+        const stepMag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+        const stepNorm = rawStep / stepMag;
+        const niceUnit = stepNorm <= 1 ? 1 : stepNorm <= 2 ? 2 : stepNorm <= 5 ? 5 : 10;
+        const step = niceUnit * stepMag;
+        const yMin = Math.max(0, Math.floor(lo / step) * step);
+        const yMax = yMin + step * 4;
         const ySpan = Math.max(1, yMax - yMin);
         const yAt = v => pad.top + (1 - (clamp(v, yMin, yMax) - yMin) / ySpan) * innerH;
         const yBase = pad.top + innerH;
