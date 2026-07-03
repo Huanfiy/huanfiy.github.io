@@ -1626,6 +1626,15 @@ footer::before {
     font-size: 0.9rem;
 }
 
+.footer-note a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.footer-note a:hover {
+    color: var(--primary-color);
+}
+
 .footer-note i {
     color: var(--rose);
 }
