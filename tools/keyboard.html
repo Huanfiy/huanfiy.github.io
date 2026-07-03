@@ -137,6 +137,24 @@
             flex-shrink: 0;
         }
 
+        .capslock-warning {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: max-content;
+            max-width: 100%;
+            margin: 0 auto 0.8rem;
+            padding: 4px 14px;
+            border-radius: 999px;
+            background: var(--warm-soft);
+            border: 1.5px dashed var(--warm);
+            color: var(--dark-text);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .capslock-warning i { color: var(--warm); }
+
         .queue-key {
             display: inline-flex;
             align-items: center;
@@ -548,7 +566,7 @@
             border-radius: 50%;
         }
 
-        .legend-dot.growth { background: #7c3aed; }
+        .legend-dot.growth { background: var(--primary-color); }
         .legend-dot.acc { background: #16a34a; }
         .legend-dot.kpm { background: #2563eb; }
 
@@ -586,6 +604,16 @@
             height: 220px;
             display: block;
         }
+
+        /* 趋势图配色走主题变量，亮/暗模式自动适配 */
+        .trend-chart .tc-grid { stroke: var(--line-soft); }
+        .trend-chart .tc-tick { fill: var(--light-text); }
+        .trend-chart .tc-ref { stroke: var(--line-soft); }
+        .trend-chart .tc-ref-base { stroke: var(--light-text); }
+        .trend-chart .tc-area { fill: var(--primary-color); opacity: 0.14; }
+        .trend-chart .tc-line { fill: none; stroke: var(--primary-color); }
+        .trend-chart .tc-dot { fill: var(--primary-color); }
+        .trend-chart .tc-cur-label { fill: var(--primary-hover); font-weight: 700; }
 
         .trend-empty {
             margin: 0.55rem 0 0.2rem;
@@ -857,6 +885,9 @@
 
         <!-- Practice Area -->
         <div class="practice-area" id="practice-area" tabindex="0">
+            <div class="capslock-warning" id="capslock-warning" style="display:none;">
+                <i class="fas fa-exclamation-circle"></i> CapsLock 已开启，字母将按大写判定
+            </div>
             <div class="key-queue-wrapper">
                 <div id="done-keys" style="display:flex;gap:4px;"></div>
                 <div class="queue-separator" id="queue-sep" style="display:none;"></div>
@@ -878,7 +909,7 @@
         <!-- Weak Keys Panel -->
         <div class="weak-keys-panel" id="weak-keys-panel" style="display:none;">
             <div class="weak-keys-title">
-                <i class="fas fa-exclamation-triangle" style="color:#f97316;"></i>
+                <i class="fas fa-exclamation-triangle" style="color:var(--warm);"></i>
                 需要加强的键位
             </div>
             <div id="weak-keys-list"></div>
@@ -888,7 +919,7 @@
         <div class="session-stats-panel" id="session-stats-panel" style="display:none;">
             <div class="session-stats-header">
                 <div class="weak-keys-title" style="margin-bottom:0;">
-                    <i class="fas fa-chart-line" style="color:#2563eb;"></i>
+                    <i class="fas fa-chart-line" style="color:var(--accent-color);"></i>
                     进步统计
                 </div>
                 <div class="session-range-group" id="session-range-group">
@@ -986,42 +1017,25 @@
     </footer>
 
     <script src="../js/script.js"></script>
+    <script src="keyboard-algo.js"></script>
     <script>
     // =========================================================
-    //  键位练习 - 全键位覆盖 & 智能弱键强化
+    //  键位练习 - 页面控制层（渲染 / 输入 / 存储）
+    //  纯算法引擎见 keyboard-algo.js（KeyboardAlgo：时钟/随机数注入，
+    //  无 DOM 依赖，可在 node 下直接 require 做参数仿真与测试）
     // =========================================================
 
+    const Algo = KeyboardAlgo;
+    const { toFiniteNumber, clamp } = Algo;
+
     // ===== Constants =====
-    const BASE_SEQ_LEN = 25;
-    const MAX_SEQ_LEN = 100;
     const STORAGE_KEY = 'keyboard_practice_stats';
+    const KEY_STATS_VERSION = 2;   // v2: { version, keys, bigrams, roundCounter }
     const SESSION_STORAGE_KEY = 'keyboard_practice_sessions';
     const SESSION_META_STORAGE_KEY = 'keyboard_practice_session_meta';
     const SESSION_META_VERSION = 1;
     const SESSION_RENDER_MAX_POINTS = 240;
     const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta']);
-    const WEIGHT_CONFIG = {
-        errorFactor: 4.0,        // 长期(衰减)错误率权重
-        latencyFactor: 1.9,      // 反应延迟权重（慢但准的键也要练）
-        streakFactor: 1.35,      // 短期连错权重
-        streakCap: 5,
-        roundBoostFactor: 1.6,   // 本轮内常错键加成
-        roundBoostCap: 7,
-        confSamples: 6           // 置信度饱和样本数（小样本回退到均匀探索）
-    };
-    const STATS_MODEL = {
-        errorAlpha: 0.18,        // 错误率 EWMA 平滑系数（越大越看重近期）
-        latencyAlpha: 0.25,      // 延迟 EWMA 平滑系数
-        latFloorMs: 260,         // 反应时间下限（视为“很快”）
-        latCeilMs: 1200,         // 反应时间上限（视为“很慢”）
-        latMaxValidMs: 5000      // 超过此值视为分心，不计入延迟
-    };
-    const REINFORCE_CONFIG = {
-        minGap: 3,
-        maxGap: 8,
-        maxPendingPerKey: 2,     // 同一键在未打区段内最多并存几次回灌
-        maxAhead: 14             // 回灌不超过当前位置之后多少格
-    };
     const MAX_STORED_SESSIONS = 2000;  // 会话历史本地存储上限
 
     // Display name mapping for special keys
@@ -1031,27 +1045,6 @@
         'Shift': 'Shift', 'Alt': 'Alt'
     };
 
-    // Shift-symbol → base key (for keyboard highlight)
-    const SHIFT_BASE = {
-        '~':'`','!':'1','@':'2','#':'3','$':'4','%':'5',
-        '^':'6','&':'7','*':'8','(':'9',')':'0','_':'-',
-        '+':'=','{':'[','}':']','|':'\\',':':';','"':"'",
-        '<':',','>':'.','?':'/'
-    };
-
-    // ===== Key Pools =====
-    const POOLS = {
-        homeRow:    ['a','s','d','f','g','h','j','k','l',';',"'"],
-        topRow:     ['q','w','e','r','t','y','u','i','o','p','[',']','\\'],
-        bottomRow:  ['z','x','c','v','b','n','m',',','.','/'],
-        numberRow:  ['`','1','2','3','4','5','6','7','8','9','0','-','='],
-        shiftCombo: [
-            '~','!','@','#','$','%','^','&','*','(',')','_','+',
-            '{','}','|',':','"','<','>','?',
-            ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-        ],
-        funcKeys:   ['Tab','CapsLock','Shift','Control','Alt','Enter','Backspace',' ']
-    };
     const MODE_LABELS = {
         homeRow: '基础行',
         topRow: '上行',
@@ -1062,63 +1055,19 @@
         allKeys: '全键混合'
     };
 
-    function getAllKeys() {
-        return [
-            ...POOLS.homeRow, ...POOLS.topRow, ...POOLS.bottomRow,
-            ...POOLS.numberRow, ...POOLS.shiftCombo, ...POOLS.funcKeys
-        ];
-    }
-
-    // ===== Keyboard Layout Definition =====
-    // [dataKey, label, shiftLabel, fingerClass, widthClass]
-    const KB_ROWS = [
-        [ // Number row
-            ['`','`','~','f-lp',''],['1','1','!','f-lp',''],['2','2','@','f-lr',''],
-            ['3','3','#','f-lm',''],['4','4','$','f-li',''],['5','5','%','f-li',''],
-            ['6','6','^','f-ri',''],['7','7','&','f-ri',''],['8','8','*','f-rm',''],
-            ['9','9','(','f-rr',''],['0','0',')','f-rp',''],['-','-','_','f-rp',''],
-            ['=','=','+','f-rp',''],['Backspace','Back','','f-rp','w2']
-        ],
-        [ // Top row
-            ['Tab','Tab','','f-lp','w1'],['q','Q','','f-lp',''],['w','W','','f-lr',''],
-            ['e','E','','f-lm',''],['r','R','','f-li',''],['t','T','','f-li',''],
-            ['y','Y','','f-ri',''],['u','U','','f-ri',''],['i','I','','f-rm',''],
-            ['o','O','','f-rr',''],['p','P','','f-rp',''],['[','[','{','f-rp',''],
-            [']',']','}','f-rp',''],['\\','\\','|','f-rp','w1']
-        ],
-        [ // Home row
-            ['CapsLock','Caps','','f-lp','w2'],['a','A','','f-lp',''],['s','S','','f-lr',''],
-            ['d','D','','f-lm',''],['f','F','','f-li',''],['g','G','','f-li',''],
-            ['h','H','','f-ri',''],['j','J','','f-ri',''],['k','K','','f-rm',''],
-            ['l','L','','f-rr',''],[';',';',':','f-rp',''],["'","'",'"','f-rp',''],
-            ['Enter','Enter','','f-rp','w2']
-        ],
-        [ // Bottom row
-            ['Shift','Shift','','f-lp','w2'],['z','Z','','f-lp',''],['x','X','','f-lr',''],
-            ['c','C','','f-lm',''],['v','V','','f-li',''],['b','B','','f-li',''],
-            ['n','N','','f-ri',''],['m','M','','f-ri',''],[',',',','<','f-rm',''],
-            ['.','.','>' ,'f-rr',''],['/','/','?','f-rp',''],['Shift','Shift','','f-rp','w2']
-        ],
-        [ // Bottom controls
-            ['Control','Ctrl','','f-lp','w3'],['Meta','Win','','f-lp','w3'],
-            ['Alt','Alt','','f-th','w3'],[' ','Space','','f-th','space-key'],
-            ['Alt','Alt','','f-th','w3'],['Meta','Win','','f-rp','w3'],
-            ['Control','Ctrl','','f-rp','w3']
-        ]
-    ];
-
     // ===== State =====
     let mode = 'homeRow';
     let seq = [];
     let idx = 0;
-    let results = [];       // all attempts: { key, correct }
+    let results = [];       // all attempts: { key, correct, pressed }
     let passedKeys = [];    // passed targets: { key, hadError }
     let currentTargetMistakes = 0;
     let currentTargetHasError = false;
     let roundMistakes = 0;
-    let roundTargetLen = BASE_SEQ_LEN;
+    let roundTargetLen = Algo.BASE_SEQ_LEN;
     let roundMistakeByKey = {};      // key -> count (round only)
     let targetShownAt = null;        // 当前目标键展示时刻（反应时延统计用）
+    let prevTargetKey = null;        // 上一个已通过的目标键（bigram 转移统计用）
     let t0 = null;          // start timestamp
     let timerID = null;
     let active = false;
@@ -1128,56 +1077,76 @@
     let statsResizeTimer = null;
     const keyElMap = {};    // dataKey → [elements]
 
-    // ===== Key-stats persistence (in-memory cache + debounced flush) =====
+    // ===== Engine store: keys + bigrams + roundCounter =====
     // 单一数据源：内存缓存。按键时只改内存并标脏，落盘走防抖/关键节点，
     // 避免每次击键都做整盘 JSON.parse + JSON.stringify。
-    let keyStatsCache = null;
-    let keyStatsDirty = false;
-    let keyStatsFlushTimer = null;
+    let engineCache = null;
+    let engineDirty = false;
+    let engineFlushTimer = null;
 
-    function readKeyStatsFromStorage() {
+    function normalizeEngineData(raw) {
+        const obj = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+        // v1 为无 version 字段的扁平 key→stats 映射，读取时就地迁移到 v2
+        const isV2 = toFiniteNumber(obj.version, 0) >= 2 || Object.prototype.hasOwnProperty.call(obj, 'keys');
+        const keysRaw = isV2 ? obj.keys : obj;
+        const keys = {};
+        if (keysRaw && typeof keysRaw === 'object' && !Array.isArray(keysRaw)) {
+            Object.entries(keysRaw).forEach(([k, v]) => {
+                if (k && v && typeof v === 'object') keys[k] = Algo.normalizeKeyStats(v);
+            });
+        }
+        const bigrams = {};
+        if (isV2 && obj.bigrams && typeof obj.bigrams === 'object' && !Array.isArray(obj.bigrams)) {
+            Object.entries(obj.bigrams).forEach(([id, v]) => {
+                if (id && v && typeof v === 'object') bigrams[id] = Algo.normalizeBigramStats(v);
+            });
+        }
+        return {
+            version: KEY_STATS_VERSION,
+            keys,
+            bigrams,
+            roundCounter: Math.max(0, Math.floor(toFiniteNumber(isV2 ? obj.roundCounter : 0, 0)))
+        };
+    }
+
+    function readEngineFromStorage() {
         try {
-            const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
-        } catch { return {}; }
+            return normalizeEngineData(JSON.parse(localStorage.getItem(STORAGE_KEY)));
+        } catch {
+            return normalizeEngineData(null);
+        }
     }
 
-    function loadStats() {
-        if (!keyStatsCache) keyStatsCache = readKeyStatsFromStorage();
-        return keyStatsCache;
+    function engine() {
+        if (!engineCache) engineCache = readEngineFromStorage();
+        return engineCache;
     }
+
+    function loadStats() { return engine().keys; }
+    function loadBigrams() { return engine().bigrams; }
 
     function flushStats() {
-        if (!keyStatsDirty || !keyStatsCache) return;
+        if (!engineDirty || !engineCache) return;
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(keyStatsCache));
-            keyStatsDirty = false;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(engineCache));
+            engineDirty = false;
         } catch (err) {
-            console.warn('key stats flush failed', err);
+            console.warn('engine stats flush failed', err);
         }
     }
 
     function markStatsDirty() {
-        keyStatsDirty = true;
-        if (keyStatsFlushTimer) return;
-        keyStatsFlushTimer = setTimeout(() => {
-            keyStatsFlushTimer = null;
+        engineDirty = true;
+        if (engineFlushTimer) return;
+        engineFlushTimer = setTimeout(() => {
+            engineFlushTimer = null;
             flushStats();
         }, 800);
     }
 
     function reloadStatsCache() {
-        keyStatsCache = readKeyStatsFromStorage();
-        keyStatsDirty = false;
-    }
-
-    function toFiniteNumber(v, fallback = 0) {
-        const n = Number(v);
-        return Number.isFinite(n) ? n : fallback;
-    }
-
-    function clamp(v, min, max) {
-        return Math.min(max, Math.max(min, v));
+        engineCache = readEngineFromStorage();
+        engineDirty = false;
     }
 
     function formatDuration(totalSec) {
@@ -1186,6 +1155,9 @@
         const s = sec % 60;
         return `${m}:${s.toString().padStart(2, '0')}`;
     }
+
+    // ===== Session history（与键位统计同样走内存缓存，避免反复整盘 parse）=====
+    let sessionCache = null;
 
     function normalizeSessionMeta(raw) {
         const item = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
@@ -1227,7 +1199,7 @@
 
     function normalizeSessionRecord(raw) {
         const item = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
-        const modeName = (typeof item.mode === 'string' && (item.mode === 'allKeys' || Object.prototype.hasOwnProperty.call(POOLS, item.mode)))
+        const modeName = (typeof item.mode === 'string' && (item.mode === 'allKeys' || Object.prototype.hasOwnProperty.call(Algo.POOLS, item.mode)))
             ? item.mode
             : 'homeRow';
         return {
@@ -1243,20 +1215,23 @@
     }
 
     function loadSessionHistory() {
+        if (sessionCache) return sessionCache;
         try {
             const parsed = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY));
-            if (!Array.isArray(parsed)) return [];
-            return parsed
-                .map(normalizeSessionRecord)
-                .filter(item => item.timestamp > 0);
+            sessionCache = Array.isArray(parsed)
+                ? parsed.map(normalizeSessionRecord).filter(item => item.timestamp > 0)
+                : [];
         } catch {
-            return [];
+            sessionCache = [];
         }
+        return sessionCache;
     }
 
     function saveSessionHistory(history) {
         try {
-            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(Array.isArray(history) ? history : []));
+            const list = Array.isArray(history) ? history : [];
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(list));
+            sessionCache = list;
             return true;
         } catch {
             return false;
@@ -1284,7 +1259,7 @@
     }
 
     function appendSessionRecord(payload) {
-        const history = loadSessionHistory();
+        const history = loadSessionHistory().slice();
         const next = normalizeSessionRecord(payload);
         if (!next.timestamp) next.timestamp = Date.now();
         history.push(next);
@@ -1302,20 +1277,34 @@
         });
     }
 
+    // ===== Import / Export =====
     function normalizeImportedKeyStats(raw) {
         const source = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
         const out = {};
         const isLikelyKeyStatsItem = value => {
             if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-            const fields = ['total', 'errors', 'streakWrong', 'reinforceDebt', 'lastSeenAt'];
+            const fields = ['total', 'errors', 'streakWrong', 'reinforceDebt', 'lastSeenAt',
+                            'emaError', 'emaLatency', 'confusions', 'reviewGap', 'dueRound'];
             return fields.some(name => Object.prototype.hasOwnProperty.call(value, name));
         };
         Object.entries(source).forEach(([key, value]) => {
             if (!key || typeof key !== 'string') return;
             if (!isLikelyKeyStatsItem(value)) return;
-            out[key] = normalizeKeyStats(value);
+            out[key] = Algo.normalizeKeyStats(value);
         });
         return out;
+    }
+
+    function normalizeImportedBigrams(raw) {
+        const source = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+        const out = {};
+        Object.entries(source).forEach(([id, value]) => {
+            if (!id || typeof id !== 'string' || !id.includes(Algo.BIGRAM_SEP)) return;
+            if (!value || typeof value !== 'object' || Array.isArray(value)) return;
+            const item = Algo.normalizeBigramStats(value);
+            if (item.total > 0) out[id] = item;
+        });
+        return Algo.pruneBigramMap(out);
     }
 
     function extractImportPayload(raw) {
@@ -1326,10 +1315,26 @@
             Object.prototype.hasOwnProperty.call(obj, STORAGE_KEY) ||
             Object.prototype.hasOwnProperty.call(obj, SESSION_STORAGE_KEY);
 
-        const keyStatsRaw =
+        let keyStatsRaw =
             (obj.keyStats && typeof obj.keyStats === 'object' && !Array.isArray(obj.keyStats)) ? obj.keyStats :
             (obj[STORAGE_KEY] && typeof obj[STORAGE_KEY] === 'object' && !Array.isArray(obj[STORAGE_KEY])) ? obj[STORAGE_KEY] :
             (!hasStructuredPayload ? obj : {});
+
+        let bigramsRaw =
+            (obj.bigramStats && typeof obj.bigramStats === 'object' && !Array.isArray(obj.bigramStats)) ? obj.bigramStats : {};
+
+        let roundCounterRaw =
+            (obj.engineMeta && typeof obj.engineMeta === 'object') ? obj.engineMeta.roundCounter : 0;
+
+        // 兼容 v2 引擎包装结构 { version, keys, bigrams, roundCounter }
+        if (keyStatsRaw && typeof keyStatsRaw === 'object' &&
+            keyStatsRaw.keys && typeof keyStatsRaw.keys === 'object' && !Array.isArray(keyStatsRaw.keys)) {
+            if (!Object.keys(bigramsRaw).length && keyStatsRaw.bigrams && typeof keyStatsRaw.bigrams === 'object') {
+                bigramsRaw = keyStatsRaw.bigrams;
+            }
+            if (!roundCounterRaw) roundCounterRaw = keyStatsRaw.roundCounter;
+            keyStatsRaw = keyStatsRaw.keys;
+        }
 
         const sessionsRaw =
             Array.isArray(obj.sessions) ? obj.sessions :
@@ -1343,6 +1348,8 @@
 
         return {
             keyStats: normalizeImportedKeyStats(keyStatsRaw),
+            bigrams: normalizeImportedBigrams(bigramsRaw),
+            roundCounter: Math.max(0, Math.floor(toFiniteNumber(roundCounterRaw, 0))),
             sessions: sessionsRaw.map(normalizeSessionRecord).filter(item => item.timestamp > 0).slice(-MAX_STORED_SESSIONS),
             meta: normalizeSessionMeta(metaRaw)
         };
@@ -1372,10 +1379,12 @@
     function exportStatsData() {
         try {
             const payload = {
-                schemaVersion: 1,
+                schemaVersion: 2,
                 source: 'huanfly-keyboard-practice',
                 exportedAt: new Date().toISOString(),
-                keyStats: loadStats(),
+                keyStats: loadStats(),                 // 扁平 key→stats（与 v1 导出字段兼容）
+                bigramStats: loadBigrams(),
+                engineMeta: { roundCounter: engine().roundCounter },
                 sessions: loadSessionHistory(),
                 sessionMeta: loadSessionMeta()
             };
@@ -1409,7 +1418,12 @@
             sessionMeta: localStorage.getItem(SESSION_META_STORAGE_KEY)
         };
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.keyStats));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                version: KEY_STATS_VERSION,
+                keys: payload.keyStats,
+                bigrams: payload.bigrams,
+                roundCounter: payload.roundCounter
+            }));
             localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload.sessions));
             localStorage.setItem(SESSION_META_STORAGE_KEY, JSON.stringify(payload.meta));
             return true;
@@ -1459,6 +1473,7 @@
                 }
 
                 reloadStatsCache();   // 导入直接写了 localStorage，需同步内存缓存
+                sessionCache = null;
                 updateHeatmap();
                 renderWeakKeys();
                 renderSessionStatsPanel();
@@ -1477,193 +1492,46 @@
         reader.readAsText(file, 'utf-8');
     }
 
-    function normalizeKeyStats(raw) {
-        const item = (raw && typeof raw === 'object') ? raw : {};
-        const toNum = v => Number.isFinite(Number(v)) ? Number(v) : 0;
-        const total = Math.max(0, Math.floor(toNum(item.total)));
-        const errors = Math.max(0, Math.floor(toNum(item.errors)));
-        // emaError: 衰减错误率。旧数据缺该字段时用历史均值回填，迁移无突变。
-        const hasEma = Number.isFinite(Number(item.emaError));
-        const emaError = clamp(hasEma ? toNum(item.emaError) : (total > 0 ? errors / total : 0), 0, 1);
+    // ===== 引擎调用封装 =====
+    function samplingCtx() {
+        const eng = engine();
         return {
-            total,
-            errors,
-            streakWrong: Math.max(0, Math.floor(toNum(item.streakWrong))),
-            reinforceDebt: Math.max(0, toNum(item.reinforceDebt)),  // 旧字段，保留以兼容导入识别
-            lastSeenAt: Math.max(0, Math.floor(toNum(item.lastSeenAt))),
-            emaError,
-            emaLatency: Math.max(0, toNum(item.emaLatency))         // 正确按键的平滑反应时延(ms)
+            now: Date.now(),
+            bigramMap: eng.bigrams,
+            roundMistakeByKey,
+            roundNumber: eng.roundCounter + 1   // 当前正在进行的轮次序号
         };
     }
 
-    function errorRateOf(item) {
-        return item.total > 0 ? item.errors / item.total : 0;
-    }
-
-    // 置信度：样本越多越接近 1；小样本回退到均匀探索，避免按错一次就被狂刷
-    function confidenceOf(item) {
-        return clamp(item.total / WEIGHT_CONFIG.confSamples, 0, 1);
-    }
-
-    // 延迟弱度 0-1：越慢越接近 1（无有效延迟样本时为 0）
-    function latencyScoreOf(item) {
-        if (!(item.emaLatency > 0)) return 0;
-        const { latFloorMs, latCeilMs } = STATS_MODEL;
-        return clamp((item.emaLatency - latFloorMs) / (latCeilMs - latFloorMs), 0, 1);
-    }
-
-    // 掌握度 0-100：又快又准才高分；样本不足返回 null
-    function masteryOf(item) {
-        if (item.total < 3) return null;
-        const accPart = 1 - clamp(item.emaError, 0, 1);
-        const speedPart = 1 - latencyScoreOf(item);
-        return Math.round(clamp(accPart * (0.65 + 0.35 * speedPart), 0, 1) * 100);
-    }
-
-    function getModePool(m) {
-        if (m === 'allKeys') return Array.from(new Set(getAllKeys()));
-        return POOLS[m] || POOLS.homeRow;
-    }
-
-    function recencyFactor(lastSeenAt) {
-        if (!lastSeenAt) return 0.2;
-        const age = Date.now() - lastSeenAt;
-        if (age < 60 * 1000) return 1;
-        if (age < 5 * 60 * 1000) return 0.7;
-        if (age < 30 * 60 * 1000) return 0.45;
-        return 0.25;
-    }
-
-    function recordResult(key, ok, latencyMs) {
-        const s = loadStats();
-        const item = normalizeKeyStats(s[key]);
-        item.total++;
-        item.lastSeenAt = Date.now();
-
-        // 衰减错误率：每次击键都更新，让权重跟踪“当前水平”而非历史包袱
-        const ae = STATS_MODEL.errorAlpha;
-        item.emaError = clamp(ae * (ok ? 0 : 1) + (1 - ae) * item.emaError, 0, 1);
-
-        if (!ok) {
-            item.errors++;
-            item.streakWrong = Math.min(12, item.streakWrong + 1);
-        } else {
-            item.streakWrong = 0;
-            const lat = Number(latencyMs);
-            if (Number.isFinite(lat) && lat > 0 && lat <= STATS_MODEL.latMaxValidMs) {
-                const al = STATS_MODEL.latencyAlpha;
-                item.emaLatency = item.emaLatency > 0
-                    ? al * lat + (1 - al) * item.emaLatency
-                    : lat;
-            }
+    function recordResult(key, ok, latencyMs, pressed) {
+        const eng = engine();
+        const now = Date.now();
+        Algo.recordAttempt(eng.keys, key, { ok, pressed, latencyMs, now });
+        if (prevTargetKey) {
+            Algo.recordBigramAttempt(eng.bigrams, prevTargetKey, key, { ok, latencyMs, now });
+            Algo.pruneBigramMap(eng.bigrams);
         }
-
-        s[key] = item;
         markStatsDirty();
-    }
-
-    // ===== Sequence Generation =====
-
-    function weightForKey(key, statsMap) {
-        const item = normalizeKeyStats(statsMap[key]);
-        const conf = confidenceOf(item);
-        const recent = recencyFactor(item.lastSeenAt);
-        // 小样本时 conf 低 -> 误差/延迟项趋零，权重≈基线 1（均匀探索新键）
-        const errorTerm = item.emaError * conf * WEIGHT_CONFIG.errorFactor;
-        const latencyTerm = latencyScoreOf(item) * conf * WEIGHT_CONFIG.latencyFactor;
-        const shortTerm = Math.min(item.streakWrong, WEIGHT_CONFIG.streakCap) * WEIGHT_CONFIG.streakFactor * recent;
-        const roundBoost = Math.min(WEIGHT_CONFIG.roundBoostCap, (roundMistakeByKey[key] || 0) * WEIGHT_CONFIG.roundBoostFactor);
-        return 1 + errorTerm + latencyTerm + shortTerm + roundBoost;
-    }
-
-    function pickWeighted(pool, statsMap, prevKey) {
-        const items = pool.map(key => {
-            let w = weightForKey(key, statsMap);
-            if (prevKey && key === prevKey) w *= 0.82;
-            return { key, w: Math.max(0.1, w) };
-        });
-        const total = items.reduce((sum, it) => sum + it.w, 0);
-        let r = Math.random() * total;
-        for (const it of items) {
-            r -= it.w;
-            if (r <= 0) return it.key;
-        }
-        return items[items.length - 1].key;
-    }
-
-    // 序列元素为对象 { key, reinforced }，使回灌标记在 splice 后仍稳定跟随元素
-    function makeSeqItem(key, reinforced = false) {
-        return { key, reinforced };
-    }
-
-    function genSeq(m, length = BASE_SEQ_LEN) {
-        const pool = getModePool(m);
-        const statsMap = loadStats();
-        const out = [];
-        let prev = null;
-        for (let i = 0; i < length; i++) {
-            const nextKey = pickWeighted(pool, statsMap, prev);
-            out.push(makeSeqItem(nextKey));
-            prev = nextKey;
-        }
-        return out;
     }
 
     // 仅向尾部追加（长度成长用），不触碰已展示的预览区
     function appendToSequence(targetLen) {
-        const wanted = Math.min(MAX_SEQ_LEN, Math.max(BASE_SEQ_LEN, targetLen));
+        const wanted = Math.min(Algo.MAX_SEQ_LEN, Math.max(Algo.BASE_SEQ_LEN, targetLen));
         if (seq.length >= wanted) return;
-        const pool = getModePool(mode);
-        const statsMap = loadStats();
-        let prev = seq.length ? seq[seq.length - 1].key : null;
-        while (seq.length < wanted) {
-            const nextKey = pickWeighted(pool, statsMap, prev);
-            seq.push(makeSeqItem(nextKey));
-            prev = nextKey;
-        }
-    }
-
-    function computeGrowthStep(mistakes) {
-        return 1 + Math.min(2, Math.floor(mistakes / 8));
+        Algo.extendSeq(seq, Algo.getModePool(mode), loadStats(), samplingCtx(), wanted);
     }
 
     function applyTieredLengthGrowth() {
         roundMistakes++;
-        const step = computeGrowthStep(roundMistakes);
-        roundTargetLen = Math.min(MAX_SEQ_LEN, roundTargetLen + step);
+        const step = Algo.computeGrowthStep(roundMistakes);
+        roundTargetLen = Math.min(Algo.MAX_SEQ_LEN, roundTargetLen + step);
         appendToSequence(roundTargetLen);
     }
 
-    // 统计当前位置之后、尚未打到的区段里某键已有的回灌数量
-    function pendingReinforceCount(key) {
-        let n = 0;
-        for (let i = idx + 1; i < seq.length; i++) {
-            if (seq[i].reinforced && seq[i].key === key) n++;
-        }
-        return n;
-    }
-
-    // 出错即在近距离窗口内就地 splice 插入回灌键：
-    // 只动插入点，未来其余预览保持稳定（取代旧的整段重排）
+    // 出错即就地插入回灌键：只动插入点，未来其余预览保持稳定
     function insertReinforce(key) {
-        const insertCount = Math.min(2, 1 + Math.floor(currentTargetMistakes / 2));
-        for (let n = 0; n < insertCount; n++) {
-            if (seq.length >= MAX_SEQ_LEN) break;
-            if (pendingReinforceCount(key) >= REINFORCE_CONFIG.maxPendingPerKey) break;
-
-            const gap = REINFORCE_CONFIG.minGap +
-                Math.floor(Math.random() * (REINFORCE_CONFIG.maxGap - REINFORCE_CONFIG.minGap + 1));
-            let pos = Math.min(idx + gap + n * 2, idx + REINFORCE_CONFIG.maxAhead, seq.length);
-            if (pos < idx + 1) pos = idx + 1;
-
-            // 避免与相邻键相同造成连续同键
-            if (seq[pos - 1] && seq[pos - 1].key === key) pos++;
-            if (pos < seq.length && seq[pos].key === key) pos++;
-            pos = Math.min(pos, seq.length);
-
-            seq.splice(pos, 0, makeSeqItem(key, true));
-            roundTargetLen = Math.min(MAX_SEQ_LEN, Math.max(roundTargetLen, seq.length));
-        }
+        Algo.insertReinforce(seq, idx, key, currentTargetMistakes);
+        roundTargetLen = Math.min(Algo.MAX_SEQ_LEN, Math.max(roundTargetLen, seq.length));
     }
 
     // ===== Display Helpers =====
@@ -1679,7 +1547,7 @@
     function buildKeyboard() {
         const el = document.getElementById('virtual-keyboard');
         let html = '';
-        KB_ROWS.forEach(row => {
+        Algo.KB_ROWS.forEach(row => {
             html += '<div class="kb-row">';
             row.forEach(([dk, label, slabel, fc, wc]) => {
                 const cls = ['kb-key', fc, wc].filter(Boolean).join(' ');
@@ -1715,8 +1583,8 @@
         if (targetKey.length === 1 && targetKey >= 'A' && targetKey <= 'Z') {
             base = targetKey.toLowerCase();
             needShift = true;
-        } else if (SHIFT_BASE[targetKey]) {
-            base = SHIFT_BASE[targetKey];
+        } else if (Algo.SHIFT_BASE[targetKey]) {
+            base = Algo.SHIFT_BASE[targetKey];
             needShift = true;
         }
 
@@ -1732,7 +1600,7 @@
     function flashPress(eventKey, isWrong = false) {
         let base = eventKey;
         if (eventKey.length === 1 && eventKey >= 'A' && eventKey <= 'Z') base = eventKey.toLowerCase();
-        else if (SHIFT_BASE[eventKey]) base = SHIFT_BASE[eventKey];
+        else if (Algo.SHIFT_BASE[eventKey]) base = Algo.SHIFT_BASE[eventKey];
 
         const els = [];
         const addUnique = (arr) => {
@@ -1757,6 +1625,14 @@
         });
     }
 
+    // ===== CapsLock 状态提示 =====
+    // CapsLock 开着时字母会按大写判定、全部判错，用户很难自查，主动提示
+    function updateCapsLockWarning(e) {
+        const banner = document.getElementById('capslock-warning');
+        if (!banner || typeof e.getModifierState !== 'function') return;
+        banner.style.display = e.getModifierState('CapsLock') ? '' : 'none';
+    }
+
     // ===== Heatmap =====
     function updateHeatmap() {
         document.querySelectorAll('.kb-key').forEach(e => {
@@ -1765,9 +1641,10 @@
         if (!heatmapOn) return;
         const stats = loadStats();
         document.querySelectorAll('.kb-key').forEach(e => {
-            const item = normalizeKeyStats(stats[e.dataset.key]);
+            const item = Algo.normalizeKeyStats(stats[e.dataset.key]);
             if (item.total >= 5) {
-                const r = errorRateOf(item);
+                // 与弱键面板同口径：衰减错误率反映"当前水平"，已掌握的键不再常年标红
+                const r = item.emaError;
                 if (r > 0.30) e.classList.add('heat-3');
                 else if (r > 0.15) e.classList.add('heat-2');
                 else if (r > 0.05) e.classList.add('heat-1');
@@ -1830,8 +1707,9 @@
         const m = Math.floor(s / 60);
         const ss = Math.floor(s % 60);
         document.getElementById('stat-time').textContent = `${m}:${ss.toString().padStart(2,'0')}`;
-        if (s > 0 && results.length) {
-            document.getElementById('stat-kpm').textContent = Math.round(results.length / (s / 60));
+        // KPM 按净推进数（passedKeys）计，快速乱按不再推高键/分
+        if (s > 0 && passedKeys.length) {
+            document.getElementById('stat-kpm').textContent = Math.round(passedKeys.length / (s / 60));
         }
     }
 
@@ -1842,19 +1720,20 @@
         const list = document.getElementById('weak-keys-list');
 
         const weak = Object.entries(stats)
-            .map(([k, s]) => ({ key: k, item: normalizeKeyStats(s) }))
+            .map(([k, s]) => ({ key: k, item: Algo.normalizeKeyStats(s) }))
             .filter(({ item }) => item.total >= 5)
             .map(({ key, item }) => {
                 const errScore = item.emaError;
-                const latScore = latencyScoreOf(item);
+                const latScore = Algo.latencyScoreOf(item, key);
                 // 综合弱度：错误为主、慢手为辅
                 const weakness = errScore * 0.7 + latScore * 0.3;
                 return {
                     key,
                     weakness,
-                    errPct: Math.round(errorRateOf(item) * 100),
-                    mastery: masteryOf(item),
-                    slow: latScore >= 0.5 && errScore < 0.12
+                    errPct: Math.round(errScore * 100),
+                    mastery: Algo.masteryOf(item, key),
+                    slow: latScore >= 0.5 && errScore < 0.12,
+                    confusion: Algo.topConfusionOf(item)
                 };
             })
             .filter(w => w.weakness > 0.05)
@@ -1868,38 +1747,16 @@
             const barPct = Math.round(clamp(w.weakness, 0, 1) * 100);
             const tag = w.slow ? '偏慢' : `${w.errPct}% 错`;
             const masteryText = w.mastery === null ? '' : ` · 掌握 ${w.mastery}`;
+            const confusionText = w.confusion ? ` · 常误 ${esc(displayName(w.confusion.key))}` : '';
             return `<div class="weak-key-item">
                 <span class="weak-key-name">${esc(displayName(w.key))}</span>
                 <div class="weak-key-bar"><div class="weak-key-fill" style="width:${barPct}%"></div></div>
-                <span class="weak-key-rate">${tag}${masteryText}</span>
+                <span class="weak-key-rate">${tag}${masteryText}${confusionText}</span>
             </div>`;
         }).join('');
     }
 
-    function averageFromArray(values) {
-        if (!Array.isArray(values) || !values.length) return null;
-        return values.reduce((acc, n) => acc + n, 0) / values.length;
-    }
-
-    function medianOf(values) {
-        if (!Array.isArray(values) || !values.length) return null;
-        const sorted = values.slice().sort((a, b) => a - b);
-        const mid = Math.floor(sorted.length / 2);
-        if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
-        return sorted[mid];
-    }
-
-    function emaSeries(values, period = 7) {
-        if (!Array.isArray(values) || !values.length) return [];
-        const p = Math.max(2, Math.floor(period));
-        const alpha = 2 / (p + 1);
-        const out = [values[0]];
-        for (let i = 1; i < values.length; i++) {
-            out.push(alpha * values[i] + (1 - alpha) * out[i - 1]);
-        }
-        return out;
-    }
-
+    // ===== Session Stats Panel =====
     function pickSessionsByRange(history, range) {
         if (range === 'all') return history;
         const n = Math.max(1, Math.floor(toFiniteNumber(range, 20)));
@@ -1921,65 +1778,14 @@
         return sampled;
     }
 
-    function effectiveKpmOf(item) {
-        const acc = clamp(toFiniteNumber(item.accuracy, 0), 0, 100) / 100;
-        const kpm = Math.max(0, toFiniteNumber(item.kpm, 0));
-        return kpm * acc * acc;
-    }
-
-    function buildProgressModel(history, baselineOverride = null) {
-        if (!history.length) return null;
-        const effective = history.map(effectiveKpmOf);
-        const baseSeed = effective.slice(0, Math.min(10, effective.length)).filter(v => v > 0);
-        // Fall back to the median of all positive sessions before the hard 1 floor,
-        // so an unusable early sample can't collapse the baseline and inflate the index.
-        const baseRaw = medianOf(baseSeed) || medianOf(effective.filter(v => v > 0)) || effective[0] || 1;
-        const baselineEffectiveKpm = Math.max(1, toFiniteNumber(baselineOverride, baseRaw));
-        const indexRaw = effective.map(v => Math.max(0, (v / baselineEffectiveKpm) * 100));
-        const indexEma = emaSeries(indexRaw, 7);
-        const accEma = emaSeries(history.map(item => item.accuracy), 7);
-        const kpmEma = emaSeries(history.map(item => item.kpm), 7);
-        return {
-            history,
-            effective,
-            baselineEffectiveKpm,
-            indexRaw,
-            indexEma,
-            accEma,
-            kpmEma
-        };
-    }
-
-    function compareRecent(values, preferredWindow = 7) {
-        if (!Array.isArray(values) || values.length < 4) return null;
-        const win = Math.min(preferredWindow, Math.floor(values.length / 2));
-        if (win < 2) return null;
-        const recent = averageFromArray(values.slice(-win));
-        const prev = averageFromArray(values.slice(-(win * 2), -win));
-        if (recent === null || prev === null) return null;
-        return { recent, prev };
-    }
-
-    function computeStability(effectiveSeries) {
-        if (!effectiveSeries.length) return null;
-        const mean = averageFromArray(effectiveSeries);
-        if (!mean || mean <= 0) return { score: 100, label: '稳定' };
-        const variance = effectiveSeries.reduce((acc, value) => acc + Math.pow(value - mean, 2), 0) / effectiveSeries.length;
-        const std = Math.sqrt(variance);
-        const cv = std / mean;
-        const score = clamp(Math.round((1 - Math.min(cv, 0.45) / 0.45) * 100), 0, 100);
-        const label = score >= 80 ? '稳定' : (score >= 60 ? '可控' : '波动偏大');
-        return { score, label };
-    }
-
     function buildTrendInsight(model) {
         if (!model || model.history.length < 4) {
             return '继续完成几轮练习后，会生成更稳定的进步解读。';
         }
 
-        const idxCmp = compareRecent(model.indexEma, 7);
-        const accCmp = compareRecent(model.accEma, 7);
-        const kpmCmp = compareRecent(model.kpmEma, 7);
+        const idxCmp = Algo.compareRecent(model.indexEma, 7);
+        const accCmp = Algo.compareRecent(model.accEma, 7);
+        const kpmCmp = Algo.compareRecent(model.kpmEma, 7);
         if (!idxCmp || !accCmp || !kpmCmp) {
             return '当前样本较少，建议继续练习，观察指数是否持续高于 100。';
         }
@@ -2094,15 +1900,15 @@
             const y = pad.top + t * innerH;
             const tick = Math.round(yMax - t * ySpan);
             grid += `
-                <line x1="${pad.left}" y1="${y.toFixed(2)}" x2="${(width - pad.right).toFixed(2)}" y2="${y.toFixed(2)}" stroke="#e8ecea" stroke-width="1"/>
-                <text x="${(pad.left - 8).toFixed(2)}" y="${(y + 3).toFixed(2)}" text-anchor="end" font-size="10" fill="#8b98a7">${tick}</text>
+                <line class="tc-grid" x1="${pad.left}" y1="${y.toFixed(2)}" x2="${(width - pad.right).toFixed(2)}" y2="${y.toFixed(2)}" stroke-width="1"/>
+                <text class="tc-tick" x="${(pad.left - 8).toFixed(2)}" y="${(y + 3).toFixed(2)}" text-anchor="end" font-size="10">${tick}</text>
             `;
         }
 
         const refs = [100, 120, 140].filter(v => v >= yMin && v <= yMax).map(v => `
-            <line x1="${pad.left}" y1="${yAt(v).toFixed(2)}" x2="${(width - pad.right).toFixed(2)}" y2="${yAt(v).toFixed(2)}"
-                stroke="${v === 100 ? '#9ca3af' : '#d1d5db'}" stroke-width="${v === 100 ? '1.2' : '1'}" stroke-dasharray="5 4"/>
-            <text x="${(width - pad.right + 4).toFixed(2)}" y="${(yAt(v) + 3).toFixed(2)}" font-size="10" fill="#8b98a7">${v}</text>
+            <line class="tc-ref${v === 100 ? ' tc-ref-base' : ''}" x1="${pad.left}" y1="${yAt(v).toFixed(2)}" x2="${(width - pad.right).toFixed(2)}" y2="${yAt(v).toFixed(2)}"
+                stroke-width="${v === 100 ? '1.2' : '1'}" stroke-dasharray="5 4"/>
+            <text class="tc-tick" x="${(width - pad.right + 4).toFixed(2)}" y="${(yAt(v) + 3).toFixed(2)}" font-size="10">${v}</text>
         `).join('');
 
         const linePath = buildLinePath(values, xAt, yAt);
@@ -2114,24 +1920,14 @@
         const endLabel = formatShortDate(data[data.length - 1].timestamp);
         chart.innerHTML = `
             <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="综合进步指数曲线">
-                <defs>
-                    <linearGradient id="growthLine" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="#7c3aed"/>
-                        <stop offset="100%" stop-color="#a855f7"/>
-                    </linearGradient>
-                    <linearGradient id="growthArea" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="rgba(168, 85, 247, 0.28)"/>
-                        <stop offset="100%" stop-color="rgba(168, 85, 247, 0.02)"/>
-                    </linearGradient>
-                </defs>
                 ${grid}
                 ${refs}
-                <path d="${areaPath}" fill="url(#growthArea)"/>
-                <path d="${linePath}" fill="none" stroke="url(#growthLine)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="${lastX.toFixed(2)}" cy="${lastY.toFixed(2)}" r="3.7" fill="#7c3aed"/>
-                <text x="${(lastX + 8).toFixed(2)}" y="${(lastY - 8).toFixed(2)}" font-size="10" fill="#6d28d9">当前 ${lastValue.toFixed(1)}</text>
-                <text x="${pad.left}" y="${height - 8}" font-size="10" fill="#8b98a7">${startLabel}</text>
-                <text x="${width - pad.right}" y="${height - 8}" text-anchor="end" font-size="10" fill="#8b98a7">${endLabel}</text>
+                <path class="tc-area" d="${areaPath}"/>
+                <path class="tc-line" d="${linePath}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle class="tc-dot" cx="${lastX.toFixed(2)}" cy="${lastY.toFixed(2)}" r="3.7"/>
+                <text class="tc-cur-label" x="${(lastX + 8).toFixed(2)}" y="${(lastY - 8).toFixed(2)}" font-size="10">当前 ${lastValue.toFixed(1)}</text>
+                <text class="tc-tick" x="${pad.left}" y="${height - 8}" font-size="10">${startLabel}</text>
+                <text class="tc-tick" x="${width - pad.right}" y="${height - 8}" text-anchor="end" font-size="10">${endLabel}</text>
             </svg>
         `;
     }
@@ -2144,9 +1940,9 @@
             ? `统计范围：当前模式（${MODE_LABELS[mode] || mode}）`
             : '统计范围：全模式（当前模式样本不足）';
 
-        const fullModel = buildProgressModel(scopedHistory);
+        const fullModel = Algo.buildProgressModel(scopedHistory);
         const visibleHistory = pickSessionsByRange(scopedHistory, sessionRange);
-        const visibleModel = buildProgressModel(visibleHistory, fullModel ? fullModel.baselineEffectiveKpm : null);
+        const visibleModel = Algo.buildProgressModel(visibleHistory, fullModel ? fullModel.baselineEffectiveKpm : null);
         const totalEl = document.getElementById('sum-total-sessions');
         totalEl.textContent = scopedHistory.length;
         totalEl.title = rawHistory.length > scopedHistory.length ? `全部模式累计 ${rawHistory.length} 轮` : '';
@@ -2154,10 +1950,10 @@
         const currentIndex = visibleModel ? visibleModel.indexEma[visibleModel.indexEma.length - 1] : null;
         document.getElementById('sum-best-accuracy').textContent = currentIndex === null ? '-' : `${Math.round(currentIndex)}`;
 
-        const recentEffective = visibleModel ? averageFromArray(visibleModel.effective.slice(-7)) : null;
+        const recentEffective = visibleModel ? Algo.averageFromArray(visibleModel.effective.slice(-7)) : null;
         document.getElementById('sum-best-kpm').textContent = recentEffective === null ? '-' : recentEffective.toFixed(1);
 
-        const stability = visibleModel ? computeStability(visibleModel.effective.slice(-10)) : null;
+        const stability = visibleModel ? Algo.computeStability(visibleModel.effective.slice(-10)) : null;
         const stabilityEl = document.getElementById('sum-recent-accuracy');
         stabilityEl.textContent = stability ? `${stability.score}分` : '-';
         stabilityEl.title = stability ? stability.label : '';
@@ -2167,8 +1963,8 @@
         if (visibleModel) {
             const accLast = visibleModel.accEma[visibleModel.accEma.length - 1];
             const kpmLast = visibleModel.kpmEma[visibleModel.kpmEma.length - 1];
-            const accCompare = compareRecent(visibleModel.accEma, 7);
-            const kpmCompare = compareRecent(visibleModel.kpmEma, 7);
+            const accCompare = Algo.compareRecent(visibleModel.accEma, 7);
+            const kpmCompare = Algo.compareRecent(visibleModel.kpmEma, 7);
             const accDelta = accCompare ? (accCompare.recent - accCompare.prev) : null;
             const kpmDelta = kpmCompare && kpmCompare.prev > 0 ? ((kpmCompare.recent - kpmCompare.prev) / kpmCompare.prev) * 100 : null;
             const accDeltaText = accDelta === null ? '' : `（${accDelta >= 0 ? '+' : ''}${accDelta.toFixed(1)}）`;
@@ -2211,6 +2007,8 @@
 
     // ===== Input Handling =====
     document.addEventListener('keydown', function(e) {
+        updateCapsLockWarning(e);
+
         const overlayShown = document.getElementById('completion-overlay').classList.contains('show');
         if (overlayShown && (e.code === 'Space' || e.key === ' ')) {
             e.preventDefault();
@@ -2219,13 +2017,18 @@
         }
 
         if (!active) return;
+
+        const target = seq[idx].key;
+
+        // 放行浏览器快捷键：目标不是修饰键时，Ctrl/Meta 组合（F5、Ctrl+C 等）不拦截
+        if ((e.ctrlKey || e.metaKey) && !MODIFIERS.has(target)) return;
+
         if (e.code === 'Space' && e.repeat) {
             e.preventDefault();
             return;
         }
         e.preventDefault();
 
-        const target = seq[idx].key;
         const pressed = e.key;
 
         // Ignore modifier-only presses when target is not a modifier
@@ -2241,8 +2044,8 @@
             : null;
         flashPress(pressed, !ok);
 
-        results.push({ key: target, correct: ok });
-        recordResult(target, ok, cleanLatency);
+        results.push({ key: target, correct: ok, pressed });
+        recordResult(target, ok, cleanLatency, pressed);
 
         if (ok) {
             setCurrentErrorState(false);
@@ -2252,6 +2055,7 @@
             if (roundMistakeByKey[target]) {
                 roundMistakeByKey[target] = Math.max(0, roundMistakeByKey[target] - 1);
             }
+            prevTargetKey = target;
             idx++;
         } else {
             currentTargetMistakes++;
@@ -2277,17 +2081,21 @@
         }
     });
 
+    // CapsLock 状态在 keyup（含释放 CapsLock 本身）后刷新提示
+    document.addEventListener('keyup', updateCapsLockWarning);
+
     // ===== Practice Flow =====
     function startNewPractice() {
         roundMistakes = 0;
-        roundTargetLen = BASE_SEQ_LEN;
+        roundTargetLen = Algo.BASE_SEQ_LEN;
         roundMistakeByKey = {};
-        seq = genSeq(mode, roundTargetLen);
+        seq = Algo.genSeq(Algo.getModePool(mode), loadStats(), samplingCtx(), roundTargetLen);
         idx = 0;
         results = [];
         passedKeys = [];
         currentTargetMistakes = 0;
         currentTargetHasError = false;
+        prevTargetKey = null;
         t0 = Date.now();
         targetShownAt = t0;
         active = true;
@@ -2317,7 +2125,14 @@
     function completePractice() {
         active = false;
         targetShownAt = null;
+
+        // 轮次计数 + 间隔重复排期：出错键短间隔复习，清白通过间隔倍增
+        const eng = engine();
+        eng.roundCounter++;
+        Algo.applyReviewSchedule(eng.keys, eng.roundCounter, passedKeys);
+        markStatsDirty();
         flushStats();   // 轮次边界落盘，保证统计不因防抖丢失
+
         if (timerID) { clearInterval(timerID); timerID = null; }
         updateTimer();
         clearTarget();
@@ -2327,7 +2142,8 @@
         const okCount = results.filter(r => r.correct).length;
         const acc = results.length ? Math.round(okCount / results.length * 100) : 100;
         const elapsed = (Date.now() - t0) / 1000;
-        const kpm = elapsed > 0 ? Math.round(results.length / (elapsed / 60)) : 0;
+        // KPM 按净推进数计（passedKeys = 本轮全部目标），准确率仍按尝试次数计
+        const kpm = elapsed > 0 ? Math.round(passedKeys.length / (elapsed / 60)) : 0;
 
         document.getElementById('comp-accuracy').textContent = acc + '%';
         document.getElementById('comp-time').textContent = formatDuration(elapsed);
@@ -2412,12 +2228,13 @@
 
     function resetAllData() {
         if (!confirm('确定要清除所有练习记录吗？此操作不可撤销。')) return;
-        if (keyStatsFlushTimer) { clearTimeout(keyStatsFlushTimer); keyStatsFlushTimer = null; }
+        if (engineFlushTimer) { clearTimeout(engineFlushTimer); engineFlushTimer = null; }
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(SESSION_STORAGE_KEY);
         localStorage.removeItem(SESSION_META_STORAGE_KEY);
-        keyStatsCache = {};
-        keyStatsDirty = false;
+        engineCache = normalizeEngineData(null);
+        engineDirty = false;
+        sessionCache = [];
         updateHeatmap();
         renderWeakKeys();
         renderSessionStatsPanel();
@@ -2425,7 +2242,7 @@
 
     // ===== Init =====
     syncSessionMetaWithHistory();
-    loadStats();   // 预热内存缓存
+    engine();   // 预热内存缓存（含 v1 -> v2 迁移）
     buildKeyboard();
     renderWeakKeys();
     renderSessionStatsPanel();
