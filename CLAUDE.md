@@ -31,9 +31,9 @@ No build, lint, or test commands exist — the site is served as-is.
 
 **Key pattern:** Pages use view switching — JavaScript toggles between list view and detail view within the same page (blog article list ↔ article content, tool grid ↔ tool interface).
 
-**Design theme:** "Luo Xiaohei" (罗小黑) inspired. Primary: forest green `#6ab04c`, accent: spirit blue `#7ed6df`. Uses large rounded cards, soft shadows, glass-morphism header, and AOS scroll animations.
+**Design theme:** Hand-drawn storybook style inspired by "Luo Xiaohei" (罗小黑). Warm paper background with grain overlay; dark mode = "night forest". Primary: forest green `#5da844`, accent: spirit teal `#4fc4cf`. Signature elements: wobble border-radius (`--wobble-*` vars), ink outlines with offset shadows, squiggle SVG underlines, hero hills + animated black cat SVG (index.html), ambient firefly canvas + click spirit-burst (js/script.js). Standalone pages in `tools/` still consume legacy aliases from style.css (`--border-color`, `--radius-lg/md`, `.tool-icon`) — keep them.
 
-**CDN dependencies:** Marked.js 4.0.12, AOS 2.3.1, Font Awesome 6.4.0, Google Fonts (Nunito).
+**CDN dependencies:** Marked.js 4.0.12, AOS 2.3.1, Font Awesome 6.4.0, LXGW WenKai Screen webfont (jsDelivr).
 
 ## Git Commit Convention
 
