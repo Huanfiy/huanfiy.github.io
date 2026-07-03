@@ -17,6 +17,8 @@
     </script>
     <title>博客 - Huanfly</title>
     <link rel="icon" type="image/png" href="picture/icon.png">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -57,44 +59,40 @@
     </header>
 
     <!-- 列表展示区域 -->
-    <main id="blog-list-view" class="container" style="padding-top: 2rem;">
+    <main id="blog-list-view" class="container page">
         <h2 class="section-title" data-aos="fade-up">最新文章</h2>
-        
-        <!-- 搜索框 -->
-        <div style="max-width: 500px; margin: 0 auto 2rem; position: relative;" data-aos="fade-up">
-            <input type="text" id="blog-search-input" placeholder="搜索文章标题、简介或标签..." style="width: 100%; padding: 12px 20px 12px 40px; border-radius: 50px; border: 2px solid var(--border-color); font-size: 1rem; background: var(--card-bg); color: var(--dark-text); outline: none; transition: all 0.3s; box-sizing: border-box;">
-            <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--light-text);"></i>
+
+        <div class="blog-toolbar" data-aos="fade-up">
+            <div class="blog-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="blog-search-input" placeholder="搜索文章标题、简介或标签…">
+            </div>
+            <!-- 标签筛选：由 JS 根据 posts.json 动态生成 -->
+            <div class="filter-chips" id="blog-filter-chips"></div>
         </div>
 
-        <!-- 文章分类标签 (示例) -->
-        <div class="flex justify-center gap-4 mb-8" data-aos="fade-up" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 3rem;">
-            <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.9rem;">全部</button>
-            <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.9rem;">技术</button>
-            <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.9rem;">生活</button>
-        </div>
-
-        <div class="grid-3 blog-list" id="blog-cards-grid">
+        <div class="blog-list" id="blog-cards-grid">
             <!-- 文章卡片由 JS 从 posts.json 动态渲染 -->
-            <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
-                <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
-                <p style="color: var(--light-text); margin-top: 1rem;">加载文章列表...</p>
+            <div class="loading-block">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>加载文章列表...</p>
             </div>
         </div>
     </main>
 
     <!-- 文章详情阅读区域 (默认隐藏) -->
-    <div id="blog-detail-view" class="container" style="display: none; padding-top: 2rem;">
-        <button onclick="closeMarkdown()" class="btn btn-outline" style="margin-bottom: 2rem;">
+    <div id="blog-detail-view" class="container page" style="display: none;">
+        <button onclick="closeMarkdown()" class="btn btn-outline btn-back">
             <i class="fas fa-arrow-left"></i> 返回列表
         </button>
-        <div id="markdown-content" class="markdown-body">
+        <article id="markdown-content" class="markdown-body">
             <!-- Markdown 内容将渲染在这里 -->
-        </div>
+        </article>
     </div>
 
     <footer>
         <div class="container">
-            <p style="color: var(--light-text); font-size: 0.9rem;">&copy; 2026 Huanfly. 保留所有权利。</p>
+            <p class="footer-note">&copy; 2026 Huanfly. 保留所有权利。</p>
         </div>
     </footer>
 
@@ -105,18 +103,18 @@
 
         // === 默认配图：基于 tag 生成 SVG 渐变图 ===
         const TAG_GRADIENTS = {
-            'Git':   ['#667eea', '#764ba2'],
-            'Linux': ['#11998e', '#38ef7d'],
-            '随笔':  ['#ee9ca7', '#ffdde1'],
-            '前端':  ['#f7971e', '#ffd200'],
-            '后端':  ['#4facfe', '#00f2fe'],
-            '嵌入式': ['#2d98da', '#3867d6'],
-            '调试':  ['#20bf6b', '#0fb9b1'],
-            '工程实践': ['#f0932b', '#eb4d4b'],
-            '成长':  ['#8854d0', '#a55eea'],
-            '感悟':  ['#fc5c65', '#fd9644'],
+            'Git':   ['#8fa8e8', '#a58cd4'],
+            'Linux': ['#5cbfa2', '#8fe0a8'],
+            '随笔':  ['#eeb0b8', '#ffe3e8'],
+            '前端':  ['#f2bb66', '#ffe08a'],
+            '后端':  ['#7ec3f2', '#8ae6f2'],
+            '嵌入式': ['#6ba8d9', '#7d94d9'],
+            '调试':  ['#5cc98a', '#63cfc4'],
+            '工程实践': ['#f2ad66', '#e8837a'],
+            '成长':  ['#a58cd4', '#c39aec'],
+            '感悟':  ['#f28a8f', '#f7b980'],
         };
-        const DEFAULT_GRADIENT = ['#6ab04c', '#7ed6df'];
+        const DEFAULT_GRADIENT = ['#5da844', '#4fc4cf'];
 
         function getCoverUrl(post) {
             if (post.cover) return post.cover;
@@ -128,7 +126,7 @@
                 </linearGradient></defs>
                 <rect width="400" height="250" fill="url(#g)"/>
                 <text x="200" y="135" text-anchor="middle" fill="white" font-size="28"
-                      font-family="sans-serif" opacity="0.6">${label}</text>
+                      font-family="sans-serif" opacity="0.7">${label}</text>
             </svg>`;
             return 'data:image/svg+xml,' + encodeURIComponent(svg);
         }
@@ -137,15 +135,17 @@
         function renderBlogCards(posts) {
             const grid = document.getElementById('blog-cards-grid');
             if (!posts.length) {
-                grid.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--light-text);">暂无文章</div>';
+                grid.innerHTML = '<div class="loading-block"><i class="far fa-folder-open fa-2x"></i><p>没有找到相关文章</p></div>';
                 return;
             }
             grid.innerHTML = posts.map((post, i) => `
-                <article class="card blog-card" data-aos="fade-up" data-aos-delay="${i * 100}"
-                         onclick="loadMarkdown('${post.file}')" style="cursor:pointer;">
-                    <img src="${getCoverUrl(post)}" alt="${post.title || post.tag || '文章'}"
-                         class="${post.coverFit === 'contain' ? 'contain' : ''}"
-                         width="320" height="180" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async">
+                <article class="card blog-card" data-aos="fade-up" data-aos-delay="${Math.min(i, 4) * 80}"
+                         onclick="openPost('${post.file}')">
+                    <div class="blog-thumb">
+                        <img src="${getCoverUrl(post)}" alt="${post.title || post.tag || '文章'}"
+                             class="${post.coverFit === 'contain' ? 'contain' : ''}"
+                             width="320" height="180" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async">
+                    </div>
                     <div class="blog-card-body">
                         <div class="blog-meta">
                             <span><i class="far fa-calendar"></i> ${post.date}</span>
@@ -161,29 +161,70 @@
         }
 
         let allPosts = [];
+        let activeTag = '全部';
+
+        // === 标签筛选 + 搜索 联动 ===
+        function applyFilters() {
+            const keyword = document.getElementById('blog-search-input').value.toLowerCase();
+            const filtered = allPosts.filter(post =>
+                (activeTag === '全部' || post.tag === activeTag) &&
+                ((post.title && post.title.toLowerCase().includes(keyword)) ||
+                 (post.tag && post.tag.toLowerCase().includes(keyword)) ||
+                 (post.summary && post.summary.toLowerCase().includes(keyword)) ||
+                 !keyword)
+            );
+            renderBlogCards(filtered);
+        }
+
+        function renderFilterChips(posts) {
+            const tags = ['全部', ...new Set(posts.map(p => p.tag).filter(Boolean))];
+            const box = document.getElementById('blog-filter-chips');
+            box.innerHTML = tags.map(tag =>
+                `<button class="filter-chip${tag === activeTag ? ' active' : ''}" data-tag="${tag}">${tag}</button>`
+            ).join('');
+            box.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    activeTag = chip.dataset.tag;
+                    box.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c === chip));
+                    applyFilters();
+                });
+            });
+        }
 
         // 页面加载时拉取文章清单
         fetch('posts/posts.json')
             .then(r => { if (!r.ok) throw new Error('加载失败'); return r.json(); })
             .then(posts => {
                 allPosts = posts;
+                renderFilterChips(posts);
                 renderBlogCards(posts);
             })
             .catch(() => {
                 document.getElementById('blog-cards-grid').innerHTML =
-                    '<div style="text-align:center;padding:2rem;color:red;"><i class="fas fa-exclamation-triangle"></i> 文章列表加载失败，请刷新重试</div>';
+                    '<div class="error-block"><i class="fas fa-exclamation-triangle fa-2x"></i><p>文章列表加载失败，请刷新重试</p></div>';
             });
 
+        // === Hash 路由：文章可直链分享，浏览器后退可返回列表 ===
+        function openPost(file) {
+            location.hash = 'post=' + encodeURIComponent(file);
+        }
+
+        function handleHashRoute() {
+            const match = location.hash.match(/^#post=(.+)$/);
+            if (match) {
+                loadMarkdown(decodeURIComponent(match[1]));
+            } else {
+                document.getElementById('blog-detail-view').style.display = 'none';
+                document.getElementById('blog-list-view').style.display = 'block';
+                setTimeout(() => AOS.refresh(), 100);
+            }
+        }
+
+        window.addEventListener('hashchange', handleHashRoute);
+        if (location.hash.startsWith('#post=')) handleHashRoute();
+
         // 搜索功能
-        document.getElementById('blog-search-input').addEventListener('input', function(e) {
-            const keyword = e.target.value.toLowerCase();
-            const filtered = allPosts.filter(post => 
-                (post.title && post.title.toLowerCase().includes(keyword)) ||
-                (post.tag && post.tag.toLowerCase().includes(keyword)) ||
-                (post.summary && post.summary.toLowerCase().includes(keyword))
-            );
-            renderBlogCards(filtered);
-        });
+        document.getElementById('blog-search-input').addEventListener('input', applyFilters);
 
         // === 剥离 Front Matter ===
         function stripFrontMatter(text) {
@@ -196,17 +237,17 @@
         // === 加载并渲染 Markdown 文章 ===
         function loadMarkdown(file) {
             const contentDiv = document.getElementById('markdown-content');
-            contentDiv.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>加载中...</p></div>';
+            contentDiv.innerHTML = '<div class="loading-block"><i class="fas fa-spinner fa-spin fa-2x"></i><p>加载中...</p></div>';
 
             document.getElementById('blog-list-view').style.display = 'none';
             document.getElementById('blog-detail-view').style.display = 'block';
             window.scrollTo(0, 0);
 
             if (typeof marked === 'undefined') {
-                contentDiv.innerHTML = `<div style="text-align:center;color:red;padding:2rem;">
-                    <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;"></i>
+                contentDiv.innerHTML = `<div class="error-block">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
                     <p>Markdown 解析库加载失败</p>
-                    <p style="font-size:0.9rem;color:var(--light-text);">请检查网络连接后刷新页面</p>
+                    <p style="font-size:0.9rem;">请检查网络连接后刷新页面</p>
                 </div>`;
                 return;
             }
@@ -220,13 +261,15 @@
                     contentDiv.innerHTML = marked.parse(stripFrontMatter(text));
                 })
                 .catch(error => {
-                    contentDiv.innerHTML = `<div style="text-align:center;color:red;">
+                    contentDiv.innerHTML = `<div class="error-block">
                         <i class="fas fa-exclamation-triangle"></i> 文章加载出错: ${error.message}
                     </div>`;
                 });
         }
 
         function closeMarkdown() {
+            // pushState 清空 hash 不触发 hashchange，视图在下方手动切回
+            history.pushState('', document.title, location.pathname + location.search);
             document.getElementById('blog-detail-view').style.display = 'none';
             document.getElementById('blog-list-view').style.display = 'block';
             setTimeout(() => AOS.refresh(), 100);

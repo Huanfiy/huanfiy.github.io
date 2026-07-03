@@ -17,11 +17,11 @@
     </script>
     <title>Huanfly的空间 - 记录与分享</title>
     <link rel="icon" type="image/png" href="picture/icon.png">
-    <!-- 引入自定义 CSS -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- 手写感中文字体：霞鹜文楷 屏幕阅读版 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css">
     <link rel="stylesheet" href="css/style.css">
-    <!-- 引入 Font Awesome 图标 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 引入 AOS 动画库 -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 <body>
@@ -48,57 +48,97 @@
 
     <!-- 核心展示区 (Hero) -->
     <section class="hero">
-        <div class="hero-content" data-aos="fade-up">
-            <div class="avatar-container" style="margin-bottom: 2rem;">
-                <img src="picture/icon.png" alt="Huanfly" style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--card-bg); box-shadow: var(--shadow-md); margin: 0 auto; object-fit: cover;">
+        <div class="hero-bg" aria-hidden="true">
+            <span class="blob blob-1"></span>
+            <span class="blob blob-2"></span>
+            <span class="blob blob-3"></span>
+        </div>
+
+        <div class="hero-content container" data-aos="fade-up">
+            <div class="hero-avatar">
+                <img src="picture/icon.png" alt="Huanfly">
             </div>
-            <h1>你好，我是 <span>Huanfly</span></h1>
-            <p>一名热衷于技术分享与科技制作的探索者。<br>在这里记录学习，分享生活，构建有趣的世界。</p>
-            
-            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
+            <p class="hero-kicker">Embedded · Maker · Blogger</p>
+            <h1 class="hero-title">你好，我是 <span class="marker">Huanfly</span></h1>
+            <p class="hero-sub">一名热衷于技术分享与科技制作的探索者。<br>在这里记录学习，分享生活，构建有趣的世界。</p>
+            <div class="hero-actions">
                 <a href="#explore" class="btn">开始探索</a>
                 <a href="about.html" class="btn btn-outline">了解更多</a>
             </div>
         </div>
+
+        <!-- 手绘森林场景 -->
+        <div class="hero-scene" aria-hidden="true">
+            <svg class="hero-hills" viewBox="0 0 1440 220" preserveAspectRatio="none">
+                <path fill="var(--hill-back)" d="M0 118 C 200 70 420 140 640 104 C 880 66 1140 132 1440 88 L1440 220 L0 220 Z"/>
+                <g fill="var(--tree)">
+                    <circle cx="210" cy="86" r="22"/>
+                    <rect x="207" y="100" width="6" height="24"/>
+                    <circle cx="264" cy="98" r="15"/>
+                    <rect x="262" y="108" width="5" height="18"/>
+                    <circle cx="1128" cy="112" r="17"/>
+                    <rect x="1125" y="122" width="6" height="20"/>
+                </g>
+                <path fill="var(--hill-mid)" d="M0 158 C 240 118 520 182 780 148 C 1020 118 1240 176 1440 138 L1440 220 L0 220 Z"/>
+                <g fill="var(--tree)">
+                    <circle cx="980" cy="142" r="13"/>
+                    <rect x="978" y="150" width="5" height="16"/>
+                </g>
+                <path fill="var(--hill-front)" d="M0 192 C 260 166 520 206 760 184 C 980 166 1180 148 1440 168 L1440 220 L0 220 Z"/>
+            </svg>
+
+            <!-- 小黑 -->
+            <svg class="hero-cat" viewBox="0 0 150 130">
+                <path class="cat-tail" d="M112 102 C 138 100 146 76 132 62" fill="none" stroke="var(--cat-ink)" stroke-width="11" stroke-linecap="round"/>
+                <ellipse cx="78" cy="96" rx="36" ry="26" fill="var(--cat-ink)"/>
+                <ellipse cx="64" cy="118" rx="9" ry="6" fill="var(--cat-ink)"/>
+                <ellipse cx="92" cy="118" rx="9" ry="6" fill="var(--cat-ink)"/>
+                <path class="cat-ear-l" d="M52 28 L44 2 L67 16 Z" fill="var(--cat-ink)"/>
+                <path class="cat-ear-r" d="M96 28 L104 2 L81 16 Z" fill="var(--cat-ink)"/>
+                <circle cx="74" cy="46" r="31" fill="var(--cat-ink)"/>
+                <g class="cat-eyes">
+                    <ellipse cx="63" cy="46" rx="4.5" ry="6.5" fill="#8fe3d9"/>
+                    <ellipse cx="85" cy="46" rx="4.5" ry="6.5" fill="#8fe3d9"/>
+                    <circle cx="64.5" cy="43.5" r="1.5" fill="#ffffff"/>
+                    <circle cx="86.5" cy="43.5" r="1.5" fill="#ffffff"/>
+                </g>
+                <path d="M69 57 q5 4 10 0" fill="none" stroke="#8fe3d9" stroke-width="1.8" stroke-linecap="round"/>
+                <g fill="none" stroke="#8fe3d9" stroke-width="1.5" stroke-linecap="round" opacity="0.5">
+                    <path d="M36 46 q10 1 16 1"/>
+                    <path d="M37 54 q9 -1 15 -2"/>
+                    <path d="M112 46 q-10 1 -16 1"/>
+                    <path d="M111 54 q-9 -1 -15 -2"/>
+                </g>
+            </svg>
+        </div>
     </section>
 
     <!-- 核心板块入口 -->
-    <section id="explore" class="container" style="padding-bottom: 4rem;">
+    <section id="explore" class="container" style="padding-top: 2rem;">
+        <h2 class="section-title" data-aos="fade-up">随便逛逛</h2>
         <div class="grid-3">
             <!-- 博客入口 -->
-            <article class="card" data-aos="fade-up" data-aos-delay="100" onclick="location.href='blog.html'" style="cursor: pointer;">
-                <div class="tool-icon" style="background: #e3f9e5; color: #2ecc71;">
-                    <i class="fas fa-pen-nib"></i>
-                </div>
-                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">技术博客</h3>
-                <p style="color: var(--light-text);">分享 Web 开发、编程心得与折腾记录。记录成长的每一步。</p>
-                <div style="margin-top: auto; padding-top: 1rem; color: var(--primary-color); font-weight: bold;">
-                    阅读文章 <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
-                </div>
+            <article class="card entry-card tone-green" data-aos="fade-up" data-aos-delay="100" onclick="location.href='blog.html'">
+                <div class="card-icon"><i class="fas fa-pen-nib"></i></div>
+                <h3>技术博客</h3>
+                <p>分享嵌入式开发、编程心得与折腾记录，记录成长的每一步。</p>
+                <span class="card-link">阅读文章 <i class="fas fa-arrow-right"></i></span>
             </article>
 
             <!-- 工具入口 -->
-            <article class="card" data-aos="fade-up" data-aos-delay="200" onclick="location.href='tool.html'" style="cursor: pointer;">
-                <div class="tool-icon" style="background: #e0f7fa; color: #00bcd4;">
-                    <i class="fas fa-toolbox"></i>
-                </div>
-                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">实用工具箱</h3>
-                <p style="color: var(--light-text);">自制或收集的实用在线工具。提高效率，解决小问题。</p>
-                <div style="margin-top: auto; padding-top: 1rem; color: var(--accent-color); font-weight: bold;">
-                    使用工具 <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
-                </div>
+            <article class="card entry-card tone-teal" data-aos="fade-up" data-aos-delay="200" onclick="location.href='tool.html'">
+                <div class="card-icon"><i class="fas fa-toolbox"></i></div>
+                <h3>实用工具箱</h3>
+                <p>自制或收集的实用在线工具。提高效率，解决小问题。</p>
+                <span class="card-link">使用工具 <i class="fas fa-arrow-right"></i></span>
             </article>
 
             <!-- 关于入口 -->
-            <article class="card" data-aos="fade-up" data-aos-delay="300" onclick="location.href='about.html'" style="cursor: pointer;">
-                <div class="tool-icon" style="background: #f3e5f5; color: #9c27b0;">
-                    <i class="fas fa-user-astronaut"></i>
-                </div>
-                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">关于我</h3>
-                <p style="color: var(--light-text);">了解更多关于我的故事、技能栈以及联系方式。</p>
-                <div style="margin-top: auto; padding-top: 1rem; color: #9c27b0; font-weight: bold;">
-                    查看详情 <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
-                </div>
+            <article class="card entry-card tone-violet" data-aos="fade-up" data-aos-delay="300" onclick="location.href='about.html'">
+                <div class="card-icon"><i class="fas fa-user-astronaut"></i></div>
+                <h3>关于我</h3>
+                <p>了解更多关于我的故事、技能栈以及联系方式。</p>
+                <span class="card-link">查看详情 <i class="fas fa-arrow-right"></i></span>
             </article>
         </div>
     </section>
@@ -112,9 +152,7 @@
                 <a href="https://space.bilibili.com/179895513" target="_blank" title="Bilibili"><i class="fab fa-bilibili"></i></a>
                 <a href="mailto:huanfly999@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
             </div>
-            <p style="color: var(--light-text); font-size: 0.9rem;">
-                &copy; 2026 Huanfly. Design with <i class="fas fa-heart" style="color: #ff6b6b;"></i> & Luo Xiaohei Style.
-            </p>
+            <p class="footer-note">&copy; 2026 Huanfly. Design with <i class="fas fa-heart"></i> &amp; 罗小黑</p>
         </div>
     </footer>
 

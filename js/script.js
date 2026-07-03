@@ -1,21 +1,28 @@
-const FIREWORK_CONFIG = {
-    burstParticleCount: 28,
-    ringParticleCount: 10,
-    maxParticles: 420,
-    maxFlashes: 60,
+/* =============================================================
+ * Huanfly · 手绘森林主题交互
+ * 1. 点击灵气迸发（绿/青色粒子）
+ * 2. 全屏漂浮萤火灵气（缓慢上浮的发光点）
+ * 3. 主题切换 / 移动端菜单 / 平滑滚动
+ * ============================================================= */
+
+const SPIRIT_BURST_CONFIG = {
+    burstParticleCount: 18,
+    ringParticleCount: 8,
+    maxParticles: 300,
+    maxFlashes: 40,
     clickCooldownMs: 90,
-    gravity: 0.045,
-    drag: 0.975,
-    lifeMin: 26,
-    lifeMax: 44,
-    speedMin: 1.7,
-    speedMax: 4.5,
-    ringSpeed: 2.1,
+    gravity: -0.012,   // 灵气轻微上浮
+    drag: 0.965,
+    lifeMin: 28,
+    lifeMax: 50,
+    speedMin: 1.2,
+    speedMax: 3.4,
+    ringSpeed: 1.8,
     centerFlashLife: 14,
-    colors: ['#D62828', '#E63946', '#F77F00', '#FCBF49', '#F4D35E', '#FFE9A8']
+    colors: ['#6ab04c', '#8fd873', '#4fc4cf', '#7ee3ec', '#b8f0f5', '#f2c46e']
 };
 
-function initFestivalClickEffect() {
+function initSpiritBurstEffect() {
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     let prefersReducedMotion = motionQuery.matches;
     let lastBurstAt = 0;
@@ -28,12 +35,12 @@ function initFestivalClickEffect() {
     const flashes = [];
 
     const randomBetween = (min, max) => min + Math.random() * (max - min);
-    const pickColor = () => FIREWORK_CONFIG.colors[Math.floor(Math.random() * FIREWORK_CONFIG.colors.length)];
+    const pickColor = () => SPIRIT_BURST_CONFIG.colors[Math.floor(Math.random() * SPIRIT_BURST_CONFIG.colors.length)];
 
     function ensureCanvas() {
         if (canvas || prefersReducedMotion) return;
         canvas = document.createElement('canvas');
-        canvas.className = 'firework-layer';
+        canvas.className = 'burst-layer';
         document.body.appendChild(canvas);
         ctx = canvas.getContext('2d');
         resizeCanvas();
@@ -70,7 +77,7 @@ function initFestivalClickEffect() {
     }
 
     function spawnParticle(x, y, speed, angle, color, sizeScale = 1) {
-        const life = Math.floor(randomBetween(FIREWORK_CONFIG.lifeMin, FIREWORK_CONFIG.lifeMax));
+        const life = Math.floor(randomBetween(SPIRIT_BURST_CONFIG.lifeMin, SPIRIT_BURST_CONFIG.lifeMax));
         particles.push({
             x,
             y,
@@ -78,16 +85,16 @@ function initFestivalClickEffect() {
             prevY: y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            drag: randomBetween(FIREWORK_CONFIG.drag - 0.02, FIREWORK_CONFIG.drag + 0.01),
-            gravity: FIREWORK_CONFIG.gravity + randomBetween(-0.01, 0.01),
+            drag: randomBetween(SPIRIT_BURST_CONFIG.drag - 0.02, SPIRIT_BURST_CONFIG.drag + 0.01),
+            gravity: SPIRIT_BURST_CONFIG.gravity + randomBetween(-0.008, 0.008),
             life,
             maxLife: life,
             color,
-            size: randomBetween(1.4, 2.8) * sizeScale
+            size: randomBetween(1.4, 2.6) * sizeScale
         });
     }
 
-    function spawnFirework(x, y) {
+    function spawnBurst(x, y) {
         if (prefersReducedMotion) {
             createReducedMotionPulse(x, y);
             return;
@@ -97,33 +104,33 @@ function initFestivalClickEffect() {
         if (!ctx) return;
 
         const now = performance.now();
-        if (now - lastBurstAt < FIREWORK_CONFIG.clickCooldownMs) return;
+        if (now - lastBurstAt < SPIRIT_BURST_CONFIG.clickCooldownMs) return;
         lastBurstAt = now;
 
-        for (let i = 0; i < FIREWORK_CONFIG.burstParticleCount; i += 1) {
+        for (let i = 0; i < SPIRIT_BURST_CONFIG.burstParticleCount; i += 1) {
             const angle = randomBetween(0, Math.PI * 2);
-            const speed = randomBetween(FIREWORK_CONFIG.speedMin, FIREWORK_CONFIG.speedMax);
+            const speed = randomBetween(SPIRIT_BURST_CONFIG.speedMin, SPIRIT_BURST_CONFIG.speedMax);
             spawnParticle(x, y, speed, angle, pickColor(), 1);
         }
 
-        for (let i = 0; i < FIREWORK_CONFIG.ringParticleCount; i += 1) {
-            const angle = (Math.PI * 2 / FIREWORK_CONFIG.ringParticleCount) * i;
-            const speed = FIREWORK_CONFIG.ringSpeed + randomBetween(-0.35, 0.35);
+        for (let i = 0; i < SPIRIT_BURST_CONFIG.ringParticleCount; i += 1) {
+            const angle = (Math.PI * 2 / SPIRIT_BURST_CONFIG.ringParticleCount) * i;
+            const speed = SPIRIT_BURST_CONFIG.ringSpeed + randomBetween(-0.3, 0.3);
             spawnParticle(x, y, speed, angle, pickColor(), 1.2);
         }
 
         flashes.push({
             x,
             y,
-            life: FIREWORK_CONFIG.centerFlashLife,
-            maxLife: FIREWORK_CONFIG.centerFlashLife
+            life: SPIRIT_BURST_CONFIG.centerFlashLife,
+            maxLife: SPIRIT_BURST_CONFIG.centerFlashLife
         });
 
-        if (particles.length > FIREWORK_CONFIG.maxParticles) {
-            particles.splice(0, particles.length - FIREWORK_CONFIG.maxParticles);
+        if (particles.length > SPIRIT_BURST_CONFIG.maxParticles) {
+            particles.splice(0, particles.length - SPIRIT_BURST_CONFIG.maxParticles);
         }
-        if (flashes.length > FIREWORK_CONFIG.maxFlashes) {
-            flashes.splice(0, flashes.length - FIREWORK_CONFIG.maxFlashes);
+        if (flashes.length > SPIRIT_BURST_CONFIG.maxFlashes) {
+            flashes.splice(0, flashes.length - SPIRIT_BURST_CONFIG.maxFlashes);
         }
 
         if (!rafId) {
@@ -152,9 +159,9 @@ function initFestivalClickEffect() {
             particle.life -= 1;
 
             const alpha = Math.max(particle.life / particle.maxLife, 0);
-            ctx.globalAlpha = alpha;
+            ctx.globalAlpha = alpha * 0.9;
             ctx.strokeStyle = particle.color;
-            ctx.lineWidth = Math.max(particle.size * 0.7, 0.8);
+            ctx.lineWidth = Math.max(particle.size * 0.6, 0.8);
             ctx.beginPath();
             ctx.moveTo(particle.prevX, particle.prevY);
             ctx.lineTo(particle.x, particle.y);
@@ -174,12 +181,12 @@ function initFestivalClickEffect() {
             const flash = flashes[i];
             flash.life -= 1;
             const alpha = Math.max(flash.life / flash.maxLife, 0);
-            const radius = 8 + (1 - alpha) * 32;
+            const radius = 6 + (1 - alpha) * 26;
 
             const gradient = ctx.createRadialGradient(flash.x, flash.y, 0, flash.x, flash.y, radius);
-            gradient.addColorStop(0, `rgba(255, 245, 190, ${0.7 * alpha})`);
-            gradient.addColorStop(0.45, `rgba(255, 190, 80, ${0.4 * alpha})`);
-            gradient.addColorStop(1, 'rgba(255, 120, 60, 0)');
+            gradient.addColorStop(0, `rgba(216, 255, 226, ${0.55 * alpha})`);
+            gradient.addColorStop(0.45, `rgba(126, 227, 236, ${0.3 * alpha})`);
+            gradient.addColorStop(1, 'rgba(106, 176, 76, 0)');
 
             ctx.globalAlpha = 1;
             ctx.fillStyle = gradient;
@@ -204,7 +211,7 @@ function initFestivalClickEffect() {
 
     function handlePointerDown(event) {
         if (event.pointerType === 'mouse' && event.button !== 0) return;
-        spawnFirework(event.clientX, event.clientY);
+        spawnBurst(event.clientX, event.clientY);
     }
 
     function handleMotionChange(event) {
@@ -228,33 +235,152 @@ function initFestivalClickEffect() {
     }
 }
 
-// Mobile Navigation Toggle
-document.addEventListener('DOMContentLoaded', () => {
-    initFestivalClickEffect();
+/* =============================================================
+ * 漂浮萤火灵气：缓慢上浮、左右摇曳的发光点
+ * ============================================================= */
+function initAmbientSpirits() {
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (motionQuery.matches) return;
 
-// Theme Toggle Logic
+    const COLORS = ['#8fd873', '#7ee3ec', '#b8f0f5', '#f2c46e'];
+    const canvas = document.createElement('canvas');
+    canvas.className = 'spirit-layer';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    let dpr = 1;
+    let width = 0;
+    let height = 0;
+    let rafId = null;
+    let spirits = [];
+
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        seed();
+    }
+
+    function seed() {
+        const count = width < 768 ? 10 : 20;
+        spirits = Array.from({ length: count }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            r: 1 + Math.random() * 2.2,
+            rise: 0.12 + Math.random() * 0.22,
+            swayAmp: 16 + Math.random() * 28,
+            swaySpeed: 0.0006 + Math.random() * 0.0009,
+            phase: Math.random() * Math.PI * 2,
+            twinkleSpeed: 0.0012 + Math.random() * 0.0018,
+            color: COLORS[Math.floor(Math.random() * COLORS.length)]
+        }));
+    }
+
+    function tick(t) {
+        ctx.clearRect(0, 0, width, height);
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const baseAlpha = isDark ? 0.55 : 0.32;
+
+        for (const s of spirits) {
+            s.y -= s.rise;
+            if (s.y < -10) {
+                s.y = height + 10;
+                s.x = Math.random() * width;
+            }
+            const x = s.x + Math.sin(t * s.swaySpeed + s.phase) * s.swayAmp;
+            const twinkle = 0.6 + 0.4 * Math.sin(t * s.twinkleSpeed + s.phase * 2);
+            const alpha = baseAlpha * twinkle;
+
+            const glow = ctx.createRadialGradient(x, s.y, 0, x, s.y, s.r * 5);
+            glow.addColorStop(0, s.color);
+            glow.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.globalAlpha = alpha * 0.35;
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(x, s.y, s.r * 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = s.color;
+            ctx.beginPath();
+            ctx.arc(x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        rafId = requestAnimationFrame(tick);
+    }
+
+    function start() {
+        if (!rafId) rafId = requestAnimationFrame(tick);
+    }
+
+    function stop() {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+    }
+
+    function destroy() {
+        stop();
+        canvas.remove();
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stop();
+        } else if (!motionQuery.matches) {
+            start();
+        }
+    });
+
+    const onMotionChange = (event) => {
+        if (event.matches) destroy();
+    };
+    if (typeof motionQuery.addEventListener === 'function') {
+        motionQuery.addEventListener('change', onMotionChange);
+    } else if (typeof motionQuery.addListener === 'function') {
+        motionQuery.addListener(onMotionChange);
+    }
+
+    window.addEventListener('resize', resize, { passive: true });
+    resize();
+    start();
+}
+
+/* =============================================================
+ * 基础交互：主题切换 / 移动端菜单 / 平滑滚动
+ * ============================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+    initSpiritBurstEffect();
+    initAmbientSpirits();
+
+    // Theme Toggle Logic
     const themeToggles = document.querySelectorAll('.theme-toggle');
-    
+
     // Check saved theme or system preference
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         document.documentElement.setAttribute('data-theme', 'dark');
         updateThemeIcons('dark');
     }
-    
+
     themeToggles.forEach(toggle => {
         toggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
+
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIcons(newTheme);
         });
     });
-    
+
     function updateThemeIcons(theme) {
         themeToggles.forEach(toggle => {
             const icon = toggle.querySelector('i');
@@ -276,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (menuToggle && navLinks) {
         menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
-            
+
             // Toggle icon between bars and times (X)
             const icon = menuToggle.querySelector('i');
             if (icon.classList.contains('fa-bars')) {
