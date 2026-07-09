@@ -1,0 +1,2749 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="paper">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script>
+            (function () {
+                try {
+                    const savedTheme = localStorage.getItem("theme");
+                    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                    const siteTheme = savedTheme || (prefersDark ? "dark" : "light");
+                    document.documentElement.dataset.theme = siteTheme === "dark" ? "chalk" : "paper";
+                } catch (error) {
+                    document.documentElement.dataset.theme = "paper";
+                }
+            })();
+        </script>
+        <meta name="color-scheme" content="light dark" />
+        <title>FOC 场定向控制 · 技术可视化 - Huanfly</title>
+        <link rel="icon" type="image/png" href="../../picture/icon.png" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.css" />
+        <style>
+            :root {
+                --paper: #faf7f0;
+                --paper-alt: #fffdf8;
+                --ink: #35322b;
+                --ink-soft: #6f6a5e;
+                --ink-faint: #a8a191;
+                --line: #cfc8b8;
+                --blue: #3b6ec9;
+                --teal: #0e9d84;
+                --amber: #d9930d;
+                --red: #d64550;
+                --purple: #8958d8;
+                --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+                --font-hand: "LXGW WenKai", "Xiaolai SC", "KaiTi", "STKaiti", "AR PL UKai CN", cursive;
+                --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+                --wobble-a: 255px 15px 225px 15px / 15px 225px 15px 255px;
+                --wobble-b: 15px 225px 15px 255px / 255px 15px 225px 15px;
+            }
+            [data-theme="chalk"] {
+                --paper: #232830;
+                --paper-alt: #2a303a;
+                --ink: #e9e4d8;
+                --ink-soft: #a8a294;
+                --ink-faint: #6f6a5e;
+                --line: #4a4f58;
+                --blue: #6f9ee8;
+                --teal: #3ec9ad;
+                --amber: #e8b34b;
+                --red: #e8707a;
+                --purple: #ab8ae8;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                margin: 0;
+                min-width: 0;
+                overflow-x: hidden;
+                background: var(--paper);
+                color: var(--ink);
+                font-family: var(--font-hand);
+                font-size: 15px;
+                line-height: 1.7;
+                background-image: radial-gradient(var(--line) 0.8px, transparent 0.8px);
+                background-size: 26px 26px;
+            }
+            button,
+            input {
+                font: inherit;
+            }
+            button {
+                color: inherit;
+            }
+            button:focus-visible,
+            input:focus-visible,
+            summary:focus-visible,
+            [tabindex]:focus-visible {
+                outline: 3px solid color-mix(in srgb, var(--blue) 58%, transparent);
+                outline-offset: 3px;
+            }
+            .skip-link {
+                position: fixed;
+                left: 16px;
+                top: 12px;
+                z-index: 20;
+                transform: translateY(-160%);
+                padding: 8px 12px;
+                border: 1.6px solid var(--ink);
+                background: var(--paper-alt);
+                color: var(--ink);
+            }
+            .skip-link:focus {
+                transform: none;
+            }
+            .container {
+                width: min(1180px, 100%);
+                margin: 0 auto;
+                padding: 34px 24px 70px;
+            }
+            h1,
+            h2,
+            h3,
+            p {
+                overflow-wrap: anywhere;
+            }
+            h1 {
+                margin: 0;
+                font-size: clamp(28px, 4vw, 42px);
+                line-height: 1.2;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+            }
+            h2 {
+                margin: 0;
+                font-size: clamp(22px, 2.4vw, 28px);
+                line-height: 1.3;
+            }
+            h3 {
+                margin: 0;
+                font-size: 17px;
+            }
+            p {
+                margin: 0;
+            }
+            code,
+            .mono {
+                font-family: var(--font-mono);
+                font-size: 0.88em;
+            }
+            code {
+                padding: 1px 5px;
+                border-radius: 4px;
+                background: color-mix(in srgb, var(--ink) 8%, transparent);
+            }
+            section {
+                margin-top: 52px;
+                scroll-margin-top: 18px;
+            }
+            .eyebrow {
+                margin-bottom: 8px;
+                color: var(--blue);
+                font-size: 13px;
+                font-weight: 700;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+            .subtitle {
+                max-width: 790px;
+                margin-top: 12px;
+                color: var(--ink-soft);
+                font-size: 16px;
+            }
+            .header-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 24px;
+                align-items: flex-start;
+            }
+            .header-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                justify-content: flex-end;
+            }
+            .header-actions .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+            }
+            .section-head {
+                display: flex;
+                justify-content: space-between;
+                gap: 20px;
+                align-items: end;
+                margin-bottom: 18px;
+            }
+            .section-head p {
+                max-width: 650px;
+                color: var(--ink-soft);
+            }
+
+            .thesis {
+                display: grid;
+                grid-template-columns: auto 1fr auto;
+                gap: 16px;
+                align-items: center;
+                margin-top: 24px;
+                padding: 18px 20px;
+                border: 1.8px solid var(--ink);
+                border-radius: var(--wobble-a);
+                background: var(--paper-alt);
+            }
+            .thesis-mark {
+                display: grid;
+                width: 48px;
+                height: 48px;
+                place-items: center;
+                border: 1.6px solid var(--amber);
+                border-radius: 50%;
+                color: var(--amber);
+                font-size: 25px;
+                font-weight: 700;
+            }
+            .thesis strong {
+                display: block;
+                margin-bottom: 2px;
+                font-size: 18px;
+            }
+            .thesis p {
+                color: var(--ink-soft);
+            }
+            .thesis-path {
+                color: var(--blue);
+                font-family: var(--font-mono);
+                font-size: 12px;
+                white-space: nowrap;
+            }
+
+            .btn,
+            .step-btn,
+            .preset-btn {
+                min-height: 44px;
+                padding: 8px 14px;
+                border: 1.6px solid var(--ink);
+                border-radius: var(--wobble-b);
+                background: var(--paper-alt);
+                color: var(--ink-soft);
+                cursor: pointer;
+                transition:
+                    color 0.2s var(--ease),
+                    background-color 0.2s var(--ease),
+                    border-color 0.2s var(--ease),
+                    transform 0.2s var(--ease);
+            }
+            .btn:hover,
+            .step-btn:hover,
+            .preset-btn:hover {
+                color: var(--ink);
+                transform: translateY(-1px);
+            }
+            .btn.primary {
+                background: var(--ink);
+                color: var(--paper-alt);
+            }
+            .btn[aria-pressed="true"],
+            .preset-btn[aria-pressed="true"],
+            .step-btn.is-current {
+                border-color: var(--ink);
+                background: var(--ink);
+                color: var(--paper-alt);
+            }
+            .btn:disabled {
+                cursor: not-allowed;
+                opacity: 0.5;
+                transform: none;
+            }
+            .icon-btn {
+                min-width: 44px;
+                padding-inline: 12px;
+            }
+
+            .card,
+            .panel,
+            .diagram,
+            details {
+                border: 1.6px solid var(--ink);
+                border-radius: var(--wobble-a);
+                background: var(--paper-alt);
+            }
+            .card:nth-child(even) {
+                border-radius: var(--wobble-b);
+            }
+            .diagram {
+                padding: 12px;
+            }
+            .panel {
+                padding: 18px;
+            }
+            .card {
+                padding: 16px;
+            }
+
+            .legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px 18px;
+                color: var(--ink-soft);
+                font-size: 13px;
+            }
+            .legend-item {
+                display: inline-flex;
+                gap: 7px;
+                align-items: center;
+            }
+            .legend-line {
+                width: 24px;
+                height: 0;
+                border-top: 3px solid var(--blue);
+            }
+            .legend-line.measured {
+                border-color: var(--teal);
+                border-top-style: dashed;
+            }
+            .legend-line.rotor {
+                border-color: var(--amber);
+                border-top-style: dotted;
+            }
+            .legend-line.transform {
+                border-color: var(--purple);
+                border-top-style: dotted;
+            }
+
+            .tour-shell {
+                margin-top: 14px;
+            }
+            .stepper-wrap {
+                position: relative;
+                overflow: hidden;
+                border-block: 1px dashed var(--line);
+                padding-block: 10px;
+            }
+            .stepper {
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                overscroll-behavior-x: contain;
+                scrollbar-width: thin;
+                scrollbar-color: var(--ink-faint) transparent;
+                padding: 2px 1px 7px;
+            }
+            .stepper::-webkit-scrollbar {
+                height: 5px;
+            }
+            .stepper::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .stepper::-webkit-scrollbar-thumb {
+                background: var(--ink-faint);
+                border-radius: 999px;
+            }
+            .step-btn {
+                flex: 0 0 auto;
+                font-size: 14px;
+            }
+            .tour-layout {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 16px;
+                align-items: start;
+                margin-top: 16px;
+            }
+            .diagram-wrap {
+                min-width: 0;
+            }
+            .diagram svg {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+            .diagram-note {
+                min-height: 48px;
+                margin-top: 10px;
+                padding: 10px 13px;
+                border-left: 3px solid var(--blue);
+                background: color-mix(in srgb, var(--blue) 7%, transparent);
+                color: var(--ink-soft);
+                font-size: 13px;
+            }
+            .diagram-note strong {
+                color: var(--ink);
+            }
+            .tour-controls {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                margin-top: 12px;
+            }
+            .tour-controls .btn {
+                flex: 1;
+            }
+            .step-panel {
+                min-height: 0;
+                position: static;
+            }
+            .step-count {
+                color: var(--blue);
+                font-family: var(--font-mono);
+                font-size: 12px;
+                font-weight: 700;
+            }
+            .step-title {
+                margin-top: 3px;
+                font-size: 21px;
+            }
+            .step-lead {
+                margin-top: 8px;
+                color: var(--ink-soft);
+                line-height: 1.75;
+            }
+            .explain-grid {
+                display: grid;
+                gap: 9px;
+                margin-top: 16px;
+            }
+            .explain-row {
+                display: grid;
+                grid-template-columns: 68px 1fr;
+                gap: 9px;
+                padding-top: 9px;
+                border-top: 1px dashed var(--line);
+                font-size: 13px;
+            }
+            .explain-row dt {
+                color: var(--ink-soft);
+                font-weight: 700;
+            }
+            .explain-row dd {
+                margin: 0;
+                color: var(--ink-soft);
+            }
+            .formula-chip {
+                margin-top: 15px;
+                padding: 10px 12px;
+                border-left: 3px solid var(--purple);
+                border-radius: 8px;
+                background: color-mix(in srgb, var(--purple) 9%, transparent);
+                color: var(--ink);
+                font-family: var(--font-mono);
+                font-size: 12px;
+                line-height: 1.7;
+            }
+            .step-tip {
+                margin-top: 13px;
+                color: var(--blue);
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .mobile-chain {
+                display: none;
+                list-style: none;
+                margin: 0;
+                padding: 4px;
+            }
+            .mobile-chain li {
+                position: relative;
+                margin: 0;
+                padding: 0 0 18px 24px;
+            }
+            .mobile-chain li:not(:last-child)::before {
+                content: "";
+                position: absolute;
+                left: 10px;
+                top: 36px;
+                bottom: 2px;
+                border-left: 1.6px dashed var(--line);
+            }
+            .mobile-chain li::after {
+                content: "";
+                position: absolute;
+                left: 6px;
+                top: 18px;
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+                background: var(--line);
+            }
+            .mobile-node {
+                width: 100%;
+                min-height: 50px;
+                padding: 8px 12px;
+                border: 1.4px solid var(--line);
+                border-radius: 9px;
+                background: transparent;
+                color: var(--ink-soft);
+                text-align: left;
+            }
+            .mobile-node strong {
+                display: block;
+                color: var(--ink);
+            }
+            .mobile-node.is-active {
+                border-color: var(--blue);
+                background: color-mix(in srgb, var(--blue) 7%, transparent);
+            }
+            .mobile-node.is-dimmed {
+                opacity: 1;
+                border-color: var(--line);
+                background: transparent;
+            }
+            .mobile-node.is-dimmed strong {
+                color: var(--ink-soft);
+            }
+
+            .node {
+                cursor: pointer;
+            }
+            .node .shape path,
+            .node .shape rect {
+                stroke: var(--c, var(--ink));
+                transition:
+                    stroke 0.2s var(--ease),
+                    stroke-width 0.2s var(--ease);
+            }
+            .node .shape rect {
+                fill: none;
+                stroke-width: 1.6;
+            }
+            .node .hfill path {
+                stroke: var(--c, var(--ink-faint));
+                opacity: 0.24;
+            }
+            .node .node-label {
+                fill: var(--ink);
+                font-family: var(--font-hand);
+                font-size: 15px;
+                font-weight: 700;
+                text-anchor: middle;
+                dominant-baseline: central;
+                pointer-events: none;
+            }
+            .node .node-sub {
+                fill: var(--ink-soft);
+                font-family: var(--font-hand);
+                font-size: 11.5px;
+                text-anchor: middle;
+                dominant-baseline: central;
+                pointer-events: none;
+            }
+            .node.is-active .shape path,
+            .node.is-active .shape rect {
+                stroke-width: 2.8;
+            }
+            .node.is-hovered .shape path,
+            .node.is-hovered .shape rect {
+                stroke-width: 3.3;
+            }
+            .edge path,
+            .edge line {
+                stroke: var(--ink-soft);
+                fill: none;
+                transition: stroke 0.2s var(--ease);
+            }
+            .edge line,
+            .edge .shaft {
+                stroke-width: 1.6;
+            }
+            .edge.is-active path,
+            .edge.is-active line {
+                stroke: var(--c, var(--blue));
+            }
+            .edge-label {
+                fill: var(--ink-soft);
+                font-family: var(--font-hand);
+                font-size: 11.5px;
+                text-anchor: middle;
+                paint-order: stroke;
+                stroke: var(--paper-alt);
+                stroke-width: 5px;
+                stroke-linejoin: round;
+            }
+            .edge.is-active .edge-label {
+                fill: var(--ink);
+                font-weight: 700;
+            }
+            .edge.edge-feedback path {
+                stroke-dasharray: 7 5;
+            }
+            .edge.edge-angle path {
+                stroke-dasharray: 2 5;
+            }
+            .group path,
+            .group rect {
+                stroke: var(--c, var(--ink-faint));
+                fill: none;
+            }
+            .group text {
+                fill: var(--ink-soft);
+                font-family: var(--font-hand);
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+            }
+            .diagram-heading {
+                fill: var(--ink-soft);
+                font-family: var(--font-hand);
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+            }
+            .edge.is-dimmed,
+            .group.is-dimmed {
+                opacity: 0.16;
+            }
+            .node.is-dimmed {
+                opacity: 1;
+            }
+            .node.is-dimmed .shape,
+            .node.is-dimmed .hfill {
+                opacity: 0.22;
+            }
+            .node.is-dimmed .node-label,
+            .node.is-dimmed .node-sub {
+                fill: var(--ink-soft);
+            }
+            .node,
+            .edge,
+            .group {
+                transition: opacity 0.3s var(--ease);
+            }
+            .node .shape,
+            .node .hfill {
+                transition: opacity 0.3s var(--ease);
+            }
+
+            .flow-dot {
+                display: none;
+            }
+            @supports (offset-path: path("M0 0L8 8")) {
+                .flow-dot {
+                    display: block;
+                    opacity: 0;
+                    offset-rotate: 0deg;
+                    animation: flow-move linear infinite;
+                }
+            }
+            @keyframes flow-move {
+                0% {
+                    offset-distance: 0%;
+                    opacity: 0;
+                }
+                12% {
+                    opacity: 0.9;
+                }
+                88% {
+                    opacity: 0.9;
+                }
+                100% {
+                    offset-distance: 100%;
+                    opacity: 0;
+                }
+            }
+
+            .lab-board {
+                padding: 18px;
+            }
+            .preset-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+            .preset-btn {
+                min-height: 44px;
+                padding-block: 6px;
+                font-size: 13px;
+            }
+            .control-grid {
+                display: grid;
+                grid-template-columns: 1.25fr 1fr 1fr auto;
+                gap: 16px;
+                align-items: end;
+            }
+            .control {
+                min-width: 0;
+            }
+            .control label {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                color: var(--ink-soft);
+                font-size: 13px;
+            }
+            .control output,
+            .control-readout {
+                color: var(--ink);
+                font-family: var(--font-mono);
+                font-weight: 700;
+            }
+            input[type="range"] {
+                width: 100%;
+                height: 34px;
+                margin: 4px 0 0;
+                accent-color: var(--blue);
+                cursor: pointer;
+            }
+            .lab-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 14px;
+                margin-top: 18px;
+            }
+            .viz-card {
+                min-width: 0;
+                padding: 13px;
+                overflow: hidden;
+            }
+            .viz-card-head {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                align-items: baseline;
+            }
+            .viz-card-head span {
+                color: var(--ink-soft);
+                font-family: var(--font-mono);
+                font-size: 11px;
+            }
+            .viz-card p {
+                margin-top: 3px;
+                color: var(--ink-soft);
+                font-size: 12.5px;
+            }
+            .viz {
+                min-height: 250px;
+                margin-top: 7px;
+            }
+            .viz svg {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+            .phase-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 9px;
+                margin-top: 5px;
+                font-size: 11.5px;
+            }
+            .phase-a-text,
+            .phase-b-text,
+            .phase-c-text {
+                color: var(--ink-soft);
+            }
+            .phase-a-text {
+                text-decoration: underline solid var(--blue) 2px;
+                text-underline-offset: 3px;
+            }
+            .phase-b-text {
+                text-decoration: underline dashed var(--amber) 2px;
+                text-underline-offset: 3px;
+            }
+            .phase-c-text {
+                text-decoration: underline dotted var(--purple) 2px;
+                text-underline-offset: 3px;
+            }
+
+            .precision-axis {
+                stroke: var(--line);
+                stroke-width: 1.2;
+                fill: none;
+            }
+            .precision-grid {
+                stroke: var(--line);
+                stroke-width: 0.7;
+                stroke-dasharray: 3 5;
+                fill: none;
+            }
+            .phase-a {
+                stroke: var(--blue);
+                fill: none;
+                stroke-width: 2.2;
+            }
+            .phase-b {
+                stroke: var(--amber);
+                fill: none;
+                stroke-width: 2.2;
+                stroke-dasharray: 9 4;
+            }
+            .phase-c {
+                stroke: var(--purple);
+                fill: none;
+                stroke-width: 2.2;
+                stroke-dasharray: 2 4;
+            }
+            .cursor-line {
+                stroke: var(--red);
+                stroke-width: 1.5;
+                stroke-dasharray: 5 4;
+            }
+            .math-axis {
+                stroke: var(--line);
+                stroke-width: 1.2;
+                fill: none;
+            }
+            .phase-axis {
+                stroke: var(--ink-faint);
+                stroke-width: 1;
+                stroke-dasharray: 3 5;
+            }
+            .rotor-axis {
+                stroke: var(--purple);
+                stroke-width: 1.6;
+                stroke-dasharray: 6 5;
+            }
+            .flux-vector {
+                stroke: var(--amber);
+                fill: none;
+                stroke-width: 3.2;
+            }
+            .current-vector {
+                stroke: var(--blue);
+                fill: none;
+                stroke-width: 3.6;
+            }
+            .id-vector {
+                stroke: var(--teal);
+                fill: none;
+                stroke-width: 3;
+            }
+            .iq-vector {
+                stroke: var(--purple);
+                fill: none;
+                stroke-width: 3;
+            }
+            .vector-head {
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+            .axis-label {
+                fill: var(--ink-soft);
+                font-family: var(--font-hand);
+                font-size: 12px;
+            }
+            .axis-label.strong {
+                fill: var(--ink);
+                font-weight: 700;
+            }
+            .lab-xf,
+            .vector-xf {
+                transform-origin: 0 0;
+                transition: transform 0.45s var(--ease);
+            }
+            .value-strip {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 9px;
+                margin-top: 14px;
+            }
+            .value-cell {
+                padding: 9px 10px;
+                border: 1px dashed var(--line);
+                border-radius: 8px;
+                color: var(--ink-soft);
+                font-size: 11.5px;
+            }
+            .value-cell strong {
+                display: block;
+                color: var(--ink);
+                font-family: var(--font-mono);
+                font-size: 13px;
+            }
+            .lab-insight {
+                display: grid;
+                grid-template-columns: auto 1fr 220px;
+                gap: 12px;
+                align-items: center;
+                margin-top: 14px;
+                padding: 13px 15px;
+                border-left: 4px solid var(--teal);
+                background: color-mix(in srgb, var(--teal) 7%, transparent);
+            }
+            .lab-insight .tag {
+                color: var(--ink);
+                font-size: 12px;
+                font-weight: 700;
+            }
+            .lab-insight p {
+                color: var(--ink-soft);
+                font-size: 13px;
+            }
+            .torque-meter {
+                position: relative;
+                height: 12px;
+                border: 1px solid var(--line);
+                border-radius: 999px;
+                overflow: hidden;
+                background: color-mix(in srgb, var(--ink) 4%, transparent);
+            }
+            .torque-meter::after {
+                content: "";
+                position: absolute;
+                left: 50%;
+                top: -2px;
+                bottom: -2px;
+                width: 1px;
+                background: var(--ink);
+            }
+            .torque-pos,
+            .torque-neg {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 50%;
+                background: var(--blue);
+                transition: transform 0.35s var(--ease);
+            }
+            .torque-pos {
+                left: 50%;
+                transform-origin: left center;
+            }
+            .torque-neg {
+                right: 50%;
+                transform-origin: right center;
+                background: var(--red);
+            }
+            .torque-caption {
+                display: flex;
+                justify-content: space-between;
+                color: var(--ink-soft);
+                font-size: 10px;
+            }
+
+            details {
+                overflow: hidden;
+            }
+            summary {
+                min-height: 58px;
+                padding: 15px 18px;
+                cursor: pointer;
+                font-size: 17px;
+                font-weight: 700;
+            }
+            details[open] summary {
+                border-bottom: 1px dashed var(--line);
+            }
+            .details-body {
+                padding: 18px;
+            }
+            .formula-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+            }
+            .formula-card {
+                padding: 14px;
+                border: 1px solid var(--line);
+                border-radius: 9px;
+            }
+            .formula-card h3 {
+                color: var(--blue);
+            }
+            .formula {
+                margin-top: 9px;
+                padding: 10px;
+                overflow-x: auto;
+                border-radius: 7px;
+                background: color-mix(in srgb, var(--ink) 5%, transparent);
+                color: var(--ink);
+                font-family: var(--font-mono);
+                font-size: 12px;
+                line-height: 1.85;
+                white-space: nowrap;
+            }
+            .formula-card p {
+                margin-top: 9px;
+                color: var(--ink-soft);
+                font-size: 13px;
+            }
+            .boundary-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px 20px;
+                margin-top: 18px;
+            }
+            .boundary {
+                position: relative;
+                padding-left: 20px;
+                color: var(--ink-soft);
+                font-size: 13px;
+            }
+            .boundary::before {
+                content: "→";
+                position: absolute;
+                left: 0;
+                color: var(--amber);
+                font-weight: 700;
+            }
+            .convention {
+                margin-top: 16px;
+                padding: 12px 14px;
+                border: 1px dashed var(--purple);
+                color: var(--ink-soft);
+                font-size: 13px;
+            }
+            .convention strong {
+                color: var(--ink);
+            }
+            .footer-note {
+                margin-top: 24px;
+                color: var(--ink-soft);
+                font-size: 12px;
+                text-align: center;
+            }
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+
+            @keyframes fade-in-up {
+                from {
+                    opacity: 0;
+                    transform: translateY(8px);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+            .anim-in {
+                opacity: 0;
+                animation: fade-in-up 0.4s var(--ease) forwards;
+                animation-delay: calc(var(--i, 0) * 60ms);
+            }
+            .draw-in {
+                stroke-dasharray: 1;
+                stroke-dashoffset: 1;
+                animation: draw-on 0.55s var(--ease) both;
+                animation-delay: calc(var(--di, 0) * 10ms);
+            }
+            @keyframes draw-on {
+                to {
+                    stroke-dashoffset: 0;
+                }
+            }
+            .fade-el {
+                opacity: 0;
+                animation: fade-el-in 0.35s ease-out both;
+                animation-delay: calc(var(--di, 0) * 10ms);
+            }
+            @keyframes fade-el-in {
+                to {
+                    opacity: 1;
+                }
+            }
+            .panel-swap {
+                animation: fade-in-up 0.3s var(--ease) both;
+            }
+
+            @media (min-width: 821px) {
+                .step-panel .explain-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+            @media (max-width: 930px) {
+                .tour-layout {
+                    grid-template-columns: 1fr;
+                }
+                .step-panel {
+                    min-height: 0;
+                    position: static;
+                }
+                .lab-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+                .viz-card:last-child {
+                    grid-column: 1 / -1;
+                    max-width: 520px;
+                    width: 100%;
+                    justify-self: center;
+                }
+                .control-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+                .control-grid .btn {
+                    grid-column: 1 / -1;
+                }
+            }
+            @media (max-width: 970px) {
+                #diagram svg {
+                    display: none;
+                }
+                .mobile-chain {
+                    display: block;
+                }
+            }
+            @media (max-width: 680px) {
+                .container {
+                    padding: 24px 14px 52px;
+                }
+                section {
+                    margin-top: 42px;
+                }
+                .header-row,
+                .section-head {
+                    display: block;
+                }
+                .header-actions {
+                    justify-content: flex-start;
+                    margin-top: 16px;
+                }
+                .section-head .legend {
+                    margin-top: 12px;
+                }
+                .thesis {
+                    grid-template-columns: auto 1fr;
+                    padding: 14px;
+                }
+                .thesis-path {
+                    display: none;
+                }
+                .tour-layout {
+                    gap: 12px;
+                }
+                #diagram svg {
+                    display: none;
+                }
+                .mobile-chain {
+                    display: block;
+                }
+                .diagram {
+                    padding: 10px;
+                }
+                .tour-controls {
+                    position: sticky;
+                    bottom: 8px;
+                    z-index: 5;
+                    padding: 7px;
+                    border: 1px solid var(--line);
+                    border-radius: 10px;
+                    background: color-mix(in srgb, var(--paper-alt) 94%, transparent);
+                }
+                .tour-controls .btn {
+                    padding-inline: 8px;
+                }
+                .control-grid {
+                    grid-template-columns: 1fr;
+                    gap: 9px;
+                }
+                .control-grid .btn {
+                    grid-column: auto;
+                }
+                .lab-board {
+                    padding: 13px;
+                }
+                .lab-grid {
+                    grid-template-columns: 1fr;
+                }
+                .viz-card:last-child {
+                    grid-column: auto;
+                    max-width: none;
+                }
+                .value-strip {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .lab-insight {
+                    grid-template-columns: 1fr;
+                }
+                .formula-grid,
+                .boundary-grid {
+                    grid-template-columns: 1fr;
+                }
+                .step-panel {
+                    padding: 15px;
+                }
+            }
+            @media (max-width: 420px) {
+                h1 {
+                    font-size: 29px;
+                }
+                .thesis-mark {
+                    width: 42px;
+                    height: 42px;
+                }
+                .preset-row {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                }
+                .preset-btn {
+                    width: 100%;
+                }
+                .tour-controls .btn:nth-child(2) {
+                    flex: 1.25;
+                }
+                .explain-row {
+                    grid-template-columns: 60px 1fr;
+                }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                html {
+                    scroll-behavior: auto;
+                }
+                *,
+                *::before,
+                *::after {
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: 0.01ms !important;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a class="skip-link" href="#main">跳到主要内容</a>
+        <div class="container">
+            <header class="anim-in">
+                <div class="header-row">
+                    <div>
+                        <p class="eyebrow">Huanfly 技术可视化 · Field-Oriented Control</p>
+                        <h1>FOC 到底在控制什么？</h1>
+                        <p class="subtitle">
+                            以 PMSM /
+                            正弦反电动势无刷电机为例，把三相交流电流换一个“跟着转子转”的观察坐标系，于是磁链与转矩可以像两个直流量一样分别闭环控制。
+                        </p>
+                    </div>
+                    <div class="header-actions" aria-label="页面操作">
+                        <a class="btn" href="../visualizations.html">← 返回列表</a>
+                        <button class="btn icon-btn" id="theme-btn" type="button" aria-pressed="false">切换黑板</button>
+                        <button class="btn primary" id="restart-btn" type="button">从头理解</button>
+                    </div>
+                </div>
+                <div class="thesis">
+                    <div class="thesis-mark" aria-hidden="true">τ</div>
+                    <div>
+                        <strong>一句话本质：控制定子电流矢量相对转子磁链的方向与大小。</strong>
+                        <p>
+                            <code>i<sub>q</sub></code> 主要形成切向力矩，<code>i<sub>d</sub></code> 调节 d
+                            轴合成磁链；坐标变换不改变物理矢量，只改变描述它的尺子。
+                        </p>
+                    </div>
+                    <div class="thesis-path">abc → αβ → dq → PI → SVPWM</div>
+                </div>
+            </header>
+
+            <main id="main" tabindex="-1">
+                <noscript
+                    ><p class="panel" style="margin-top: 24px">
+                        此交互图需要启用 JavaScript；下面的公式与工程边界仍可直接阅读。
+                    </p></noscript
+                >
+
+                <section id="tour" class="anim-in" style="--i: 1">
+                    <div class="section-head">
+                        <div>
+                            <p class="eyebrow">01 · 控制周期全景</p>
+                            <h2>沿信号流走一遍 FOC</h2>
+                            <p>点步骤或框图节点逐层聚焦；只有当前环节的数据流会运动，避免整张图一起“热闹”。</p>
+                        </div>
+                        <div class="legend" aria-label="图例">
+                            <span class="legend-item"><i class="legend-line"></i>指令 / 主路径</span>
+                            <span class="legend-item"><i class="legend-line measured"></i>测量 / 反馈</span>
+                            <span class="legend-item"><i class="legend-line rotor"></i>转子角度</span>
+                        </div>
+                    </div>
+
+                    <div class="tour-shell">
+                        <div class="stepper-wrap">
+                            <div class="stepper" id="stepper" aria-label="FOC 学习步骤"></div>
+                        </div>
+                        <div class="tour-layout">
+                            <div class="diagram-wrap">
+                                <div class="diagram" id="diagram" aria-busy="true">
+                                    <p style="padding: 18px; color: var(--ink-soft)">正在绘制控制闭环…</p>
+                                    <ol class="mobile-chain" id="mobile-chain" aria-label="移动端 FOC 信号链"></ol>
+                                </div>
+                                <div class="diagram-note" id="diagram-note">
+                                    <strong>交互提示：</strong>悬停、聚焦或点击模块查看职责；点击会跳到对应讲解步骤。
+                                </div>
+                                <div class="tour-controls" aria-label="导览控制">
+                                    <button class="btn" id="prev-step" type="button">← 上一环</button>
+                                    <button class="btn primary" id="tour-play" type="button" aria-pressed="false">
+                                        ▶ 自动导览
+                                    </button>
+                                    <button class="btn" id="next-step" type="button">下一环 →</button>
+                                </div>
+                            </div>
+                            <aside class="panel step-panel" id="step-panel" aria-live="off"></aside>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="lab" class="anim-in" style="--i: 2">
+                    <div class="section-head">
+                        <div>
+                            <p class="eyebrow">02 · 同一矢量，三种表达</p>
+                            <h2>亲手拖动电角度，看 Park 变换“冻结旋转”</h2>
+                            <p>
+                                三个视图共享同一组状态。改变 <code>θ<sub>e</sub></code> 时，abc 与 αβ
+                                在变化；如果电流与转子同步，dq 分量保持不变。下方转矩方向采用 SPMSM 简化模型。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card lab-board">
+                        <div class="preset-row" aria-label="运行场景">
+                            <button class="preset-btn" data-preset="drive" type="button" aria-pressed="true">
+                                正转驱动
+                            </button>
+                            <button class="preset-btn" data-preset="zero" type="button" aria-pressed="false">
+                                零转矩
+                            </button>
+                            <button class="preset-btn" data-preset="regen" type="button" aria-pressed="false">
+                                负向转矩
+                            </button>
+                            <button class="preset-btn" data-preset="weak" type="button" aria-pressed="false">
+                                SPMSM 弱磁
+                            </button>
+                        </div>
+
+                        <div class="control-grid">
+                            <div class="control">
+                                <label for="theta-range"
+                                    ><span>转子电角度 θ<sub>e</sub></span
+                                    ><span class="control-readout" id="theta-out">35° electrical</span></label
+                                >
+                                <input
+                                    id="theta-range"
+                                    type="range"
+                                    min="0"
+                                    max="360"
+                                    step="1"
+                                    value="35"
+                                    aria-label="转子电角度"
+                                />
+                            </div>
+                            <div class="control">
+                                <label for="id-range"
+                                    ><span>d 轴电流 i<sub>d</sub></span
+                                    ><span class="control-readout" id="id-out">0.0 A</span></label
+                                >
+                                <input
+                                    id="id-range"
+                                    type="range"
+                                    min="-8"
+                                    max="8"
+                                    step="0.1"
+                                    value="0"
+                                    aria-label="d 轴电流"
+                                />
+                            </div>
+                            <div class="control">
+                                <label for="iq-range"
+                                    ><span>转矩分量 i<sub>q</sub></span
+                                    ><span class="control-readout" id="iq-out">6.0 A</span></label
+                                >
+                                <input
+                                    id="iq-range"
+                                    type="range"
+                                    min="-8"
+                                    max="8"
+                                    step="0.1"
+                                    value="6"
+                                    aria-label="q 轴电流"
+                                />
+                            </div>
+                            <button class="btn primary" id="rotor-play" type="button" aria-pressed="false">
+                                ▶ 转动 θ<sub>e</sub>
+                            </button>
+                        </div>
+
+                        <div class="lab-grid">
+                            <article class="card viz-card">
+                                <div class="viz-card-head">
+                                    <h3>三相 abc</h3>
+                                    <span>定子绕组</span>
+                                </div>
+                                <p>三条交流量；竖线是当前采样时刻。</p>
+                                <div class="viz" id="wave-viz"></div>
+                                <div class="phase-legend">
+                                    <span class="phase-a-text">A 相 <b id="ia-value">0.0 A</b></span>
+                                    <span class="phase-b-text">B 相 <b id="ib-value">0.0 A</b></span>
+                                    <span class="phase-c-text">C 相 <b id="ic-value">0.0 A</b></span>
+                                </div>
+                            </article>
+                            <article class="card viz-card">
+                                <div class="viz-card-head">
+                                    <h3>静止 αβ</h3>
+                                    <span>站在定子看</span>
+                                </div>
+                                <p>电流矢量与转子 d/q 轴一起转。</p>
+                                <div class="viz" id="alpha-viz"></div>
+                                <div class="phase-legend">
+                                    <span class="phase-a-text">iα <b id="ialpha-value">0.0 A</b></span>
+                                    <span class="phase-b-text">iβ <b id="ibeta-value">0.0 A</b></span>
+                                </div>
+                            </article>
+                            <article class="card viz-card">
+                                <div class="viz-card-head">
+                                    <h3>旋转 dq</h3>
+                                    <span>跟着转子看</span>
+                                </div>
+                                <p>同步稳态下，旋转量变成近似常值。</p>
+                                <div class="viz" id="dq-viz"></div>
+                                <div class="phase-legend">
+                                    <span
+                                        style="
+                                            color: var(--ink-soft);
+                                            text-decoration: underline solid var(--teal) 2px;
+                                            text-underline-offset: 3px;
+                                        "
+                                        >id <b id="id-value">0.0 A</b></span
+                                    >
+                                    <span
+                                        style="
+                                            color: var(--ink-soft);
+                                            text-decoration: underline dashed var(--purple) 2px;
+                                            text-underline-offset: 3px;
+                                        "
+                                        >iq <b id="iq-value">0.0 A</b></span
+                                    >
+                                </div>
+                            </article>
+                        </div>
+
+                        <div class="value-strip" aria-label="实时数值">
+                            <div class="value-cell">三相和<strong id="sum-value">0.00 A</strong></div>
+                            <div class="value-cell">|i<sub>s</sub>|<strong id="mag-value">6.00 A</strong></div>
+                            <div class="value-cell">电流相对 +d 轴角度<strong id="delta-value">90.0°</strong></div>
+                            <div class="value-cell">SPMSM 转矩符号<strong id="torque-value">正向转矩</strong></div>
+                        </div>
+                        <div class="lab-insight">
+                            <span class="tag">此刻该看什么</span>
+                            <p id="lab-insight-text">
+                                拖动 θe：左、中两图持续变化，右侧 dq 矢量不动。这就是 Park 变换让 PI 控制变简单的原因。
+                            </p>
+                            <div>
+                                <div class="torque-caption">
+                                    <span>负向</span><span>SPMSM：T<sub>e</sub> ∝ i<sub>q</sub></span
+                                    ><span>正向</span>
+                                </div>
+                                <div class="torque-meter" aria-hidden="true">
+                                    <span class="torque-neg" id="torque-neg"></span>
+                                    <span class="torque-pos" id="torque-pos"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="engineering" class="anim-in" style="--i: 3">
+                    <div class="section-head">
+                        <div>
+                            <p class="eyebrow">03 · 公式与工程边界</p>
+                            <h2>把直觉落到同一套符号约定</h2>
+                            <p>
+                                这里采用 amplitude-invariant Clarke 变换；若换
+                                convention，矩阵、转矩系数和解耦项必须整套一起换。
+                            </p>
+                        </div>
+                    </div>
+                    <details>
+                        <summary>展开：Clarke / Park / 转矩公式与落地注意事项</summary>
+                        <div class="details-body">
+                            <div class="formula-grid">
+                                <article class="formula-card">
+                                    <h3>Clarke：abc → αβ</h3>
+                                    <div class="formula">
+                                        iα = 2/3 · (ia − ib/2 − ic/2)<br />
+                                        iβ = 2/3 · (√3·ib/2 − √3·ic/2)<br />
+                                        三线制无零序时：iα = ia，iβ = (ia + 2ib)/√3
+                                    </div>
+                                    <p>三相平衡量只有两个独立自由度。变换压缩的是表示，不是把三个物理绕组“变没了”。</p>
+                                </article>
+                                <article class="formula-card">
+                                    <h3>Park：αβ → dq</h3>
+                                    <div class="formula">
+                                        id = iα cosθe + iβ sinθe<br />
+                                        iq = −iα sinθe + iβ cosθe<br />
+                                        逆变换：iα = id cosθe − iq sinθe<br />
+                                        iβ = id sinθe + iq cosθe
+                                    </div>
+                                    <p>
+                                        观察坐标系跟着转子电角度旋转。同步稳态下近似 DC；动态、角度误差与谐波仍会让 dq
+                                        波动。
+                                    </p>
+                                </article>
+                                <article class="formula-card">
+                                    <h3>角度：机械 → 电气</h3>
+                                    <div class="formula">
+                                        θe = p · θm + θ0<br />
+                                        ωe = p · ωm<br />
+                                        p = 极对数，不是磁极总数
+                                    </div>
+                                    <p>
+                                        编码器零位、方向和相序必须与 Park 约定一致。偏差会直接造成 d/q
+                                        串扰，严重时无法起动。
+                                    </p>
+                                </article>
+                                <article class="formula-card">
+                                    <h3>PMSM 电磁转矩</h3>
+                                    <div class="formula">
+                                        λd = ψf + Ld id<br />
+                                        Te = 3/2 · p [ ψf iq + (Ld − Lq) id iq ]<br />
+                                        SPMSM：Ld ≈ Lq → Te ≈ 3/2 · p ψf iq
+                                    </div>
+                                    <p>
+                                        <code>id</code> 调节的是 d 轴合成磁链 λd，不会改变永磁体自身的 ψf。<code
+                                            >id*=0</code
+                                        >
+                                        是 SPMSM 基速以下的常用起点；IPMSM 的 MTPA 与高速弱磁通常需要非零、常为负的
+                                        <code>id</code>。
+                                    </p>
+                                </article>
+                            </div>
+                            <div class="convention">
+                                <strong>本页坐标约定：</strong>A 相轴与 +α 重合，B 相为 +120°、C 相为
+                                −120°；正相电流定义为逆变器流入电机绕组；数学角逆时针为正，正转速使 θe 增大；+d
+                                对齐转子永磁磁链 ψf，+q 是 +d 逆时针 90°，θe 是 +α 到 +d 的电角度。
+                            </div>
+                            <div class="boundary-grid">
+                                <p class="boundary">
+                                    常见两电阻采样依赖有效 PWM 采样窗口，不能把
+                                    <code>ia+ib+ic=0</code> 当作任何拓扑、任何时刻都无条件成立。
+                                </p>
+                                <p class="boundary">
+                                    dq 电压命令受 DC bus 限制；饱和后应配合 voltage limiting 与 PI anti-windup。
+                                </p>
+                                <p class="boundary">速度环带宽应明显低于电流环；电流环通常与 PWM/ADC 时序紧密同步。</p>
+                                <p class="boundary">
+                                    逆 Park、Park、相序、q 轴方向与交叉耦合前馈的符号必须来自同一 convention。
+                                </p>
+                                <p class="boundary">
+                                    FOC 更自然地适配正弦反电动势 PMSM；行业口语里的“BLDC”并不保证波形天然适合平滑正弦
+                                    FOC。
+                                </p>
+                                <p class="boundary">
+                                    当前实验台展示坐标变换的理想稳态关系，不是开关级电机仿真，也没有模拟 PWM
+                                    纹波、延迟与参数失配。
+                                </p>
+                            </div>
+                        </div>
+                    </details>
+                </section>
+            </main>
+
+            <p class="footer-note">
+                键盘：步骤按钮上用 ← / → / Home / End；页面非控件区域按 P 播放导览、R 重置实验、Esc 暂停并取消节点固定。
+            </p>
+            <div class="sr-only" id="live-region" aria-live="polite" aria-atomic="true"></div>
+        </div>
+
+        <script type="module">
+            const SKETCH = { seed: 7, roughness: 1.2, bowing: 1.1 };
+            const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+            function loadScript(srcs, timeout) {
+                timeout = timeout || 6000;
+                return new Promise(function (resolve) {
+                    const timer = setTimeout(function () {
+                        resolve(false);
+                    }, timeout);
+                    let i = 0;
+                    function next() {
+                        if (i >= srcs.length) {
+                            clearTimeout(timer);
+                            resolve(false);
+                            return;
+                        }
+                        const s = document.createElement("script");
+                        s.src = srcs[i++];
+                        s.onload = function () {
+                            clearTimeout(timer);
+                            resolve(true);
+                        };
+                        s.onerror = function () {
+                            s.remove();
+                            next();
+                        };
+                        document.head.appendChild(s);
+                    }
+                    next();
+                });
+            }
+
+            const hasRough = await loadScript([
+                "https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.min.js",
+                "https://unpkg.com/roughjs@4.6.6/bundled/rough.js",
+            ]);
+
+            const NS = "http://www.w3.org/2000/svg";
+            function svgEl(tag, attrs) {
+                const el = document.createElementNS(NS, tag);
+                Object.entries(attrs || {}).forEach(function (pair) {
+                    el.setAttribute(pair[0], pair[1]);
+                });
+                return el;
+            }
+            function textEl(x, y, value, cls) {
+                const t = svgEl("text", { x: x, y: y, class: cls || "" });
+                t.textContent = value;
+                return t;
+            }
+            function hashId(value) {
+                let h = 9;
+                Array.from(String(value)).forEach(function (c) {
+                    h = (h * 31 + c.charCodeAt(0)) % 1000;
+                });
+                return h;
+            }
+            let rcHolder = null;
+
+            function sketchRect(x, y, w, h, options) {
+                options = options || {};
+                if (!hasRough) {
+                    const rect = svgEl("rect", { x: x, y: y, width: w, height: h, rx: 8 });
+                    if (options.dash) rect.setAttribute("stroke-dasharray", "8 6");
+                    return rect;
+                }
+                return rcHolder.rectangle(x, y, w, h, {
+                    roughness: SKETCH.roughness,
+                    bowing: SKETCH.bowing,
+                    seed: options.seed === undefined ? SKETCH.seed : options.seed,
+                    strokeWidth: 1.6,
+                    strokeLineDash: options.dash ? [8, 6] : undefined,
+                });
+            }
+            function sketchPath(d, options) {
+                options = options || {};
+                if (!hasRough) return svgEl("path", { d: d, class: "shaft" });
+                const g = rcHolder.path(d, {
+                    roughness: Math.min(SKETCH.roughness, 1),
+                    bowing: 0.8,
+                    seed: options.seed === undefined ? SKETCH.seed : options.seed,
+                    strokeWidth: 1.6,
+                });
+                g.classList.add("shaft");
+                return g;
+            }
+            function nodeBox(node) {
+                const g = svgEl("g", {
+                    class: "node",
+                    "data-id": node.id,
+                    "data-step": node.step,
+                    tabindex: "0",
+                    role: "button",
+                    "aria-label": node.label + "：" + node.detail,
+                });
+                g.style.setProperty("--c", node.color || "var(--blue)");
+                if (hasRough) {
+                    const hf = svgEl("g", { class: "hfill" });
+                    hf.appendChild(
+                        rcHolder.rectangle(node.x, node.y, node.w, node.h, {
+                            seed: hashId(node.id),
+                            stroke: "none",
+                            fill: "#000",
+                            fillStyle: "hachure",
+                            fillWeight: 0.5,
+                            hachureGap: 8,
+                            roughness: 1,
+                        }),
+                    );
+                    g.appendChild(hf);
+                }
+                const shape = svgEl("g", { class: "shape" });
+                shape.appendChild(sketchRect(node.x, node.y, node.w, node.h, { seed: hashId(node.id) }));
+                g.appendChild(shape);
+                const cy = node.y + node.h / 2;
+                g.appendChild(textEl(node.x + node.w / 2, cy - 8, node.label, "node-label"));
+                g.appendChild(textEl(node.x + node.w / 2, cy + 13, node.sub, "node-sub"));
+                return g;
+            }
+            function edgeLine(edge) {
+                let edgeClass = "edge edge-command";
+                if (edge.color === "var(--teal)") edgeClass = "edge edge-feedback";
+                if (edge.color === "var(--amber)") edgeClass = "edge edge-angle";
+                const g = svgEl("g", { class: edgeClass, "data-id": edge.id });
+                g.style.setProperty("--c", edge.color || "var(--blue)");
+                const dx = edge.x2 - edge.x1;
+                const dy = edge.y2 - edge.y1;
+                let d;
+                let lx;
+                let ly;
+                let ang;
+                if (edge.curve) {
+                    const len = Math.hypot(dx, dy) || 1;
+                    const cx = (edge.x1 + edge.x2) / 2 - (dy / len) * edge.curve;
+                    const cy = (edge.y1 + edge.y2) / 2 + (dx / len) * edge.curve;
+                    d = "M " + edge.x1 + " " + edge.y1 + " Q " + cx + " " + cy + " " + edge.x2 + " " + edge.y2;
+                    lx = 0.25 * edge.x1 + 0.5 * cx + 0.25 * edge.x2;
+                    ly = 0.25 * edge.y1 + 0.5 * cy + 0.25 * edge.y2 - 8;
+                    ang = Math.atan2(edge.y2 - cy, edge.x2 - cx);
+                } else {
+                    d = "M " + edge.x1 + " " + edge.y1 + " L " + edge.x2 + " " + edge.y2;
+                    lx = (edge.x1 + edge.x2) / 2;
+                    ly = (edge.y1 + edge.y2) / 2 - 8;
+                    ang = Math.atan2(dy, dx);
+                }
+                g.dataset.d = d;
+                g.appendChild(sketchPath(d, { seed: hashId(edge.id) }));
+                [0.5, -0.5].forEach(function (side) {
+                    const hx = edge.x2 - 11 * Math.cos(ang + side);
+                    const hy = edge.y2 - 11 * Math.sin(ang + side);
+                    g.appendChild(
+                        sketchPath("M " + hx + " " + hy + " L " + edge.x2 + " " + edge.y2, {
+                            seed: hashId(edge.id) + 7,
+                        }),
+                    );
+                });
+                if (edge.label) g.appendChild(textEl(lx, ly, edge.label, "edge-label"));
+                return g;
+            }
+            function groupArea(area) {
+                const g = svgEl("g", { class: "group" });
+                g.style.setProperty("--c", area.color);
+                g.appendChild(sketchRect(area.x, area.y, area.w, area.h, { seed: hashId(area.label), dash: true }));
+                const t = textEl(area.x + 14, area.y + 18, area.label, "");
+                t.setAttribute("text-anchor", "start");
+                g.appendChild(t);
+                return g;
+            }
+            function flowDots(d, color) {
+                const g = svgEl("g", { class: "flow" });
+                if (REDUCED) return g;
+                for (let i = 0; i < 2; i++) {
+                    const c = svgEl("circle", { r: 3.4, fill: color, class: "flow-dot" });
+                    c.style.offsetPath = "path('" + d + "')";
+                    c.style.animationDuration = "2.2s";
+                    c.style.animationDelay = -1.1 * i + "s";
+                    g.appendChild(c);
+                }
+                return g;
+            }
+
+            const nodes = [
+                {
+                    id: "ref",
+                    x: 22,
+                    y: 52,
+                    w: 100,
+                    h: 54,
+                    label: "ω*",
+                    sub: "目标转速",
+                    color: "var(--amber)",
+                    step: 0,
+                    detail: "用户或上位机给出的机械转速目标。",
+                },
+                {
+                    id: "speed",
+                    x: 156,
+                    y: 52,
+                    w: 126,
+                    h: 54,
+                    label: "速度 PI",
+                    sub: "ω* − ω → iq*",
+                    color: "var(--blue)",
+                    step: 6,
+                    detail: "较慢的外环把速度误差转换为转矩电流参考 iq*。",
+                },
+                {
+                    id: "policy",
+                    x: 156,
+                    y: 137,
+                    w: 126,
+                    h: 54,
+                    label: "id* 策略",
+                    sub: "0 / MTPA / 弱磁",
+                    color: "var(--amber)",
+                    step: 4,
+                    detail: "按电机类型和速度区间决定磁链电流参考。",
+                },
+                {
+                    id: "current",
+                    x: 344,
+                    y: 52,
+                    w: 172,
+                    h: 54,
+                    label: "dq 电流 PI",
+                    sub: "误差 + 解耦 → vdq*",
+                    color: "var(--blue)",
+                    step: 4,
+                    detail: "快速内环分别调节 id 与 iq，并可加入交叉耦合前馈。",
+                },
+                {
+                    id: "invpark",
+                    x: 574,
+                    y: 52,
+                    w: 132,
+                    h: 54,
+                    label: "逆 Park",
+                    sub: "vdq* → vαβ*",
+                    color: "var(--purple)",
+                    step: 5,
+                    detail: "把转子坐标系的电压命令变回定子静止坐标系。",
+                },
+                {
+                    id: "svpwm",
+                    x: 760,
+                    y: 52,
+                    w: 122,
+                    h: 54,
+                    label: "限幅 + SVPWM",
+                    sub: "vαβ* → duty",
+                    color: "var(--purple)",
+                    step: 5,
+                    detail: "在 DC bus 可达范围内合成目标平均电压矢量，并产生三相占空比。",
+                },
+                {
+                    id: "inverter",
+                    x: 928,
+                    y: 52,
+                    w: 138,
+                    h: 54,
+                    label: "三相逆变器",
+                    sub: "duty → uabc",
+                    color: "var(--blue)",
+                    step: 5,
+                    detail: "六个功率开关把直流母线转换为三相端电压。",
+                },
+                {
+                    id: "motor",
+                    x: 928,
+                    y: 222,
+                    w: 138,
+                    h: 58,
+                    label: "PMSM / BLAC",
+                    sub: "电压 → 电流 → 转矩",
+                    color: "var(--amber)",
+                    step: 6,
+                    detail: "真实被控对象，电气动态与机械负载共同决定转速。",
+                },
+                {
+                    id: "sample",
+                    x: 728,
+                    y: 222,
+                    w: 146,
+                    h: 58,
+                    label: "ADC / 位置采样",
+                    sub: "iabc，θm",
+                    color: "var(--teal)",
+                    step: 1,
+                    detail: "在合适的 PWM 时刻采样相电流，并读取传感器或观测器角度。",
+                },
+                {
+                    id: "clarke",
+                    x: 526,
+                    y: 222,
+                    w: 140,
+                    h: 58,
+                    label: "Clarke",
+                    sub: "iabc → iαβ",
+                    color: "var(--purple)",
+                    step: 2,
+                    detail: "把三相冗余表示压缩为静止平面上的两个分量。",
+                },
+                {
+                    id: "park",
+                    x: 326,
+                    y: 222,
+                    w: 140,
+                    h: 58,
+                    label: "Park",
+                    sub: "iαβ → idq",
+                    color: "var(--purple)",
+                    step: 3,
+                    detail: "用电角度旋转观察坐标系，使同步量在 dq 中近似静止。",
+                },
+                {
+                    id: "angle",
+                    x: 548,
+                    y: 355,
+                    w: 202,
+                    h: 56,
+                    label: "角度 / 速度估算",
+                    sub: "θe=pθm+θ0，ω",
+                    color: "var(--teal)",
+                    step: 3,
+                    detail: "把机械位置转换为带零位偏移的电角度，并得到速度反馈。",
+                },
+            ];
+
+            const edges = [
+                { id: "ref_speed", x1: 126, y1: 79, x2: 152, y2: 79, label: "ω*", color: "var(--blue)" },
+                { id: "speed_iq", x1: 286, y1: 79, x2: 340, y2: 79, label: "iq*", color: "var(--blue)" },
+                { id: "policy_id", x1: 286, y1: 164, x2: 340, y2: 93, label: "id*", curve: -14, color: "var(--blue)" },
+                { id: "vdq", x1: 520, y1: 79, x2: 570, y2: 79, label: "vd*, vq*", color: "var(--blue)" },
+                { id: "valphabeta", x1: 710, y1: 79, x2: 756, y2: 79, label: "vαβ*", color: "var(--blue)" },
+                { id: "duty", x1: 886, y1: 79, x2: 924, y2: 79, label: "Ta,b,c", color: "var(--blue)" },
+                { id: "phase_u", x1: 997, y1: 110, x2: 997, y2: 218, label: "uabc", color: "var(--blue)" },
+                { id: "feedback_raw", x1: 924, y1: 251, x2: 878, y2: 251, label: "iabc, θm", color: "var(--teal)" },
+                { id: "iabc", x1: 724, y1: 251, x2: 670, y2: 251, label: "iabc", color: "var(--teal)" },
+                { id: "ialphabeta", x1: 522, y1: 251, x2: 470, y2: 251, label: "iαβ", color: "var(--teal)" },
+                {
+                    id: "idq_feedback",
+                    x1: 396,
+                    y1: 218,
+                    x2: 425,
+                    y2: 110,
+                    label: "id, iq",
+                    curve: 22,
+                    color: "var(--teal)",
+                },
+                {
+                    id: "sample_angle",
+                    x1: 800,
+                    y1: 284,
+                    x2: 689,
+                    y2: 351,
+                    label: "θm",
+                    curve: 12,
+                    color: "var(--teal)",
+                },
+                {
+                    id: "theta_park",
+                    x1: 544,
+                    y1: 380,
+                    x2: 396,
+                    y2: 284,
+                    label: "θe",
+                    curve: -22,
+                    color: "var(--amber)",
+                },
+                { id: "theta_inv", x1: 650, y1: 351, x2: 640, y2: 110, label: "θe", curve: 48, color: "var(--amber)" },
+                {
+                    id: "omega_fb",
+                    x1: 544,
+                    y1: 392,
+                    x2: 219,
+                    y2: 110,
+                    label: "ω feedback",
+                    curve: -86,
+                    color: "var(--teal)",
+                },
+            ];
+
+            const allNodeIds = nodes.map(function (n) {
+                return n.id;
+            });
+            const allEdgeIds = edges.map(function (e) {
+                return e.id;
+            });
+            const steps = [
+                {
+                    label: "0 全景",
+                    title: "一拍 FOC：测量、变换、调节、合成",
+                    lead: "MCU 在每个控制周期读取电流与转子位置，算出下一拍应施加的电压矢量；闭环重复后，电流矢量被锁定在期望的 dq 位置。",
+                    input: "转速目标、相电流、转子角度与 DC bus 能力。",
+                    change: "信号依次经历 abc → αβ → dq → PI → αβ → duty。",
+                    invariant: "同一个物理电流矢量贯穿 abc、αβ 与 dq 三种表示。",
+                    meaning: "复杂 FOC 不是一个魔法算法，而是一条严格闭合的信号链。",
+                    formula: "sample → transform → regulate → synthesize → motor → feedback",
+                    tip: "先看蓝色主路径，再看下方 teal 反馈如何闭合。",
+                    nodes: allNodeIds,
+                    edges: allEdgeIds,
+                },
+                {
+                    label: "1 采样",
+                    title: "先知道电机此刻在哪里、流过多少电流",
+                    lead: "电流与角度是所有后续计算的基准。错误的采样时刻、零偏或角度方向，会被坐标变换直接放大成控制误差。",
+                    input: "相电流传感器、编码器 / Hall / sensorless observer。",
+                    change: "ADC 码值校准成 iabc；机械角 θm 转为电角度 θe。",
+                    invariant: "采样只观察真实电机状态，不应改变被测对象。",
+                    meaning: "FOC 的上限首先由传感与时序决定，而不只是 PI 参数。",
+                    formula: "三线制理想条件：ia + ib + ic = 0；θe = pθm + θ0",
+                    tip: "工程上常只测两相，但必须保证 PWM 有效采样窗口。",
+                    nodes: ["motor", "sample", "angle"],
+                    edges: ["feedback_raw", "sample_angle"],
+                },
+                {
+                    label: "2 Clarke",
+                    title: "Clarke：三相冗余表示压成静止二维平面",
+                    lead: "理想三相无零序系统只有两个独立自由度。Clarke 用 αβ 两个数描述同一个空间电流矢量。",
+                    input: "ia、ib、ic（或两相测量加重构）。",
+                    change: "坐标从相绕组 abc 换成固定在定子上的 αβ。",
+                    invariant: "物理电流空间矢量的方向与大小没有因计算而改变。",
+                    meaning: "三个随时间变化的数，先变成平面中的一根旋转箭头。",
+                    formula: "iα = ia；iβ = (ia + 2ib) / √3（无零序简式）",
+                    tip: "实验台左图与中图永远描述同一时刻。",
+                    nodes: ["sample", "clarke"],
+                    edges: ["iabc"],
+                },
+                {
+                    label: "3 Park",
+                    title: "Park：让观察者跟着转子一起转",
+                    lead: "把 αβ 坐标系旋转 θe，使 d 轴对齐转子永磁磁链。同步稳态下，原本旋转的电流矢量在 dq 中近似静止。",
+                    input: "iα、iβ 与估算电角度 θe。",
+                    change: "观察基底从定子静止系切换到转子同步旋转系。",
+                    invariant: "物理矢量没变，长度也没变；改变的是它在新基底上的投影。",
+                    meaning: "正弦交流量变成近似 DC，普通 PI 就能分别控制两个分量。",
+                    formula: "id = iαcosθe + iβsinθe；iq = −iαsinθe + iβcosθe",
+                    tip: "去实验台拖 θe：αβ 在转，dq 不动。",
+                    nodes: ["clarke", "park", "angle"],
+                    edges: ["ialphabeta", "theta_park"],
+                },
+                {
+                    label: "4 dq 闭环",
+                    title: "两个电流 PI：一个管 d 轴合成磁链，一个管转矩",
+                    lead: "参考值与实际 id、iq 相减后，快速电流环输出 vd*、vq*。高速时还需补偿 dq 交叉耦合与反电动势。",
+                    input: "id* 策略、速度环给出的 iq*，以及测量 id、iq。",
+                    change: "电流误差经 PI 与解耦前馈，变成 dq 电压命令。",
+                    invariant: "控制目标仍是电流分量；电压只是促使电流变化的执行手段。",
+                    meaning: "FOC 的“定向”在 Park 完成，真正的闭环调节在这里发生。",
+                    formula: "vd* = PI(id*−id) − ωeLqiq；vq* = PI(iq*−iq) + ωe(Ldid+ψf)",
+                    tip: "SPMSM 常规区常令 id*=0；IPMSM 的 MTPA / 弱磁不能照搬。ωe 解耦前馈为可选信号，图中未单独画线。",
+                    nodes: ["speed", "policy", "park", "current"],
+                    edges: ["speed_iq", "policy_id", "idq_feedback"],
+                },
+                {
+                    label: "5 SVPWM",
+                    title: "把 dq 电压命令翻译成三相开关占空比",
+                    lead: "dq 电压只存在于控制器内部。逆 Park 先回到 αβ，SVPWM 再用相邻开关矢量的作用时间合成目标平均电压。",
+                    input: "vd*、vq*、θe 与 DC bus 电压。",
+                    change: "vdq* → vαβ* → 限幅 → Ta/Tb/Tc → uabc。",
+                    invariant: "目标是一个平均电压空间矢量，不是让三相各自独立随意输出。",
+                    meaning: "算法命令最终变成六个功率开关可执行的时序。",
+                    formula: "线性 SVPWM：|vαβ*| ≤ Vdc / √3；饱和需 anti-windup",
+                    tip: "电压不够时，再大的 PI 输出也无法实现，必须显式限幅。",
+                    nodes: ["current", "invpark", "svpwm", "inverter"],
+                    edges: ["vdq", "valphabeta", "duty"],
+                },
+                {
+                    label: "6 闭环",
+                    title: "负载一来，误差沿闭环传播并被消除",
+                    lead: "负载使转速下降，速度 PI 提高 iq*；电流 PI 提高 q 轴电压，电机转矩增加，转速被拉回。角度反馈同时保持坐标定向。",
+                    input: "负载转矩 TL、实际速度、电流与位置。",
+                    change: "速度误差 → iq* → 电磁转矩 Te → 机械加速度。",
+                    invariant: "速度环慢、电流环快；两者职责与带宽不能混为一谈。",
+                    meaning: "闭环让 FOC 不只会“算坐标”，还能对参数变化和扰动做出响应。",
+                    formula: "J·dωm/dt = Te − TL − Bωm；Te ≈ 3/2·p·ψf·iq（SPMSM）",
+                    tip: "完整工程还需处理电流限幅、母线限制、故障保护与观测器误差。",
+                    nodes: ["speed", "inverter", "motor", "sample", "angle"],
+                    edges: ["phase_u", "feedback_raw", "sample_angle", "omega_fb", "ref_speed"],
+                },
+            ];
+
+            const state = {
+                step: 0,
+                tourPlaying: false,
+                pinnedNode: null,
+                lab: { thetaE: 35, thetaVisual: 35, id: 0, iq: 6, playing: false, preset: "drive" },
+            };
+            let tourTimer = null;
+            let rotorTimer = null;
+
+            function renderDiagram() {
+                const svg = svgEl("svg", {
+                    viewBox: "0 0 1090 440",
+                    role: "group",
+                    "aria-labelledby": "foc-diagram-title foc-diagram-desc",
+                });
+                const title = svgEl("title", { id: "foc-diagram-title" });
+                title.textContent = "FOC 完整闭环信号图";
+                const desc = svgEl("desc", { id: "foc-diagram-desc" });
+                desc.textContent =
+                    "从速度目标和 dq 电流 PI，经逆 Park、SVPWM、逆变器到电机，再由电流、角度采样经 Clarke 和 Park 闭合反馈。";
+                svg.appendChild(title);
+                svg.appendChild(desc);
+                if (hasRough) rcHolder = rough.svg(svg);
+                svg.appendChild(
+                    groupArea({ x: 325, y: 24, w: 756, h: 112, label: "FORWARD · 算下一拍电压", color: "var(--blue)" }),
+                );
+                svg.appendChild(
+                    groupArea({
+                        x: 304,
+                        y: 194,
+                        w: 778,
+                        h: 116,
+                        label: "FEEDBACK · 观察这一拍状态",
+                        color: "var(--teal)",
+                    }),
+                );
+                svg.appendChild(textEl(24, 218, "速度 / 磁链参考", "diagram-heading"));
+                edges.forEach(function (edge) {
+                    svg.appendChild(edgeLine(edge));
+                });
+                nodes.forEach(function (node) {
+                    svg.appendChild(nodeBox(node));
+                });
+                const box = document.getElementById("diagram");
+                const mobile = document.getElementById("mobile-chain");
+                Array.from(box.children).forEach(function (child) {
+                    if (child !== mobile) child.remove();
+                });
+                box.insertBefore(svg, mobile);
+                box.setAttribute("aria-busy", "false");
+                return svg;
+            }
+
+            function renderMobileChain() {
+                const mobileOrder = [
+                    "ref",
+                    "speed",
+                    "policy",
+                    "current",
+                    "invpark",
+                    "svpwm",
+                    "inverter",
+                    "motor",
+                    "sample",
+                    "clarke",
+                    "park",
+                    "angle",
+                ];
+                document.getElementById("mobile-chain").innerHTML = mobileOrder
+                    .map(function (id) {
+                        const n = nodes.find(function (item) {
+                            return item.id === id;
+                        });
+                        return (
+                            '<li><button class="mobile-node" type="button" data-id="' +
+                            n.id +
+                            '" data-step="' +
+                            n.step +
+                            '"><strong>' +
+                            n.label +
+                            "</strong>" +
+                            n.sub +
+                            "</button></li>"
+                        );
+                    })
+                    .join("");
+            }
+
+            function renderStepper() {
+                document.getElementById("stepper").innerHTML = steps
+                    .map(function (step, i) {
+                        return '<button class="step-btn" type="button" data-i="' + i + '">' + step.label + "</button>";
+                    })
+                    .join("");
+            }
+
+            function renderPanel(step) {
+                document.getElementById("step-panel").innerHTML =
+                    '<div class="panel-swap">' +
+                    '<div class="step-count">STEP ' +
+                    (state.step + 1) +
+                    " / " +
+                    steps.length +
+                    "</div>" +
+                    '<h3 class="step-title">' +
+                    step.title +
+                    "</h3>" +
+                    '<p class="step-lead">' +
+                    step.lead +
+                    "</p>" +
+                    '<dl class="explain-grid">' +
+                    '<div class="explain-row"><dt>输入</dt><dd>' +
+                    step.input +
+                    "</dd></div>" +
+                    '<div class="explain-row"><dt>做了什么</dt><dd>' +
+                    step.change +
+                    "</dd></div>" +
+                    '<div class="explain-row"><dt>不变量</dt><dd>' +
+                    step.invariant +
+                    "</dd></div>" +
+                    '<div class="explain-row"><dt>意义</dt><dd>' +
+                    step.meaning +
+                    "</dd></div>" +
+                    "</dl>" +
+                    '<div class="formula-chip">' +
+                    step.formula +
+                    "</div>" +
+                    '<div class="step-tip">↳ ' +
+                    step.tip +
+                    "</div>" +
+                    "</div>";
+            }
+
+            function applyStepClasses(step) {
+                document.querySelectorAll(".step-btn").forEach(function (button, i) {
+                    const current = i === state.step;
+                    button.classList.toggle("is-current", current);
+                    if (current) button.setAttribute("aria-current", "step");
+                    else button.removeAttribute("aria-current");
+                });
+                document.querySelectorAll("#diagram .node").forEach(function (el) {
+                    const on = step.nodes.includes(el.dataset.id);
+                    el.classList.toggle("is-active", on);
+                    el.classList.toggle("is-dimmed", !on);
+                });
+                document.querySelectorAll("#diagram .edge").forEach(function (el) {
+                    const on = step.edges.includes(el.dataset.id);
+                    el.classList.toggle("is-active", on);
+                    el.classList.toggle("is-dimmed", !on);
+                });
+                document.querySelectorAll(".mobile-node").forEach(function (el) {
+                    const on = step.nodes.includes(el.dataset.id);
+                    el.classList.toggle("is-active", on);
+                    el.classList.toggle("is-dimmed", !on);
+                });
+                document.getElementById("prev-step").disabled = state.step === 0;
+                document.getElementById("next-step").disabled = state.step === steps.length - 1;
+            }
+
+            function syncFlows(step) {
+                const svg = document.querySelector("#diagram svg");
+                if (!svg) return;
+                svg.querySelectorAll(".flow").forEach(function (f) {
+                    f.remove();
+                });
+                step.edges.forEach(function (id) {
+                    const edge = svg.querySelector('.edge[data-id="' + id + '"]');
+                    if (!edge || !edge.dataset.d) return;
+                    svg.appendChild(flowDots(edge.dataset.d, edge.style.getPropertyValue("--c") || "var(--blue)"));
+                });
+            }
+
+            function stopTour() {
+                clearInterval(tourTimer);
+                tourTimer = null;
+                state.tourPlaying = false;
+                const button = document.getElementById("tour-play");
+                button.setAttribute("aria-pressed", "false");
+                button.innerHTML = "▶ 自动导览";
+            }
+            function startTour() {
+                if (REDUCED) return;
+                stopTour();
+                state.tourPlaying = true;
+                const button = document.getElementById("tour-play");
+                button.setAttribute("aria-pressed", "true");
+                button.innerHTML = "Ⅱ 暂停导览";
+                tourTimer = setInterval(function () {
+                    goStep(state.step >= steps.length - 1 ? 0 : state.step + 1, false);
+                }, 4600);
+            }
+            function goStep(i, manual) {
+                state.step = Math.max(0, Math.min(steps.length - 1, i));
+                if (manual !== false) stopTour();
+                const step = steps[state.step];
+                applyStepClasses(step);
+                renderPanel(step);
+                syncFlows(step);
+                const currentButton = document.querySelector('.step-btn[data-i="' + state.step + '"]');
+                if (currentButton) {
+                    const scroller = document.getElementById("stepper");
+                    const left = currentButton.offsetLeft - (scroller.clientWidth - currentButton.offsetWidth) / 2;
+                    scroller.scrollTo({ left: Math.max(0, left), behavior: REDUCED ? "auto" : "smooth" });
+                }
+                if (!REDUCED) {
+                    const selector = step.edges
+                        .map(function (id) {
+                            return '.edge[data-id="' + id + '"] path';
+                        })
+                        .join(",");
+                    if (selector) {
+                        const paths = document.querySelectorAll(selector);
+                        paths.forEach(function (path) {
+                            path.classList.remove("draw-in");
+                        });
+                        void document.body.offsetWidth;
+                        paths.forEach(function (path, index) {
+                            path.style.setProperty("--di", index * 3);
+                            path.classList.add("draw-in");
+                        });
+                    }
+                }
+                document.getElementById("live-region").textContent = "第 " + (state.step + 1) + " 步：" + step.title;
+            }
+
+            function setNodeFocus(id) {
+                document.querySelectorAll("#diagram .node").forEach(function (el) {
+                    el.classList.toggle("is-hovered", el.dataset.id === id);
+                });
+                const n = nodes.find(function (item) {
+                    return item.id === id;
+                });
+                const note = document.getElementById("diagram-note");
+                if (n) note.innerHTML = "<strong>" + n.label + "：</strong>" + n.detail + " 点击跳到对应步骤。";
+                else
+                    note.innerHTML =
+                        "<strong>交互提示：</strong>悬停、聚焦或点击模块查看职责；点击会跳到对应讲解步骤。";
+            }
+            function activateNode(id) {
+                const n = nodes.find(function (item) {
+                    return item.id === id;
+                });
+                if (!n) return;
+                state.pinnedNode = id;
+                setNodeFocus(id);
+                goStep(n.step, true);
+            }
+            function clearNodePin() {
+                state.pinnedNode = null;
+                setNodeFocus(null);
+            }
+
+            function cssIntro(svg) {
+                let i = 0;
+                svg.querySelectorAll(".shape path, .edge path, .group path, .shape rect, .group rect").forEach(
+                    function (path) {
+                        path.setAttribute("pathLength", 1);
+                        path.style.setProperty("--di", i++);
+                        path.classList.add("draw-in");
+                    },
+                );
+                svg.querySelectorAll("text").forEach(function (t) {
+                    t.style.setProperty("--di", i);
+                    t.classList.add("fade-el");
+                });
+                return 620 + i * 10;
+            }
+
+            function addSvgTitle(svg, titleText, descText, id) {
+                svg.setAttribute("role", "img");
+                svg.setAttribute("aria-labelledby", id + "-title " + id + "-desc");
+                const title = svgEl("title", { id: id + "-title" });
+                title.textContent = titleText;
+                const desc = svgEl("desc", { id: id + "-desc" });
+                desc.textContent = descText;
+                svg.appendChild(title);
+                svg.appendChild(desc);
+            }
+            function addArrow(group, length, cls) {
+                group.appendChild(svgEl("line", { x1: 0, y1: 0, x2: length, y2: 0, class: cls }));
+                group.appendChild(
+                    svgEl("path", {
+                        d: "M " + (length - 11) + " 7 L " + length + " 0 L " + (length - 11) + " -7",
+                        class: cls + " vector-head",
+                    }),
+                );
+            }
+            function addMathPlane(svg, centerX, centerY) {
+                const outer = svgEl("g", { transform: "translate(" + centerX + " " + centerY + ") scale(1 -1)" });
+                outer.appendChild(svgEl("circle", { cx: 0, cy: 0, r: 88, class: "precision-grid" }));
+                outer.appendChild(svgEl("line", { x1: -102, y1: 0, x2: 102, y2: 0, class: "math-axis" }));
+                outer.appendChild(svgEl("line", { x1: 0, y1: -102, x2: 0, y2: 102, class: "math-axis" }));
+                svg.appendChild(outer);
+                return outer;
+            }
+
+            const labRefs = {};
+            function renderWaveViz() {
+                const svg = svgEl("svg", { viewBox: "0 0 340 250" });
+                addSvgTitle(svg, "三相电流波形", "A、B、C 三相正弦电流和当前电角度游标。", "wave");
+                const defs = svgEl("defs");
+                const clip = svgEl("clipPath", { id: "wave-clip" });
+                clip.appendChild(svgEl("rect", { x: 28, y: 45, width: 284, height: 158, rx: 4 }));
+                defs.appendChild(clip);
+                svg.appendChild(defs);
+                [52, 91, 130, 169, 201].forEach(function (y) {
+                    svg.appendChild(
+                        svgEl("line", {
+                            x1: 28,
+                            y1: y,
+                            x2: 312,
+                            y2: y,
+                            class: y === 130 ? "precision-axis" : "precision-grid",
+                        }),
+                    );
+                });
+                for (let i = 0; i <= 4; i++) {
+                    const x = 28 + (284 * i) / 4;
+                    svg.appendChild(svgEl("line", { x1: x, y1: 45, x2: x, y2: 203, class: "precision-grid" }));
+                }
+                const waveClipGroup = svgEl("g", { "clip-path": "url(#wave-clip)" });
+                const waveOuter = svgEl("g", { transform: "translate(28 130)" });
+                const waveXf = svgEl("g", { id: "wave-xf", class: "lab-xf" });
+                const W = 284;
+                const A = 62;
+                function pathFor(phase) {
+                    let d = "";
+                    for (let x = -W; x <= W * 2; x += 3) {
+                        const y = -A * Math.cos((2 * Math.PI * x) / W + phase);
+                        d += (d ? " L " : "M ") + x.toFixed(1) + " " + y.toFixed(1);
+                    }
+                    return d;
+                }
+                waveXf.appendChild(svgEl("path", { d: pathFor(0), class: "phase-a" }));
+                waveXf.appendChild(svgEl("path", { d: pathFor((-2 * Math.PI) / 3), class: "phase-b" }));
+                waveXf.appendChild(svgEl("path", { d: pathFor((2 * Math.PI) / 3), class: "phase-c" }));
+                waveOuter.appendChild(waveXf);
+                waveClipGroup.appendChild(waveOuter);
+                svg.appendChild(waveClipGroup);
+
+                const cursorOuter = svgEl("g", { transform: "translate(28 0)" });
+                const cursor = svgEl("g", { id: "wave-cursor", class: "lab-xf" });
+                cursor.appendChild(svgEl("line", { x1: 0, y1: 43, x2: 0, y2: 205, class: "cursor-line" }));
+                cursorOuter.appendChild(cursor);
+                svg.appendChild(cursorOuter);
+
+                const markerOuter = svgEl("g", { transform: "translate(28 130)" });
+                [
+                    ["marker-a", "var(--blue)"],
+                    ["marker-b", "var(--amber)"],
+                    ["marker-c", "var(--purple)"],
+                ].forEach(function (pair) {
+                    const m = svgEl("g", { id: pair[0], class: "lab-xf" });
+                    m.appendChild(
+                        svgEl("circle", {
+                            cx: 0,
+                            cy: 0,
+                            r: 4.8,
+                            fill: pair[1],
+                            stroke: "var(--paper-alt)",
+                            "stroke-width": 2,
+                        }),
+                    );
+                    markerOuter.appendChild(m);
+                    labRefs[pair[0]] = m;
+                });
+                svg.appendChild(markerOuter);
+                svg.appendChild(textEl(28, 226, "0°", "axis-label"));
+                svg.appendChild(textEl(305, 226, "360°", "axis-label"));
+                svg.appendChild(textEl(30, 34, "phase current / electrical angle", "axis-label"));
+                document.getElementById("wave-viz").appendChild(svg);
+                labRefs.waveXf = waveXf;
+                labRefs.waveCursor = cursor;
+            }
+
+            function renderAlphaViz() {
+                const svg = svgEl("svg", { viewBox: "0 0 300 250" });
+                addSvgTitle(svg, "静止 αβ 坐标系", "转子 d q 轴与定子电流空间矢量在固定坐标中旋转。", "alpha");
+                const plane = addMathPlane(svg, 150, 122);
+                [0, 120, -120].forEach(function (angle) {
+                    const axis = svgEl("g", { transform: "rotate(" + angle + ")" });
+                    axis.appendChild(svgEl("line", { x1: 0, y1: 0, x2: 82, y2: 0, class: "phase-axis" }));
+                    plane.appendChild(axis);
+                });
+                const rotor = svgEl("g", { id: "rotor-axes", class: "lab-xf" });
+                rotor.appendChild(svgEl("line", { x1: -88, y1: 0, x2: 88, y2: 0, class: "rotor-axis" }));
+                rotor.appendChild(svgEl("line", { x1: 0, y1: -88, x2: 0, y2: 88, class: "rotor-axis" }));
+                const flux = svgEl("g");
+                addArrow(flux, 70, "flux-vector");
+                rotor.appendChild(flux);
+                plane.appendChild(rotor);
+                const current = svgEl("g", { id: "alpha-current", class: "vector-xf" });
+                addArrow(current, 82, "current-vector");
+                plane.appendChild(current);
+                svg.appendChild(textEl(259, 128, "+α / A", "axis-label strong"));
+                svg.appendChild(textEl(156, 18, "+β", "axis-label strong"));
+                svg.appendChild(textEl(18, 226, "amber ψf / dashed d-q / blue is", "axis-label"));
+                document.getElementById("alpha-viz").appendChild(svg);
+                labRefs.rotorAxes = rotor;
+                labRefs.alphaCurrent = current;
+            }
+
+            function renderDqViz() {
+                const svg = svgEl("svg", { viewBox: "0 0 300 250" });
+                addSvgTitle(svg, "转子 dq 坐标系", "d 轴对齐转子磁链，q 轴正交；显示 id iq 分量与合成电流。", "dq");
+                const plane = addMathPlane(svg, 150, 122);
+                const dAxis = svgEl("g");
+                addArrow(dAxis, 88, "flux-vector");
+                plane.appendChild(dAxis);
+                const idVector = svgEl("g", { id: "id-vector", class: "vector-xf" });
+                addArrow(idVector, 78, "id-vector");
+                plane.appendChild(idVector);
+                const iqVector = svgEl("g", { id: "iq-vector", class: "vector-xf" });
+                addArrow(iqVector, 78, "iq-vector");
+                plane.appendChild(iqVector);
+                const result = svgEl("g", { id: "dq-current", class: "vector-xf" });
+                addArrow(result, 82, "current-vector");
+                plane.appendChild(result);
+                svg.appendChild(textEl(254, 128, "+d / ψf", "axis-label strong"));
+                svg.appendChild(textEl(156, 18, "+q", "axis-label strong"));
+                svg.appendChild(textEl(24, 226, "θe 改变时，这个视图保持不动", "axis-label"));
+                document.getElementById("dq-viz").appendChild(svg);
+                labRefs.idVector = idVector;
+                labRefs.iqVector = iqVector;
+                labRefs.dqCurrent = result;
+            }
+
+            const presets = {
+                drive: { id: 0, iq: 6, label: "正转驱动" },
+                zero: { id: 0, iq: 0, label: "零转矩" },
+                regen: { id: 0, iq: -5, label: "负向转矩" },
+                weak: { id: -3, iq: 5, label: "SPMSM 弱磁" },
+            };
+            function stopRotor() {
+                clearInterval(rotorTimer);
+                rotorTimer = null;
+                state.lab.playing = false;
+                const button = document.getElementById("rotor-play");
+                button.setAttribute("aria-pressed", "false");
+                button.innerHTML = "▶ 转动 θ<sub>e</sub>";
+            }
+            function startRotor() {
+                if (REDUCED) return;
+                stopRotor();
+                state.lab.playing = true;
+                const button = document.getElementById("rotor-play");
+                button.setAttribute("aria-pressed", "true");
+                button.innerHTML = "Ⅱ 暂停 θ<sub>e</sub>";
+                rotorTimer = setInterval(function () {
+                    state.lab.thetaE = (state.lab.thetaE + 2) % 360;
+                    state.lab.thetaVisual += 2;
+                    applyLabState();
+                }, 70);
+            }
+            function setPreset(name) {
+                const preset = presets[name];
+                if (!preset) return;
+                stopRotor();
+                state.lab.id = preset.id;
+                state.lab.iq = preset.iq;
+                state.lab.preset = name;
+                applyLabState();
+            }
+            function formatSigned(value, digits) {
+                const rounded = Math.abs(value) < 0.0005 ? 0 : value;
+                return (rounded > 0 ? "+" : "") + rounded.toFixed(digits);
+            }
+            function applyLabState() {
+                const lab = state.lab;
+                const theta = (lab.thetaE * Math.PI) / 180;
+                const id = Number(lab.id);
+                const iq = Number(lab.iq);
+                const iAlpha = id * Math.cos(theta) - iq * Math.sin(theta);
+                const iBeta = id * Math.sin(theta) + iq * Math.cos(theta);
+                const ia = iAlpha;
+                const ib = -0.5 * iAlpha + (Math.sqrt(3) / 2) * iBeta;
+                const ic = -0.5 * iAlpha - (Math.sqrt(3) / 2) * iBeta;
+                const mag = Math.hypot(id, iq);
+                const delta = mag < 0.0001 ? 0 : Math.atan2(iq, id);
+                const deltaDeg = (delta * 180) / Math.PI;
+                const thetaVisual = lab.thetaVisual === undefined ? lab.thetaE : lab.thetaVisual;
+                const maxI = 8;
+                const waveW = 284;
+                const waveA = 62;
+                const cursorX = (lab.thetaE / 360) * waveW;
+                const shiftX = (-delta / (2 * Math.PI)) * waveW;
+                const scale = mag / maxI;
+
+                labRefs.waveXf.style.transform = "translateX(" + shiftX + "px) scaleY(" + scale + ")";
+                labRefs.waveCursor.style.transform = "translateX(" + cursorX + "px)";
+                labRefs["marker-a"].style.transform = "translate(" + cursorX + "px," + (-waveA * ia) / maxI + "px)";
+                labRefs["marker-b"].style.transform = "translate(" + cursorX + "px," + (-waveA * ib) / maxI + "px)";
+                labRefs["marker-c"].style.transform = "translate(" + cursorX + "px," + (-waveA * ic) / maxI + "px)";
+                labRefs.rotorAxes.style.transform = "rotate(" + thetaVisual + "deg)";
+                labRefs.alphaCurrent.style.transform =
+                    "rotate(" + (thetaVisual + deltaDeg) + "deg) scale(" + scale + ")";
+                labRefs.dqCurrent.style.transform = "rotate(" + deltaDeg + "deg) scale(" + scale + ")";
+                labRefs.idVector.style.transform =
+                    "rotate(" + (id < 0 ? 180 : 0) + "deg) scale(" + Math.abs(id) / maxI + ")";
+                labRefs.iqVector.style.transform =
+                    "rotate(" + (iq < 0 ? -90 : 90) + "deg) scale(" + Math.abs(iq) / maxI + ")";
+
+                document.getElementById("theta-range").value = lab.thetaE;
+                document.getElementById("id-range").value = id;
+                document.getElementById("iq-range").value = iq;
+                document
+                    .getElementById("theta-range")
+                    .setAttribute("aria-valuetext", lab.thetaE.toFixed(0) + " 度 electrical");
+                document.getElementById("id-range").setAttribute("aria-valuetext", id.toFixed(1) + " 安培");
+                document.getElementById("iq-range").setAttribute("aria-valuetext", iq.toFixed(1) + " 安培");
+                document.getElementById("theta-out").textContent = lab.thetaE.toFixed(0) + "° electrical";
+                document.getElementById("id-out").textContent = formatSigned(id, 1) + " A";
+                document.getElementById("iq-out").textContent = formatSigned(iq, 1) + " A";
+                document.getElementById("ia-value").textContent = formatSigned(ia, 2) + " A";
+                document.getElementById("ib-value").textContent = formatSigned(ib, 2) + " A";
+                document.getElementById("ic-value").textContent = formatSigned(ic, 2) + " A";
+                document.getElementById("ialpha-value").textContent = formatSigned(iAlpha, 2) + " A";
+                document.getElementById("ibeta-value").textContent = formatSigned(iBeta, 2) + " A";
+                document.getElementById("id-value").textContent = formatSigned(id, 2) + " A";
+                document.getElementById("iq-value").textContent = formatSigned(iq, 2) + " A";
+                document.getElementById("sum-value").textContent = (ia + ib + ic).toFixed(2) + " A";
+                document.getElementById("mag-value").textContent = mag.toFixed(2) + " A";
+                document.getElementById("delta-value").textContent = deltaDeg.toFixed(1) + "°";
+
+                let torqueText = "零转矩";
+                if (iq > 0.05) torqueText = "正向转矩";
+                if (iq < -0.05) torqueText = "负向转矩";
+                document.getElementById("torque-value").textContent = torqueText;
+                document.getElementById("torque-pos").style.transform = "scaleX(" + Math.max(0, iq / maxI) + ")";
+                document.getElementById("torque-neg").style.transform = "scaleX(" + Math.max(0, -iq / maxI) + ")";
+
+                let insight = "拖动 θe：左、中两图持续变化，右侧 dq 矢量不动。这就是 Park 变换让 PI 控制变简单的原因。";
+                if (mag < 0.05)
+                    insight = "id 与 iq 都为零，因此没有定子电流空间矢量；转子角度仍然存在，但不会产生电磁转矩。";
+                else if (iq < -0.05)
+                    insight = "iq 为负，表示负向电磁转矩；仅当电机正转且母线能够吸收能量时，才对应制动并可能再生。";
+                else if (id < -0.05)
+                    insight =
+                        "负 id 可能来自 IPMSM 的 MTPA，也可能用于高速弱磁；本预设按 SPMSM 弱磁解释，实际需结合 Ld/Lq、转速与电压约束判断。";
+                else if (Math.abs(id) > 0.05) insight = "电流不再只落在 q 轴：id 改变磁链，iq 仍主要决定永磁转矩。";
+                document.getElementById("lab-insight-text").textContent = insight;
+
+                document.querySelectorAll(".preset-btn").forEach(function (button) {
+                    button.setAttribute("aria-pressed", button.dataset.preset === lab.preset ? "true" : "false");
+                });
+            }
+
+            document.querySelector(".skip-link").addEventListener("click", function (event) {
+                event.preventDefault();
+                const main = document.getElementById("main");
+                main.focus();
+                main.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+            });
+
+            document.getElementById("stepper").addEventListener("click", function (event) {
+                const button = event.target.closest("button[data-i]");
+                if (button) {
+                    clearNodePin();
+                    goStep(Number(button.dataset.i), true);
+                }
+            });
+            document.getElementById("stepper").addEventListener("keydown", function (event) {
+                const button = event.target.closest("button[data-i]");
+                if (!button) return;
+                let next = Number(button.dataset.i);
+                if (event.key === "ArrowRight") next = Math.min(steps.length - 1, next + 1);
+                else if (event.key === "ArrowLeft") next = Math.max(0, next - 1);
+                else if (event.key === "Home") next = 0;
+                else if (event.key === "End") next = steps.length - 1;
+                else return;
+                event.preventDefault();
+                clearNodePin();
+                goStep(next, true);
+                document.querySelector('.step-btn[data-i="' + next + '"]').focus();
+            });
+            document.getElementById("prev-step").addEventListener("click", function () {
+                clearNodePin();
+                goStep(state.step - 1, true);
+            });
+            document.getElementById("next-step").addEventListener("click", function () {
+                clearNodePin();
+                goStep(state.step + 1, true);
+            });
+            document.getElementById("tour-play").addEventListener("click", function () {
+                if (state.tourPlaying) stopTour();
+                else startTour();
+            });
+            document.getElementById("restart-btn").addEventListener("click", function () {
+                stopTour();
+                stopRotor();
+                clearNodePin();
+                goStep(0, true);
+                state.lab = { thetaE: 35, thetaVisual: 35, id: 0, iq: 6, playing: false, preset: "drive" };
+                applyLabState();
+                document.getElementById("tour").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth" });
+            });
+            const themeButton = document.getElementById("theme-btn");
+            function syncThemeButton() {
+                const chalk = document.documentElement.dataset.theme === "chalk";
+                themeButton.setAttribute("aria-pressed", chalk ? "true" : "false");
+                themeButton.textContent = chalk ? "切换纸面" : "切换黑板";
+            }
+            syncThemeButton();
+            themeButton.addEventListener("click", function () {
+                const chalk = document.documentElement.dataset.theme !== "chalk";
+                document.documentElement.dataset.theme = chalk ? "chalk" : "paper";
+                try {
+                    localStorage.setItem("theme", chalk ? "dark" : "light");
+                } catch (error) {
+                    // Storage can be unavailable in private or file contexts; visual state still works.
+                }
+                syncThemeButton();
+            });
+
+            const diagram = document.getElementById("diagram");
+            diagram.addEventListener("mouseover", function (event) {
+                const node = event.target.closest(".node, .mobile-node");
+                if (node && !state.pinnedNode) setNodeFocus(node.dataset.id);
+            });
+            diagram.addEventListener("mouseout", function (event) {
+                if (!state.pinnedNode && event.target.closest(".node, .mobile-node")) setNodeFocus(null);
+            });
+            diagram.addEventListener("focusin", function (event) {
+                const node = event.target.closest(".node, .mobile-node");
+                if (node && !state.pinnedNode) setNodeFocus(node.dataset.id);
+            });
+            diagram.addEventListener("focusout", function (event) {
+                if (!state.pinnedNode && event.target.closest(".node, .mobile-node")) setNodeFocus(null);
+            });
+            diagram.addEventListener("click", function (event) {
+                const target = event.target.closest(".node, .mobile-node");
+                if (target) activateNode(target.dataset.id);
+            });
+            diagram.addEventListener("keydown", function (event) {
+                const node = event.target.closest(".node");
+                if (node && (event.key === "Enter" || event.key === " ")) {
+                    event.preventDefault();
+                    activateNode(node.dataset.id);
+                }
+            });
+
+            document.querySelectorAll(".preset-btn").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    setPreset(button.dataset.preset);
+                });
+            });
+            ["theta", "id", "iq"].forEach(function (name) {
+                document.getElementById(name + "-range").addEventListener("input", function () {
+                    stopRotor();
+                    state.lab.preset = "custom";
+                    if (name === "theta") {
+                        state.lab.thetaE = Number(this.value);
+                        state.lab.thetaVisual = state.lab.thetaE;
+                    }
+                    if (name === "id") state.lab.id = Number(this.value);
+                    if (name === "iq") state.lab.iq = Number(this.value);
+                    applyLabState();
+                });
+            });
+            document.getElementById("rotor-play").addEventListener("click", function () {
+                if (state.lab.playing) stopRotor();
+                else startRotor();
+            });
+            if (REDUCED) {
+                const rotorButton = document.getElementById("rotor-play");
+                rotorButton.disabled = true;
+                rotorButton.textContent = "动效已简化";
+                const tourButton = document.getElementById("tour-play");
+                tourButton.disabled = true;
+                tourButton.textContent = "逐步浏览";
+            }
+
+            document.addEventListener("keydown", function (event) {
+                const interactive = event.target.closest(
+                    "input, button, [role='button'], textarea, select, summary, a, [contenteditable='true']",
+                );
+                if (event.key === "Escape") {
+                    stopTour();
+                    stopRotor();
+                    state.pinnedNode = null;
+                    setNodeFocus(null);
+                    return;
+                }
+                if (interactive) return;
+                if (event.key.toLowerCase() === "p") {
+                    event.preventDefault();
+                    if (state.tourPlaying) stopTour();
+                    else startTour();
+                }
+                if (event.key.toLowerCase() === "r") {
+                    event.preventDefault();
+                    stopRotor();
+                    state.lab = { thetaE: 35, thetaVisual: 35, id: 0, iq: 6, playing: false, preset: "drive" };
+                    applyLabState();
+                }
+            });
+
+            renderStepper();
+            renderMobileChain();
+            const architectureSvg = renderDiagram();
+            renderWaveViz();
+            renderAlphaViz();
+            renderDqViz();
+            renderPanel(steps[0]);
+            applyStepClasses(steps[0]);
+            applyLabState();
+            if (REDUCED) {
+                syncFlows(steps[0]);
+            } else {
+                setTimeout(
+                    function () {
+                        syncFlows(steps[0]);
+                    },
+                    cssIntro(architectureSvg) + 80,
+                );
+            }
+        </script>
+    </body>
+</html>

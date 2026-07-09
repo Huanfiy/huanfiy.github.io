@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script>
+            (function () {
+                try {
+                    const savedTheme = localStorage.getItem("theme");
+                    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                    const theme = savedTheme || (prefersDark ? "dark" : "light");
+                    document.documentElement.setAttribute("data-theme", theme);
+                } catch (error) {
+                    document.documentElement.setAttribute("data-theme", "light");
+                }
+            })();
+        </script>
+        <title>技术可视化 - Huanfly</title>
+        <link rel="icon" type="image/png" href="../picture/icon.png" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css" />
+        <link rel="stylesheet" href="../css/style.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+        <style>
+            .visualization-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 340px));
+                justify-content: center;
+            }
+
+            .visualization-card {
+                min-height: 320px;
+            }
+
+            .visualization-tags {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-top: 1rem;
+            }
+
+            .visualization-tag {
+                padding: 3px 10px;
+                border: 1px dashed var(--tone, var(--accent-color));
+                border-radius: 999px;
+                color: var(--light-text);
+                background: var(--tone-soft, var(--accent-soft));
+                font-size: 0.78rem;
+                font-weight: 700;
+            }
+
+            .visualization-note {
+                max-width: 620px;
+                margin: -1.5rem auto 4rem;
+                color: var(--light-text);
+                text-align: center;
+                font-size: 0.92rem;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="container">
+                <a href="../index.html" class="logo">
+                    <img src="../picture/icon.png" alt="Logo" />
+                    <span>Huanfly</span>
+                </a>
+                <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+                <nav class="nav-links">
+                    <a href="../index.html">主页</a>
+                    <a href="../blog.html">博客</a>
+                    <a href="../tool.html" class="active">工具</a>
+                    <a href="../about.html">关于</a>
+                    <button class="theme-toggle" aria-label="切换主题" title="切换主题">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="container page">
+            <a href="../tool.html" class="btn btn-outline btn-back"> <i class="fas fa-arrow-left"></i> 返回工具库 </a>
+
+            <section aria-labelledby="visualization-title">
+                <h1 class="section-title" id="visualization-title" data-aos="fade-up">技术可视化</h1>
+                <p class="section-lead" data-aos="fade-up">
+                    从物理直觉到工程闭环，用交互图解理解技术系统为何这样工作。
+                </p>
+
+                <div class="grid-3 visualization-grid">
+                    <a
+                        class="card entry-card tone-teal visualization-card"
+                        href="visualizations/foc.html"
+                        data-aos="fade-up"
+                        aria-label="打开 FOC 场定向控制技术可视化"
+                    >
+                        <div class="card-icon"><i class="fas fa-wave-square"></i></div>
+                        <h3>FOC 场定向控制</h3>
+                        <p>拖动电角度，观察三相电流如何经过 Clarke / Park 变换成为可独立控制的磁链与转矩分量。</p>
+                        <div class="visualization-tags" aria-label="主题标签">
+                            <span class="visualization-tag">无刷电机</span>
+                            <span class="visualization-tag">坐标变换</span>
+                            <span class="visualization-tag">闭环控制</span>
+                        </div>
+                        <span class="card-link"> 进入可视化 <i class="fas fa-arrow-right"></i> </span>
+                    </a>
+                </div>
+
+                <p class="visualization-note" data-aos="fade-up">
+                    这里会持续加入嵌入式、控制算法、系统架构与 AI 原理的交互式图解。
+                </p>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container">
+                <p class="footer-note">&copy; 2026 Huanfly. Keep Building.</p>
+                <p class="footer-note">
+                    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2025388790号</a>
+                </p>
+            </div>
+        </footer>
+
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        <script src="../js/script.js"></script>
+        <script>
+            if (window.AOS) {
+                AOS.init({ duration: 800, once: true });
+            } else {
+                document.querySelectorAll("[data-aos]").forEach((element) => {
+                    element.removeAttribute("data-aos");
+                });
+            }
+        </script>
+    </body>
+</html>
