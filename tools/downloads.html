@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script>
+            (function () {
+                try {
+                    const savedTheme = localStorage.getItem("theme");
+                    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                    const theme = savedTheme || (prefersDark ? "dark" : "light");
+                    document.documentElement.setAttribute("data-theme", theme);
+                } catch (error) {
+                    document.documentElement.setAttribute("data-theme", "light");
+                }
+            })();
+        </script>
+        <title>下载中心 - Huanfly</title>
+        <link rel="icon" type="image/png" href="../picture/icon.png" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+        <link rel="preconnect" href="https://api.github.com" crossorigin />
+        <link rel="preconnect" href="https://github.com" crossorigin />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css" />
+        <link rel="stylesheet" href="../css/style.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+        <style>
+            .download-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 380px));
+                justify-content: center;
+            }
+
+            .download-card {
+                min-height: 470px;
+                text-align: left;
+            }
+
+            .download-card h2 {
+                margin-bottom: 0.55rem;
+                font-size: 1.35rem;
+            }
+
+            .download-description {
+                color: var(--light-text);
+                font-size: 0.94rem;
+            }
+
+            .download-tags {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-top: 1rem;
+            }
+
+            .download-tag {
+                padding: 3px 10px;
+                border: 1px dashed var(--tone, var(--violet));
+                border-radius: 999px;
+                color: var(--light-text);
+                background: var(--tone-soft, var(--violet-soft));
+                font-size: 0.76rem;
+                font-weight: 700;
+            }
+
+            .download-meta {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                margin: 1.25rem 0;
+            }
+
+            .download-meta > div {
+                min-width: 0;
+                padding: 9px 10px;
+                border: 1px dashed var(--line-soft);
+                border-radius: var(--wobble-sm);
+                background: color-mix(in srgb, var(--tone-soft, var(--violet-soft)) 48%, transparent);
+            }
+
+            .download-meta dt {
+                color: var(--light-text);
+                font-size: 0.72rem;
+            }
+
+            .download-meta dd {
+                margin: 2px 0 0;
+                overflow-wrap: anywhere;
+                color: var(--dark-text);
+                font-size: 0.9rem;
+                font-weight: 800;
+            }
+
+            .download-meta output {
+                font: inherit;
+            }
+
+            .checksum-block {
+                margin-bottom: 1.2rem;
+                padding: 10px 12px;
+                border-left: 3px solid var(--tone, var(--violet));
+                border-radius: var(--wobble-sm);
+                background: var(--bg-soft);
+            }
+
+            .checksum-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 4px;
+                color: var(--light-text);
+                font-size: 0.75rem;
+                font-weight: 700;
+            }
+
+            .checksum-link {
+                color: var(--tone, var(--violet));
+            }
+
+            .checksum-link:hover {
+                color: var(--dark-text);
+            }
+
+            .checksum-code {
+                display: block;
+                overflow-wrap: anywhere;
+                color: var(--dark-text);
+                font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+                font-size: 0.72rem;
+                line-height: 1.55;
+            }
+
+            .download-action {
+                width: 100%;
+                justify-content: center;
+                margin-top: auto;
+            }
+
+            .download-source {
+                margin-top: 0.9rem;
+                color: var(--light-text);
+                font-size: 0.76rem;
+                text-align: center;
+            }
+
+            .download-source i {
+                margin-right: 4px;
+            }
+
+            .install-note {
+                max-width: 680px;
+                margin: -1.4rem auto 4rem;
+                padding: 18px 20px;
+                border: 1px dashed var(--line);
+                border-radius: var(--wobble-card);
+                background: var(--card-bg);
+                color: var(--light-text);
+                font-size: 0.9rem;
+            }
+
+            .install-note strong {
+                color: var(--dark-text);
+            }
+
+            .install-note code {
+                padding: 2px 6px;
+                border-radius: 5px;
+                background: var(--bg-soft);
+                color: var(--dark-text);
+                font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+                overflow-wrap: anywhere;
+            }
+
+            @media (max-width: 520px) {
+                .download-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .download-card {
+                    min-height: 0;
+                }
+
+                .download-meta {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="container">
+                <a href="../index.html" class="logo">
+                    <img src="../picture/icon.png" alt="Logo" />
+                    <span>Huanfly</span>
+                </a>
+                <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+                <nav class="nav-links">
+                    <a href="../index.html">主页</a>
+                    <a href="../blog.html">博客</a>
+                    <a href="../tool.html" class="active">工具</a>
+                    <a href="../about.html">关于</a>
+                    <button class="theme-toggle" aria-label="切换主题" title="切换主题">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="container page">
+            <a href="../tool.html" class="btn btn-outline btn-back">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> 返回工具库
+            </a>
+
+            <section aria-labelledby="downloads-title">
+                <h1 class="section-title" id="downloads-title" data-aos="fade-up">下载中心</h1>
+                <p class="section-lead" data-aos="fade-up">
+                    可直接复用的 Skills、配置与开发资源；下载次数来自公开 Release 的真实统计。
+                </p>
+
+                <div class="grid-3 download-grid">
+                    <article
+                        class="card tone-violet download-card"
+                        data-aos="fade-up"
+                        data-release-repo="Huanfiy/huanfiy.github.io"
+                        data-release-tag="tech-visual-explainer-v1.0.0"
+                        data-release-asset="tech-visual-explainer-v1.0.0.zip"
+                        data-checksum-asset="tech-visual-explainer-v1.0.0.zip.sha256"
+                    >
+                        <div class="card-icon" aria-hidden="true">
+                            <i class="fas fa-compass-drafting"></i>
+                        </div>
+                        <h2>技术可视化 Skill</h2>
+                        <p class="download-description" id="visual-explainer-description">
+                            为 Codex
+                            提供手绘纸面风技术讲解工作流，内含单文件模板、过程动画模式与设计规范，联网增强、断网优雅降级。
+                        </p>
+
+                        <div class="download-tags" aria-label="内容标签">
+                            <span class="download-tag">Codex Skill</span>
+                            <span class="download-tag">交互式 HTML</span>
+                            <span class="download-tag">断网降级</span>
+                        </div>
+
+                        <dl class="download-meta">
+                            <div>
+                                <dt>版本</dt>
+                                <dd>v1.0.0</dd>
+                            </div>
+                            <div>
+                                <dt>大小</dt>
+                                <dd data-download-size>23.7 KB</dd>
+                            </div>
+                            <div>
+                                <dt>累计下载</dt>
+                                <dd><output data-download-count aria-live="polite">获取中…</output></dd>
+                            </div>
+                        </dl>
+
+                        <div class="checksum-block">
+                            <div class="checksum-head">
+                                <span>SHA-256</span>
+                                <a
+                                    class="checksum-link"
+                                    data-checksum-link
+                                    href="https://github.com/Huanfiy/huanfiy.github.io/releases/download/tech-visual-explainer-v1.0.0/tech-visual-explainer-v1.0.0.zip.sha256"
+                                >
+                                    校验文件
+                                </a>
+                            </div>
+                            <code class="checksum-code"
+                                >3d5f581d1ba911d0a19135c3593ff5b16482bb40df0340aa140d669741953781</code
+                            >
+                        </div>
+
+                        <a
+                            class="btn btn-outline download-action"
+                            href="https://github.com/Huanfiy/huanfiy.github.io/releases/download/tech-visual-explainer-v1.0.0/tech-visual-explainer-v1.0.0.zip"
+                            aria-describedby="visual-explainer-description"
+                            data-download-link
+                        >
+                            <i class="fas fa-download" aria-hidden="true"></i>
+                            下载 ZIP
+                        </a>
+                        <p class="download-source" data-download-status>
+                            <i class="fab fa-github" aria-hidden="true"></i>统计来自 GitHub Release
+                        </p>
+                    </article>
+                </div>
+
+                <p class="install-note" data-aos="fade-up">
+                    <strong>安装：</strong>将 ZIP 解压到 <code>~/.codex/skills/</code>，保持
+                    <code>tech-visual-explainer/SKILL.md</code> 目录结构，然后新开 Codex 会话。包内暂未附加开源许可证。
+                </p>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container">
+                <p class="footer-note">&copy; 2026 Huanfly. Keep Building.</p>
+                <p class="footer-note">
+                    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2025388790号</a>
+                </p>
+            </div>
+        </footer>
+
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        <script src="../js/script.js"></script>
+        <script>
+            const RELEASE_CACHE_MS = 15 * 60 * 1000;
+            const numberFormatter = new Intl.NumberFormat("zh-CN");
+
+            function formatBytes(bytes) {
+                if (!Number.isFinite(bytes) || bytes < 0) return "暂不可用";
+                if (bytes < 1024) return bytes + " B";
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+                return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+            }
+
+            function getCachedRelease(key) {
+                try {
+                    const cached = JSON.parse(sessionStorage.getItem(key));
+                    if (cached && Date.now() - cached.savedAt < RELEASE_CACHE_MS) {
+                        return cached.release;
+                    }
+                } catch (error) {
+                    // Cache is optional; continue with the network request.
+                }
+                return null;
+            }
+
+            function cacheRelease(key, release) {
+                try {
+                    sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), release }));
+                } catch (error) {
+                    // Cache is optional; live data has already been loaded.
+                }
+            }
+
+            async function fetchRelease(repo, tag) {
+                const cacheKey = "download-release:" + repo + ":" + tag;
+                const cached = getCachedRelease(cacheKey);
+                if (cached) return cached;
+
+                const [owner, repoName] = repo.split("/");
+                const apiUrl =
+                    "https://api.github.com/repos/" +
+                    encodeURIComponent(owner) +
+                    "/" +
+                    encodeURIComponent(repoName) +
+                    "/releases/tags/" +
+                    encodeURIComponent(tag);
+                const response = await fetch(apiUrl, {
+                    headers: { Accept: "application/vnd.github+json" },
+                });
+                if (!response.ok) {
+                    throw new Error("GitHub Release API: " + response.status);
+                }
+
+                const release = await response.json();
+                cacheRelease(cacheKey, release);
+                return release;
+            }
+
+            async function hydrateDownloadCard(card) {
+                const count = card.querySelector("[data-download-count]");
+                const size = card.querySelector("[data-download-size]");
+                const status = card.querySelector("[data-download-status]");
+                const downloadLink = card.querySelector("[data-download-link]");
+                const checksumLink = card.querySelector("[data-checksum-link]");
+
+                try {
+                    const release = await fetchRelease(card.dataset.releaseRepo, card.dataset.releaseTag);
+                    const asset = release.assets.find((item) => item.name === card.dataset.releaseAsset);
+                    if (!asset) throw new Error("Release asset not found");
+
+                    count.textContent = numberFormatter.format(asset.download_count) + " 次";
+                    size.textContent = formatBytes(asset.size);
+                    downloadLink.href = asset.browser_download_url;
+
+                    const checksumAsset = release.assets.find((item) => item.name === card.dataset.checksumAsset);
+                    if (checksumAsset) checksumLink.href = checksumAsset.browser_download_url;
+                    status.innerHTML = '<i class="fab fa-github" aria-hidden="true"></i>统计来自 GitHub Release';
+                } catch (error) {
+                    count.textContent = "暂不可用";
+                    status.textContent = "统计暂不可用，下载链接仍可使用";
+                    console.warn("download metadata unavailable", error);
+                }
+            }
+
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            if (window.AOS && !reducedMotion) {
+                AOS.init({ duration: 800, once: true });
+            } else {
+                document.querySelectorAll("[data-aos]").forEach((element) => {
+                    element.removeAttribute("data-aos");
+                });
+            }
+
+            document.querySelectorAll("[data-release-repo]").forEach(hydrateDownloadCard);
+        </script>
+    </body>
+</html>
