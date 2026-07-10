@@ -1,7 +1,10 @@
 # 设计架构文档：手绘绘本 × 罗小黑森林
 
-> 落档日期：2026-07-03 · 对应提交范围：2026-07-02 全站视觉重构
-> 配套可视化：[design-system.html](design-system.html)（单文件，双击即开，断网可用）
+> 落档日期：2026-07-03
+>
+> 现状核验日期：2026-07-10
+>
+> 配套可视化：[design-system.html](design-system.html)（记录 2026-07-02 视觉基线；单文件，双击即开，断网可用）
 
 ## 1. 概述
 
@@ -10,33 +13,37 @@
 
 ### 1.1 覆盖范围
 
-- 主站 4 个页面：`index.html`、`blog.html`、`tool.html`、`about.html`；
-- 共享资源：`css/style.css`、`js/script.js`、`js/interests.js`。
+- 主站页面：`index.html`、`blog.html`、`tool.html`、`about.html`；
+- 延伸页面：`tools/downloads.html`、`tools/visualizations.html`；
+- 共享资源：`css/style.css`、`js/script.js`、`js/interests.js`；
+- 部分复用共享样式的工具页：`tools/keyboard.html`、`tools/buy.html`。
 
 ### 1.2 不覆盖范围
 
-- `tools/` 下 3 个独立应用（`keyboard.html`、`esp32_pinmapper.html`、`buy.html`）自带完整样式，
-  不参与本设计体系，仅通过兼容别名消费 `css/style.css` 的少量变量与类（见 §8.1）；
-- `posts/*.md` 文章内容本身的写作规范。
+- `tools/esp32_pinmapper.html` 与 `tools/visualizations/foc.html` 使用独立页面样式，不受共享组件规范约束；
+- `tools/keyboard.html`、`tools/buy.html` 的页面专属布局与交互样式；
+- `posts/*.md` 的内容写作规范与文章发布流程。发布流程见 [blog-auto-publish.md](blog-auto-publish.md)。
 
 ## 2. 文件结构与职责
 
 | 文件 | 职责 |
 |---|---|
 | `css/style.css` | 设计 Token 唯一定义处 + 全部组件样式 + 深色模式覆盖 + 响应式 |
-| `js/script.js` | 灵气动效（点击迸发 + 漂浮萤火）、主题切换、移动端菜单、平滑滚动 |
+| `js/script.js` | 灵气动效、主题切换、移动端菜单、首页问候与动态时间线、busuanzi 访问统计 |
 | `js/interests.js` | 关于页兴趣详情视图（摄影 / 科技制作 / 阅读）渲染，Toast 与 Lightbox |
-| `index.html` | Hero 场景（山丘 + 小黑 SVG 内联于此文件）+ 板块入口卡片 |
-| `blog.html` | 文章列表 / 详情双视图、标签筛选、搜索、`#post=` hash 路由、Markdown 渲染 |
-| `tool.html` | 工具卡片列表 + 页内 ICO 转换器（含拖拽上传） |
+| `index.html` | Hero 场景（山丘 + 小黑 SVG 内联于此文件）、板块入口卡片、动态时间线 |
+| `blog.html` | 文章列表 / 详情双视图、标签筛选、搜索、`#post=` hash 路由、Markdown 渲染、文章信息、AI 摘要与可选评论 |
+| `tool.html` | 6 个工具入口 + 页内 ICO 转换器（含拖拽上传） |
 | `about.html` | 简介、时间线、兴趣卡片与详情视图容器 |
+| `tools/downloads.html` | 下载资源卡片、校验值、GitHub 下载统计；复用共享主题并补充页内样式 |
+| `tools/visualizations.html` | 技术可视化索引；复用共享主题并补充页内样式 |
 
 页面结构模式：单页内「列表视图 ↔ 详情视图」通过 `display` 切换（博客文章、ICO 工具、兴趣详情均采用此模式）。
 
 ## 3. 设计 Token
 
-全部 Token 定义于 `css/style.css` 的 `:root`，深色模式在 `[data-theme="dark"]` 中整组覆盖。
-组件一律引用变量，禁止散写 hex。
+共享 Token 定义于 `css/style.css` 的 `:root`，深色模式在 `[data-theme="dark"]` 中覆盖主题值。
+共享组件优先引用语义变量；代码块、遮罩、反白文字、内联 SVG 和粒子效果仍保留少量固定色值。
 
 ### 3.1 色彩
 
@@ -113,6 +120,8 @@
 - **筛选 chips**：`.filter-chip`，由 `posts.json` 的 `tag` 字段去重动态生成，与搜索框联动过滤；
 - **Markdown 阅读**（`.markdown-body`）：纸面卡片，`h1/h2` 虚线分隔，无序列表项前缀 `✦`，
   代码块深墨绿底（`#253029`，深色模式 `#101711`），引用块绿色系提示条；
+- **文章信息**：`.article-meta` 展示日期、标签、字数与预计阅读时长；存在 `ai_summary` 时渲染 `.ai-summary`；
+- **文章评论**：`.giscus-wrap` 预留 giscus 容器。`blog.html` 中 `GISCUS_CONFIG.categoryId` 为空时不加载评论脚本；
 - **时间线**：`.timeline` 虚线枝干 + wobble 圆点节点，节点颜色取 `--tone`；
 - **Toast / Lightbox**：保持 `js/interests.js` 原有 API（`showToast` / `openLightbox`），仅重绘外观。
 
@@ -152,19 +161,24 @@
 | Font Awesome | 6.4.0 | cdnjs | 图标缺失，文字信息完整 |
 | AOS | 2.3.1 | unpkg | 无滚动入场动画，内容直接可见 |
 | Marked.js | 4.0.12 | jsDelivr → unpkg → cdnjs 三级回退 | 三源均失败时文章页给出显式错误提示 |
+| busuanzi | 2.3 | `busuanzi.ibruce.info` | 页脚访问统计保持隐藏，不影响导航与正文 |
+| giscus | 未固定版本 | `giscus.app/client.js` | `categoryId` 为空或脚本失败时不显示评论区，不影响文章阅读 |
 
-Marked.js 仅 `blog.html` 加载；其余页面无 Markdown 依赖。
+Marked.js 与 giscus 仅由 `blog.html` 使用；giscus 当前因 `categoryId` 为空而处于停用状态。busuanzi 由 `js/script.js` 延迟加载。
 
 ## 8. 兼容性边界
 
-### 8.1 tools/ 独立应用契约
+### 8.1 `tools/` 页面契约
 
-`tools/keyboard.html` 与 `tools/buy.html` 通过 `../css/style.css` 消费以下遗留接口，
-**删除任一项将直接破坏这两个页面**：
+`tools/downloads.html` 与 `tools/visualizations.html` 直接复用共享 Token、Header、Footer、卡片、按钮、主题切换和响应式规则；改动共享组件时必须同步验证这两个页面。
 
-- 变量别名：`--border-color`（→ `--line-soft`）、`--radius-lg: 20px`、`--radius-md: 12px`；
-- 类别名：`.tool-icon`（与 `.card-icon` 同规则）；
-- 结构类：`header` / `.nav-links` / `.theme-toggle` / `.card` / `.btn` / `.btn-outline` 的类名与语义。
+`tools/keyboard.html` 与 `tools/buy.html` 通过 `../css/style.css` 复用部分基础能力，同时保留大量页内样式：
+
+- `tools/keyboard.html` 依赖 `--border-color`、`--radius-lg`、`--radius-md`，并复用 Header、Footer、`.container`、`.btn`、`.btn-outline`、主题切换和移动端菜单；
+- `tools/buy.html` 依赖主题色、文本色、背景色、`--border-color`、`--radius-lg`、`--radius-md`，并复用 `.container` 与 Footer 基础样式；
+- `.tool-icon` 作为 `.card-icon` 的遗留类别名继续保留，但截至 2026-07-10，仓库内 HTML 未引用该类别名。
+
+`tools/esp32_pinmapper.html` 与 `tools/visualizations/foc.html` 不加载 `css/style.css`，其独立样式不应反向写入共享样式表。
 
 ### 8.2 浏览器特性要求
 
@@ -180,6 +194,6 @@ Marked.js 仅 `blog.html` 加载；其余页面无 Markdown 依赖。
 ## 9. 维护指引
 
 - **新增卡片色调**：在 style.css 追加 `.tone-x { --tone: …; --tone-soft: …; }` 并补深色值，组件自动适配；
-- **新增文章**：仅编辑 `posts/posts.json`（`tag` 会自动进入筛选 chips），无封面时按 `TAG_GRADIENTS` 生成粉彩渐变图；
+- **新增文章**：在 `posts/` 创建 Markdown 文件，执行 `./run.sh gen` 并同时审查、提交 `posts/posts.json`；不得只手工编辑索引。完整流程见 [blog-auto-publish.md](blog-auto-publish.md)；
 - **调整山丘 / 小黑**：直接编辑 `index.html` 内联 SVG，颜色务必继续引用 `var(--hill-*)` / `var(--cat-ink)` 以保持主题联动；
-- **改动共享类名前**：先按 §8.1 检查 `tools/` 引用（`grep -o 'var(--[a-z-]*)' tools/*.html`）。
+- **改动共享类名前**：先按 §8.1 检查 `tools/` 引用（`rg -n 'var\\(--|class=' tools -g '*.html'`）。
