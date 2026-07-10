@@ -102,6 +102,8 @@
         <article id="markdown-content" class="markdown-body">
             <!-- Markdown 内容将渲染在这里 -->
         </article>
+        <!-- 评论区：giscus 配置就绪后自动渲染 -->
+        <section id="article-comments" class="article-comments"></section>
     </div>
 
     <footer>
@@ -317,6 +319,7 @@
                     head.innerHTML = buildArticleHead(meta, body);
                     const h1 = contentDiv.querySelector('h1');
                     if (h1) h1.after(head); else contentDiv.prepend(head);
+                    loadComments(file);
                 })
                 .catch(error => {
                     contentDiv.innerHTML = `<div class="error-block">
@@ -324,6 +327,52 @@
                     </div>`;
                 });
         }
+
+        // === giscus 评论（基于 GitHub Discussions） ===
+        // 启用步骤：仓库开启 Discussions → 安装 giscus App（github.com/apps/giscus）
+        //           → 在 giscus.app 选择分类，把 categoryId 填到下方即可生效
+        const GISCUS_CONFIG = {
+            repo: 'Huanfiy/huanfiy.github.io',
+            repoId: 'R_kgDOM3iQ0Q',
+            category: 'Announcements',
+            categoryId: ''   // 留空 = 评论区不渲染
+        };
+
+        function loadComments(file) {
+            const box = document.getElementById('article-comments');
+            box.innerHTML = '';
+            if (!GISCUS_CONFIG.categoryId) return;
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark_dimmed' : 'light';
+            const s = document.createElement('script');
+            s.src = 'https://giscus.app/client.js';
+            s.async = true;
+            s.crossOrigin = 'anonymous';
+            const attrs = {
+                'data-repo': GISCUS_CONFIG.repo,
+                'data-repo-id': GISCUS_CONFIG.repoId,
+                'data-category': GISCUS_CONFIG.category,
+                'data-category-id': GISCUS_CONFIG.categoryId,
+                'data-mapping': 'specific',
+                'data-term': file,
+                'data-strict': '0',
+                'data-reactions-enabled': '1',
+                'data-emit-metadata': '0',
+                'data-input-position': 'top',
+                'data-theme': theme,
+                'data-lang': 'zh-CN',
+                'data-loading': 'lazy'
+            };
+            Object.entries(attrs).forEach(([k, v]) => s.setAttribute(k, v));
+            box.appendChild(s);
+        }
+
+        // 主题切换时同步 giscus 配色
+        new MutationObserver(() => {
+            const iframe = document.querySelector('iframe.giscus-frame');
+            if (!iframe) return;
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark_dimmed' : 'light';
+            iframe.contentWindow.postMessage({ giscus: { setConfig: { theme } } }, 'https://giscus.app');
+        }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
         function closeMarkdown() {
             // pushState 清空 hash 不触发 hashchange，视图在下方手动切回

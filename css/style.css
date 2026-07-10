@@ -1167,6 +1167,20 @@ header .container {
     line-height: 1.7;
 }
 
+/* --- 文章评论区 --- */
+.article-comments {
+    max-width: 100%;
+    margin-top: 2.5rem;
+}
+
+.article-comments:not(:empty) {
+    background: var(--card-bg);
+    padding: clamp(20px, 4vw, 36px);
+    border: 2px solid var(--line-soft);
+    border-radius: var(--wobble-card);
+    box-shadow: var(--shadow-md);
+}
+
 /* =========================================
    工具页：上传区
    ========================================= */
