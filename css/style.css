@@ -1253,6 +1253,7 @@ header .container {
 }
 
 .activity-timeline {
+    --timeline-dot-offset: -38px;
     position: relative;
     max-width: 680px;
     margin: 0 auto;
@@ -1360,6 +1361,7 @@ header .container {
 
 /* 时间线：虚线枝干 + 灵气节点 */
 .timeline {
+    --timeline-dot-offset: -38px;
     position: relative;
     padding-left: 28px;
     border-left: 3px dashed var(--line-soft);
@@ -1377,7 +1379,7 @@ header .container {
 
 .timeline-dot {
     position: absolute;
-    left: -38px;
+    left: var(--timeline-dot-offset);
     top: 6px;
     width: 16px;
     height: 16px;
@@ -1957,11 +1959,8 @@ footer::before {
     }
 
     .timeline {
+        --timeline-dot-offset: -30px;
         padding-left: 20px;
-    }
-
-    .timeline-dot {
-        left: -30px;
     }
 
     .toast {
