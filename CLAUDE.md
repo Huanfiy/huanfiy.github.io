@@ -15,7 +15,7 @@ Pure static personal website (huanfly.com) — no frameworks, no build step, no 
 ./run.sh deploy <ref>  # Deploy a pushed commit/ref, including an older rollback target
 ```
 
-No build, lint, or test commands exist — the site is served as-is.
+No front-end framework or asset compilation step exists — the site is served as-is. Deployment still packages and validates an immutable Git artifact as described below.
 
 Production deploys never copy the working tree directly. `run.sh deploy` requires a clean worktree, verifies the target commit is present on `origin/main`, builds it with `git archive`, writes `deploy-version.json`, validates the artifact, uses delayed rsync updates, and runs online smoke checks. `deploy/nginx/huanfly.conf` is the version-controlled server configuration.
 
