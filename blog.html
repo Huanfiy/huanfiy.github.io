@@ -246,12 +246,43 @@
         // 搜索功能
         document.getElementById('blog-search-input').addEventListener('input', applyFilters);
 
-        // === 剥离 Front Matter ===
-        function stripFrontMatter(text) {
-            if (!text.startsWith('---')) return text;
+        // === 解析 Front Matter：返回 { meta, body } ===
+        function parseFrontMatter(text) {
+            if (!text.startsWith('---')) return { meta: {}, body: text };
             const end = text.indexOf('\n---', 3);
-            if (end === -1) return text;
-            return text.substring(end + 4).trimStart();
+            if (end === -1) return { meta: {}, body: text };
+            const meta = {};
+            text.substring(3, end).split('\n').forEach(line => {
+                const idx = line.indexOf(':');
+                if (idx > 0) meta[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+            });
+            return { meta, body: text.substring(end + 4).trimStart() };
+        }
+
+        // === 字数统计：中文按字、英文数字按词 ===
+        function countWords(text) {
+            const cjk = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+            const latin = (text.match(/[a-zA-Z0-9]+/g) || []).length;
+            return cjk + latin;
+        }
+
+        // === 构建文章元信息头 + AI 摘要卡片 ===
+        function buildArticleHead(meta, body) {
+            const words = countWords(body);
+            const mins = Math.max(1, Math.round(words / 400));
+            const parts = [];
+            if (meta.date) parts.push(`<span><i class="far fa-calendar"></i> ${meta.date}</span>`);
+            if (meta.tag) parts.push(`<span class="blog-tag">${meta.tag}</span>`);
+            parts.push(`<span><i class="far fa-file-lines"></i> 约 ${words} 字</span>`);
+            parts.push(`<span><i class="far fa-clock"></i> 阅读约 ${mins} 分钟</span>`);
+            let html = `<div class="article-meta">${parts.join('')}</div>`;
+            if (meta.ai_summary) {
+                html += `<aside class="ai-summary">
+                    <div class="ai-summary-label"><i class="fas fa-wand-magic-sparkles"></i> AI 摘要</div>
+                    <p>${meta.ai_summary}</p>
+                </aside>`;
+            }
+            return html;
         }
 
         // === 加载并渲染 Markdown 文章 ===
@@ -278,7 +309,14 @@
                     return response.text();
                 })
                 .then(text => {
-                    contentDiv.innerHTML = marked.parse(stripFrontMatter(text));
+                    const { meta, body } = parseFrontMatter(text);
+                    contentDiv.innerHTML = marked.parse(body);
+                    // 元信息头插在正文 H1 之后（无 H1 则置顶）
+                    const head = document.createElement('div');
+                    head.className = 'article-head';
+                    head.innerHTML = buildArticleHead(meta, body);
+                    const h1 = contentDiv.querySelector('h1');
+                    if (h1) h1.after(head); else contentDiv.prepend(head);
                 })
                 .catch(error => {
                     contentDiv.innerHTML = `<div class="error-block">
