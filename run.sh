@@ -216,6 +216,11 @@ validate_artifact() {
         return 1
     fi
 
+    if find "${artifact_dir}" \( -name '.cursor' -o -name 'README.md' -o -name '*.test.js' \) -print -quit | grep -q .; then
+        echo "❌ 发布产物包含嵌套开发文件"
+        return 1
+    fi
+
     echo "✅ 发布产物校验通过"
 }
 
@@ -339,6 +344,7 @@ do_deploy() {
     local artifact_dir
     artifact_dir=$(mktemp -d)
     DEPLOY_ARTIFACT_DIR="${artifact_dir}"
+    chmod 0755 "${artifact_dir}"
 
     git archive --format=tar "${commit_sha}" | tar -xf - -C "${artifact_dir}"
 
@@ -361,6 +367,7 @@ do_deploy() {
         -avz \
         --delay-updates \
         --delete-delay \
+        --chmod=D755,F644 \
         -e ssh \
         "${artifact_dir}/" \
         "${SERVER_USER}@${SERVER_HOST}:${REMOTE_DIR}"

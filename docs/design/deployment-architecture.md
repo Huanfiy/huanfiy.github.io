@@ -82,8 +82,9 @@ git archive --format=tar <commit-sha>
 `.gitattributes` 使用 `export-ignore` 排除以下开发与运维文件：
 
 - `.gitattributes`、`.gitignore`；
-- `.cursor/`、`.claude/`、`CLAUDE.md`；
-- `README.md`、`run.sh`；
+- 任意层级的 `.cursor/`、根目录 `.claude/`、`CLAUDE.md`；
+- 任意层级的 `README.md`、`*.log`、`.DS_Store` 和 `*.test.js`；
+- `run.sh`；
 - `deploy/`。
 
 新增仅供开发或运维使用的路径时，必须同步更新 `export-ignore` 并验证 archive 内容。
@@ -212,6 +213,7 @@ deploy/nginx/huanfly.conf
 - `activity.json`、`posts/posts.json`、`manifest.webmanifest` 和版本标记为有效 JSON；
 - Node.js 可用时执行共享 JavaScript 语法检查；
 - artifact 不包含 `.git/`、`run.sh` 和 `deploy/`。
+- artifact 目录统一为 `0755`，文件统一为 `0644`，确保 Nginx 工作进程具备读取权限。
 
 ### 8.2 线上 Smoke Test
 
