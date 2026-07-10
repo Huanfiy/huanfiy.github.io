@@ -1,5 +1,6 @@
 test
 build
 tmp
-.cursor/plans/
+.claude/
+.cursor/
 /deploy/nginx/
