@@ -1,0 +1,13 @@
+{
+    "name": "Huanfly的空间",
+    "short_name": "Huanfly",
+    "description": "Huanfly 的个人网站：嵌入式技术博客、实用工具箱与成长记录。",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f7f3e8",
+    "theme_color": "#5da844",
+    "icons": [
+        { "src": "picture/icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "picture/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
+}
