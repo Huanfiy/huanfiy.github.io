@@ -11,10 +11,13 @@ Pure static personal website (huanfly.com) — no frameworks, no build step, no 
 ```bash
 ./run.sh test          # Start local Python HTTP server on port 8080
 ./run.sh test 3000     # Start on custom port
-./run.sh deploy        # rsync to remote server (user@example.com)
+./run.sh deploy        # Deploy the clean, pushed HEAD as a validated Git artifact
+./run.sh deploy <ref>  # Deploy a pushed commit/ref, including an older rollback target
 ```
 
 No build, lint, or test commands exist — the site is served as-is.
+
+Production deploys never copy the working tree directly. `run.sh deploy` requires a clean worktree, verifies the target commit is present on `origin/main`, builds it with `git archive`, writes `deploy-version.json`, validates the artifact, uses delayed rsync updates, and runs online smoke checks. `deploy/nginx/huanfly.conf` is the version-controlled server configuration.
 
 ## Architecture
 

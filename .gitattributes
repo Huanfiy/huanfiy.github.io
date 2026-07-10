@@ -1,0 +1,8 @@
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.cursor export-ignore
+/.claude export-ignore
+/CLAUDE.md export-ignore
+/README.md export-ignore
+/run.sh export-ignore
+/deploy export-ignore
