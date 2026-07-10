@@ -20,20 +20,24 @@ No build, lint, or test commands exist — the site is served as-is.
 
 **Multi-page static site** with client-side rendering:
 
-- `index.html` — Homepage with hero and entry cards
-- `blog.html` — Blog system: article grid + Markdown detail view (toggles visibility)
+- `index.html` — Homepage with hero, time-aware greeting, entry cards, activity timeline
+- `blog.html` — Blog system: article grid + Markdown detail view (toggles visibility); article head renders date/tag/word-count/reading-time + AI summary from front matter; giscus comments (disabled until `categoryId` is filled in `GISCUS_CONFIG`)
 - `tool.html` — Tools hub with inline ICO converter + links to standalone tools
 - `about.html` — Profile with timeline and interest cards
 - `tools/` — Standalone tool pages (keyboard practice, ESP32 pin mapper, link converter)
-- `posts/*.md` — Blog articles fetched and parsed client-side with Marked.js
+- `posts/*.md` — Blog articles fetched and parsed client-side with Marked.js; front matter supports `title/date/tag/summary/cover/coverFit/publish/ai_summary` (`ai_summary` is read by blog.html only, ignored by `run.sh gen`)
+- `activity.json` — Site/tool events merged with posts.json into homepage activity timeline (types: `post`/`tool`/`site`)
 - `css/style.css` — Single unified stylesheet with CSS custom properties for theming
-- `js/script.js` — Shared functionality (mobile nav toggle, smooth scroll)
+- `js/script.js` — Shared functionality (mobile nav, theme toggle, greeting, activity timeline, busuanzi stats)
+- `manifest.webmanifest`, `robots.txt`, `sitemap.xml` — PWA + SEO; the four primary pages carry OG meta and canonical URLs
 
 **Key pattern:** Pages use view switching — JavaScript toggles between list view and detail view within the same page (blog article list ↔ article content, tool grid ↔ tool interface).
 
+**Footer stats:** busuanzi (不蒜子) UV/PV counters, hidden until values load (`#site-stats` + `.visible`). Counts on localhost are shared global test numbers; real counts start on the production domain.
+
 **Design theme:** Hand-drawn storybook style inspired by "Luo Xiaohei" (罗小黑). Warm paper background with grain overlay; dark mode = "night forest". Primary: forest green `#5da844`, accent: spirit teal `#4fc4cf`. Signature elements: wobble border-radius (`--wobble-*` vars), ink outlines with offset shadows, squiggle SVG underlines, hero hills + animated black cat SVG (index.html), ambient firefly canvas + click spirit-burst (js/script.js). Standalone pages in `tools/` still consume legacy aliases from style.css (`--border-color`, `--radius-lg/md`, `.tool-icon`) — keep them.
 
-**CDN dependencies:** Marked.js 4.0.12, AOS 2.3.1, Font Awesome 6.4.0, LXGW WenKai Screen webfont (jsDelivr).
+**CDN dependencies:** Marked.js 4.0.12, AOS 2.3.1, Font Awesome 6.4.0, LXGW WenKai Screen webfont (jsDelivr), busuanzi, giscus (optional).
 
 ## Git Commit Convention
 
