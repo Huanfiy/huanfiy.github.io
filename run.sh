@@ -6,11 +6,10 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}" || exit 1
 
-# 服务器配置
-SERVER_USER="ubuntu"
-SERVER_HOST="huanfly.com"
-REMOTE_DIR="/srv/www/blog/"
-PUBLIC_BASE_URL="https://${SERVER_HOST}"
+# 部署目标属于运行环境，不纳入开源仓库配置。
+DEPLOY_TARGET="${DEPLOY_TARGET:-}"
+PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-}"
+DEPLOY_REQUIRED_REF="${DEPLOY_REQUIRED_REF:-}"
 DEPLOY_ARTIFACT_DIR=""
 
 cleanup() {
@@ -31,11 +30,16 @@ print_help() {
 
 可用命令:
   deploy [--gen] [git-ref]
-                 从已推送的 Git 提交生成临时产物并部署（默认 git-ref: HEAD）
+                 从 Git 提交生成临时产物并部署（默认 git-ref: HEAD）
                  --gen 仅在临时产物中重新生成 posts/posts.json
   gen           扫描 posts/*.md 生成文章清单 posts/posts.json
   test [port]   启动本地测试服务器 (默认端口: 8080)
   help          显示帮助信息
+
+deploy 环境变量:
+  DEPLOY_TARGET       rsync 目标，必填，例如 user@example.com:/srv/www/blog/
+  PUBLIC_BASE_URL     部署后的公开地址，必填，例如 https://blog.example.com
+  DEPLOY_REQUIRED_REF 可选；设置后要求 git-ref 位于该引用历史中
 EOF
 }
 
@@ -153,6 +157,34 @@ require_command() {
     fi
 }
 
+require_deploy_config() {
+    local missing=0
+
+    if [ -z "${DEPLOY_TARGET}" ]; then
+        echo "❌ 缺少环境变量: DEPLOY_TARGET"
+        missing=1
+    fi
+    if [ -z "${PUBLIC_BASE_URL}" ]; then
+        echo "❌ 缺少环境变量: PUBLIC_BASE_URL"
+        missing=1
+    fi
+    if [ "${missing}" -ne 0 ]; then
+        echo "部署目标属于运行环境配置，不应写入仓库。"
+        return 1
+    fi
+
+    case "${PUBLIC_BASE_URL}" in
+        http://*|https://*)
+            ;;
+        *)
+            echo "❌ PUBLIC_BASE_URL 必须以 http:// 或 https:// 开头"
+            return 1
+            ;;
+    esac
+
+    PUBLIC_BASE_URL="${PUBLIC_BASE_URL%/}"
+}
+
 write_deploy_marker() {
     local artifact_dir="$1"
     local commit_sha="$2"
@@ -228,7 +260,6 @@ smoke_test() {
     local expected_sha="$1"
     local marker=""
     local remote_sha=""
-    local headers=""
     local route=""
     local curl_args=(
         --retry 3
@@ -260,22 +291,6 @@ smoke_test() {
         curl "${curl_args[@]}" --output /dev/null "${PUBLIC_BASE_URL}${route}?verify=${expected_sha}"
     done
 
-    headers=$(curl "${curl_args[@]}" --head "${PUBLIC_BASE_URL}/css/style.css?verify=${expected_sha}")
-    if ! printf '%s\n' "${headers}" | grep -qi '^Cache-Control:.*no-cache'; then
-        echo "❌ 线上 CSS 未启用 no-cache 重验证"
-        return 1
-    fi
-    if ! printf '%s\n' "${headers}" | grep -qi '^ETag:'; then
-        echo "❌ 线上 CSS 缺少 ETag"
-        return 1
-    fi
-
-    headers=$(curl "${curl_args[@]}" --head "${PUBLIC_BASE_URL}/manifest.webmanifest?verify=${expected_sha}")
-    if ! printf '%s\n' "${headers}" | grep -qi '^Content-Type: application/manifest+json'; then
-        echo "❌ manifest.webmanifest 的 MIME 类型不正确"
-        return 1
-    fi
-
     echo "✅ 线上冒烟验证通过: ${expected_sha}"
 }
 
@@ -295,7 +310,8 @@ do_deploy() {
             -h|--help)
                 echo "用法: ./run.sh deploy [--gen] [git-ref]"
                 echo "  --gen     仅在临时发布产物中重新生成 posts/posts.json"
-                echo "  git-ref   已推送到 origin/main 的提交或引用，默认 HEAD"
+                echo "  git-ref   用于生成发布产物的提交或引用，默认 HEAD"
+                echo "环境变量见 ./run.sh help"
                 return 0
                 ;;
             -* )
@@ -314,10 +330,10 @@ do_deploy() {
         esac
     done
 
+    require_deploy_config
     require_command git
     require_command tar
     require_command rsync
-    require_command ssh
     require_command curl
     require_command python3
 
@@ -329,16 +345,20 @@ do_deploy() {
         return 1
     fi
 
-    git fetch --quiet origin main
-
     local commit_sha
     local short_sha
     commit_sha=$(git rev-parse --verify "${requested_ref}^{commit}")
     short_sha=$(git rev-parse --short=12 "${commit_sha}")
 
-    if ! git merge-base --is-ancestor "${commit_sha}" origin/main; then
-        echo "❌ 目标提交尚未推送到 origin/main: ${commit_sha}"
-        return 1
+    if [ -n "${DEPLOY_REQUIRED_REF}" ]; then
+        if ! git rev-parse --verify "${DEPLOY_REQUIRED_REF}^{commit}" >/dev/null 2>&1; then
+            echo "❌ DEPLOY_REQUIRED_REF 无法解析: ${DEPLOY_REQUIRED_REF}"
+            return 1
+        fi
+        if ! git merge-base --is-ancestor "${commit_sha}" "${DEPLOY_REQUIRED_REF}"; then
+            echo "❌ 目标提交不在要求的引用历史中: ${DEPLOY_REQUIRED_REF}"
+            return 1
+        fi
     fi
 
     local artifact_dir
@@ -357,10 +377,11 @@ do_deploy() {
     validate_artifact "${artifact_dir}"
 
     echo "========================================"
-    echo "正在部署 Git 产物到 ${SERVER_HOST}..."
+    echo "正在部署 Git 产物..."
     echo "提交: ${commit_sha} (${short_sha})"
     echo "引用: ${requested_ref}"
-    echo "目标: ${REMOTE_DIR}"
+    echo "目标: ${DEPLOY_TARGET}"
+    echo "验证地址: ${PUBLIC_BASE_URL}"
     echo "========================================"
 
     rsync \
@@ -368,9 +389,8 @@ do_deploy() {
         --delay-updates \
         --delete-delay \
         --chmod=D755,F644 \
-        -e ssh \
         "${artifact_dir}/" \
-        "${SERVER_USER}@${SERVER_HOST}:${REMOTE_DIR}"
+        "${DEPLOY_TARGET}"
 
     smoke_test "${commit_sha}"
     echo "✅ 部署成功: ${commit_sha}"

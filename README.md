@@ -1,6 +1,6 @@
 # Personal Web
 
-个人网站，包含博客、在线工具箱和个人展示页面。纯静态实现，无需构建，使用 rsync 部署到 [huanfly.com](https://huanfly.com)。
+开源的纯静态个人网站，包含博客、在线工具箱和个人展示页面。无需前端构建即可部署到静态托管平台；线上实例为 [huanfly.com](https://huanfly.com)。
 
 ## 功能
 
@@ -46,8 +46,18 @@
 ./run.sh test 3000     # 指定端口
 ```
 
-**部署到服务器：**
+**生成文章索引：**
 
 ```bash
-./run.sh deploy        # rsync 同步到远程服务器
+./run.sh gen
 ```
+
+**可选 rsync 部署：**
+
+```bash
+DEPLOY_TARGET='user@example.com:/srv/www/blog/' \
+PUBLIC_BASE_URL='https://blog.example.com' \
+./run.sh deploy HEAD
+```
+
+部署目标必须通过环境变量注入。仓库不管理 Nginx、TLS、DNS、服务器账号、生产目录或其他托管平台配置。GitHub Pages、Cloudflare Pages、Netlify、Vercel 等平台可直接使用各自的发布工作流，无需调用 `./run.sh deploy`。详细边界见 [发布产物与外部部署边界](docs/design/deployment-architecture.md)。

@@ -2,3 +2,4 @@ test
 build
 tmp
 .cursor/plans/
+/deploy/nginx/

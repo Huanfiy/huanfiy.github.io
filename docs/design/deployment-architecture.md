@@ -1,107 +1,97 @@
-# 网站部署与缓存架构
+# 发布产物与外部部署边界
 
-> 落档日期：2026-07-10
+> 初始落档日期：2026-07-10
 >
-> 部署基础设施提交：`b87164c`
+> 开源边界修订日期：2026-07-10
 >
-> 当前状态：缓存迁移阶段一、阶段二均已完成
+> 对应实现：`run.sh`、`.gitattributes`
 
-## 1. 目标
+## 1. 架构原则
 
-建立可追踪、可验证、可回退的静态网站发布链路，解决以下问题：
+本仓库是公开的静态博客项目。仓库只管理可复现的站点源文件、文章索引、发布产物规则和通用部署入口，不管理任何生产服务器配置。
 
-- 生产环境不再直接同步本地工作区，避免未提交文件进入线上目录；
-- 线上版本与 Git 提交建立一一对应关系；
-- CSS、JavaScript 与页面内容更新后，浏览器能够及时获得新版本；
-- 发布前后具备结构化校验，失败时返回非零状态；
-- 缓存、服务器配置和部署约束纳入仓库管理。
+服务器与托管平台配置必须位于仓库之外，包括但不限于：
 
-## 2. 覆盖范围与边界
+- Nginx、Apache、Caddy 或其他 Web Server 配置；
+- 域名解析、TLS 证书路径与续期策略；
+- 服务器账号、主机地址、部署目录与 SSH 配置；
+- 反向代理、访问认证、重定向、缓存头和 MIME 映射；
+- CDN、对象存储、Release 目录、软链接与回滚策略；
+- 密码文件、Token、Cookie 规则和受保护下载目录。
 
-### 2.1 覆盖范围
+上述内容应由私有基础设施仓库、托管平台控制台或运行环境管理。`/deploy/nginx/` 已加入 `.gitignore`，防止本机配置重新进入版本控制。
 
-- 发布入口：`run.sh deploy [--gen] [git-ref]`；
-- 发布边界：`.gitattributes` 中的 `export-ignore`；
-- 服务器配置：`deploy/nginx/huanfly.conf`；
-- 生产目录：`user@example.com:/srv/www/blog/`；
-- 线上版本标记：`/deploy-version.json`；
-- HTTP 缓存：HTML、JSON、XML、Markdown、Web App Manifest、第一方 CSS 与 JavaScript；
-- 部署后 Smoke Test：核心页面、共享资源、动态数据、缓存响应头和 Manifest MIME。
+## 2. 覆盖范围与非覆盖范围
 
-### 2.2 不覆盖范围
+### 2.1 仓库覆盖范围
 
-- Nginx release 目录与原子软链接切换；
-- 自动回滚和最近版本保留策略；
-- CDN 缓存清理；
-- Service Worker 资源缓存；
-- CSS、JavaScript 和图片的文件名内容指纹；
-- GitHub Actions 等远程持续部署平台。
+- `./run.sh gen`：从 `posts/*.md` 生成 `posts/posts.json`；
+- `git archive`：从指定 Git 提交生成临时发布产物；
+- `.gitattributes`：排除开发、文档与运维文件；
+- `deploy-version.json`：记录产物对应的完整 Git SHA；
+- Artifact 校验：检查必需文件、JSON 和 JavaScript 语法；
+- 可选 rsync 传输：目标地址由环境变量注入；
+- 通用线上 Smoke Test：检查版本标记、核心页面与静态资源可访问性。
 
-当前阶段使用 `rsync --delay-updates --delete-delay` 缩短混合版本窗口，但不具备原子发布语义。部署失败后需使用上一稳定 Git SHA 执行显式回退。
+### 2.2 仓库不覆盖范围
 
-## 3. 总体架构
+- Web Server、容器、虚拟机或托管平台配置；
+- 生产环境的缓存、压缩、MIME、TLS、认证与代理策略；
+- SSH 密钥、服务器账号和目录权限初始化；
+- 自动扩缩容、流量切换、原子发布和自动回滚；
+- GitHub Actions、GitHub Pages、Cloudflare Pages、Netlify、Vercel 等平台专属工作流。
+
+平台专属部署可以绕过 `./run.sh deploy`，直接使用仓库内容或自行调用 `git archive`。站点运行不依赖 rsync 或特定 Web Server。
+
+## 3. 数据流
 
 ```text
-本地验证
+Git 提交
    ↓
-提交并推送 origin/main
+git archive <git-ref>
    ↓
-./run.sh deploy [git-ref]
+临时 Artifact
+   ├─ 可选：重建 posts/posts.json
+   ├─ 写入 deploy-version.json
+   └─ 校验文件、JSON 与 JavaScript
    ↓
-校验工作区、依赖和远端提交可达性
+外部注入 DEPLOY_TARGET
    ↓
-git archive <commit> → 临时 artifact
+rsync 传输，或由外部平台采用其他发布方式
    ↓
-可选：仅在 artifact 内生成 posts/posts.json
+外部注入 PUBLIC_BASE_URL
    ↓
-写入 deploy-version.json
-   ↓
-JSON / JavaScript / 发布边界校验
-   ↓
-rsync --delay-updates --delete-delay
-   ↓
-线上版本、页面、资源、缓存与 MIME 验证
+版本与核心资源 Smoke Test
 ```
 
-生产环境只接收 Git 提交生成的 artifact，不读取工作区中的未提交内容。
+部署链路不读取仓库内的服务器配置文件，也不推断主机、账号、目录或域名。
 
-## 4. 发布产物设计
+## 4. 发布产物
 
 ### 4.1 产物来源
 
-`run.sh deploy` 将目标引用解析为完整 Git SHA，并确认该提交可从 `origin/main` 到达。产物通过以下方式生成：
+`./run.sh deploy [git-ref]` 将目标引用解析为完整 Git SHA，再执行：
 
 ```bash
 git archive --format=tar <commit-sha>
 ```
 
-该方式只包含目标提交中的跟踪文件。工作区修改、未跟踪文件和 `.git/` 不会进入 artifact。
+Artifact 只包含目标提交中的跟踪文件。工作区修改、未跟踪文件和 `.git/` 不会进入产物。部署前仍要求工作区保持干净，避免将本地状态误认为目标提交状态。
 
-### 4.2 发布边界
+### 4.2 导出边界
 
-`.gitattributes` 使用 `export-ignore` 排除以下开发与运维文件：
+`.gitattributes` 使用 `export-ignore` 排除以下内容：
 
 - `.gitattributes`、`.gitignore`；
-- 任意层级的 `.cursor/`、根目录 `.claude/`、`CLAUDE.md`；
-- 任意层级的 `README.md`、`*.log`、`.DS_Store` 和 `*.test.js`；
-- `run.sh`；
-- `deploy/`。
+- `.cursor/`、`.claude/`、`CLAUDE.md`；
+- `README.md`、`*.log`、`.DS_Store`、`*.test.js`；
+- `run.sh` 与 `deploy/`。
 
-新增仅供开发或运维使用的路径时，必须同步更新 `export-ignore` 并验证 archive 内容。
+发布产物不包含项目协作说明、测试文件或运维目录。
 
-### 4.3 文章索引生成
+### 4.3 版本标记
 
-默认部署使用提交中已有的 `posts/posts.json`。传入 `--gen` 时，文章索引只在临时 artifact 中重新生成，不修改仓库工作区：
-
-```bash
-./run.sh deploy --gen HEAD
-```
-
-该模式适用于验证历史提交中的 Markdown 内容，不替代提交前执行 `./run.sh gen` 并审查生成差异的常规流程。
-
-### 4.4 版本标记
-
-每次部署在 artifact 根目录生成 `deploy-version.json`：
+部署时在临时 Artifact 根目录生成 `deploy-version.json`：
 
 ```json
 {
@@ -112,181 +102,90 @@ git archive --format=tar <commit-sha>
 }
 ```
 
-Smoke Test 通过该文件确认线上版本与目标提交一致。该文件不作为业务配置使用。
+该文件用于部署后核对线上版本，不属于业务配置，也不写回工作区。
 
-## 5. HTTP 缓存策略
+## 5. 外部配置接口
 
-### 5.1 当前策略
+`./run.sh deploy` 使用以下环境变量：
 
-| 资源类型 | Cache-Control | 校验机制 | 目的 |
-|---|---|---|---|
-| HTML | `no-cache` | ETag / Last-Modified | 页面每次复用前确认版本 |
-| JSON / XML / Markdown | `no-cache` | ETag / Last-Modified | 动态列表、文章与 Sitemap 及时更新 |
-| Web App Manifest | `no-cache` | ETag / Last-Modified | 安装元数据及时更新 |
-| 第一方 CSS / JavaScript | `no-cache` | ETag / Last-Modified | 避免页面结构、脚本与样式版本错配 |
-| 图片 / 字体 | `max-age=2592000` | 到期后重验证 | 保留 30 天静态资源缓存 |
+| 变量 | 必填 | 作用 |
+|---|---|---|
+| `DEPLOY_TARGET` | 是 | rsync 目标；支持远程地址或本地目录 |
+| `PUBLIC_BASE_URL` | 是 | 部署完成后的公开访问地址，用于 Smoke Test |
+| `DEPLOY_REQUIRED_REF` | 否 | 设置后要求目标提交位于该 Git 引用历史中 |
 
-`no-cache` 允许浏览器保存响应，但复用前必须发起条件请求。文件未变化时，Nginx 返回 `304 Not Modified`，不重复传输响应体。
-
-### 5.2 Manifest MIME
-
-`manifest.webmanifest` 使用以下响应类型：
-
-```text
-Content-Type: application/manifest+json
-```
-
-该规则通过 Nginx 精确路径配置，不覆盖系统 MIME 映射表。
-
-### 5.3 查询参数迁移
-
-在 Nginx 切换前，CSS 与 JavaScript 曾使用以下临时缓存破坏参数：
-
-```text
-style.css?v=523b76e
-script.js?v=421a243
-```
-
-Nginx `no-cache` 已于 `2026-07-10 17:18:28 CST` 生效。阶段二原计划在旧缓存窗口于以下时间结束后执行：
-
-```text
-2026-07-11 17:18:28 CST
-```
-
-经确认可容忍短期旧内容，阶段二于 `2026-07-10 17:32:05 CST` 提前执行。所有页面已恢复稳定资源 URL：
-
-```text
-style.css
-script.js
-```
-
-迁移验收项：
-
-- [x] 线上 CSS 与 JavaScript 继续返回 `Cache-Control: no-cache`；
-- [x] ETag 条件请求返回 `304`；
-- [x] 删除全部共享 CSS 与 JavaScript 查询参数；
-- [x] 本地桌面和 390 px 手机视口验证通过；
-- [x] 提交、推送并部署明确 Git SHA；
-- [x] 线上页面实际加载普通资源 URL，功能和样式正常。
-
-提前迁移的已知残余风险仅覆盖曾缓存无查询参数资源、且仍持有旧 `max-age=86400` 响应的客户端。此类客户端最迟在 `2026-07-11 17:18:28 CST` 前可能暂时复用旧 CSS 或 JavaScript；强制刷新可立即触发重新请求。该风险不影响新访问客户端，且窗口结束后无需额外迁移动作。
-
-## 6. Nginx 配置管理
-
-仓库配置源为：
-
-```text
-deploy/nginx/huanfly.conf
-```
-
-线上生效路径为：
-
-```text
-/etc/nginx/sites-enabled/my_web
-```
-
-配置变更按以下顺序执行：
-
-1. 将当前线上配置备份到 `/etc/nginx/backups/`；
-2. 上传仓库候选配置；
-3. 执行 `sudo nginx -t`；
-4. 语法验证通过后执行 `sudo systemctl reload nginx`；
-5. 验证缓存头、MIME、条件请求和域名重定向；
-6. 失败时恢复备份并重新执行 `nginx -t`。
-
-2026-07-10 的切换备份为：
-
-```text
-/etc/nginx/backups/my_web.20260710-171828.conf
-```
-
-## 7. 部署前置条件
-
-执行生产部署前必须满足：
-
-- 工作区无已修改、已暂存或未跟踪文件；
-- `git-ref` 能解析为 Git 提交；
-- 目标提交已推送并可从 `origin/main` 到达；
-- 本机存在 Git、tar、rsync、SSH、curl 和 Python 3；
-- SSH 能够访问 `user@example.com`；
-- Nginx 缓存与 MIME 配置已生效。
-
-未满足任一条件时，部署命令返回非零状态。
-
-## 8. 校验与验收
-
-### 8.1 Artifact 校验
-
-- 必需页面、共享 CSS、共享 JavaScript、文章索引和 Manifest 存在；
-- `activity.json`、`posts/posts.json`、`manifest.webmanifest` 和版本标记为有效 JSON；
-- Node.js 可用时执行共享 JavaScript 语法检查；
-- artifact 不包含 `.git/`、`run.sh` 和 `deploy/`。
-- artifact 目录统一为 `0755`，文件统一为 `0644`，确保 Nginx 工作进程具备读取权限。
-
-### 8.2 线上 Smoke Test
-
-- `/deploy-version.json` 的 `commit` 等于目标 Git SHA；
-- 首页、博客页、工具页和关于页返回成功状态；
-- CSS、JavaScript、动态数据和 Manifest 可访问；
-- CSS 返回 `Cache-Control: no-cache` 和 ETag；
-- Manifest 返回 `application/manifest+json`。
-
-### 8.3 人工界面验证
-
-涉及样式、交互或响应式布局时，自动 Smoke Test 不能替代浏览器验证。至少覆盖：
-
-- 390 px 手机视口；
-- 1280 px 桌面视口；
-- 浅色与暗色主题；
-- 受影响页面的主要交互路径。
-
-## 9. 回退方式
-
-当前阶段使用显式 Git SHA 回退：
+示例：
 
 ```bash
+DEPLOY_TARGET='user@example.com:/srv/www/blog/' \
+PUBLIC_BASE_URL='https://blog.example.com' \
+DEPLOY_REQUIRED_REF='origin/main' \
+./run.sh deploy HEAD
+```
+
+示例值仅说明变量格式。真实服务器账号、SSH 主机和部署目录不得以部署配置形式写入受跟踪文件；站点 Canonical URL、Sitemap 等公开内容不受此限制。脚本不会自动执行 `git fetch`；使用 `DEPLOY_REQUIRED_REF` 前，应由调用环境更新对应引用。
+
+## 6. 文章索引模式
+
+常规部署使用目标提交中已有的 `posts/posts.json`。文章发布前执行：
+
+```bash
+./run.sh gen
+```
+
+`--gen` 只在临时 Artifact 内重建索引：
+
+```bash
+./run.sh deploy --gen <git-ref>
+```
+
+该选项不会修改工作区，不替代发布前审查并提交索引的常规流程。文章字段与生成规则见 [blog-auto-publish.md](blog-auto-publish.md)。
+
+## 7. 通用部署行为
+
+rsync 传输使用以下稳定参数：
+
+- `--delay-updates`：文件传输完成后再切换临时文件；
+- `--delete-delay`：传输完成后删除目标端多余文件；
+- `--chmod=D755,F644`：Artifact 目录设为 `0755`，文件设为 `0644`。
+
+该传输方式不具备原子发布语义。若托管环境要求零混合版本窗口或秒级回退，应在仓库之外采用 Release 目录、软链接切换或平台原子部署能力。
+
+## 8. Smoke Test 边界
+
+部署完成后，脚本验证：
+
+- `/deploy-version.json` 的 `commit` 等于目标 Git SHA；
+- 首页、博客页、工具页和关于页可访问；
+- 共享 CSS、共享 JavaScript、动态数据与 Web App Manifest 可访问。
+
+脚本不验证以下服务器策略：
+
+- `Cache-Control`、ETag 或 Last-Modified；
+- Content-Type 与 MIME 映射；
+- HTTPS、证书链、域名重定向；
+- 压缩、CDN、认证或反向代理行为。
+
+这些策略由外部托管环境负责。项目页面应避免依赖某一种 Web Server 的私有行为。
+
+## 9. 回退
+
+通用 rsync 部署可重新发布上一稳定提交：
+
+```bash
+DEPLOY_TARGET='user@example.com:/srv/www/blog/' \
+PUBLIC_BASE_URL='https://blog.example.com' \
 ./run.sh deploy <previous-stable-sha>
 ```
 
-目标 SHA 必须位于 `origin/main` 历史中。该命令重新生成 artifact、部署并执行 Smoke Test。
+该方式会重新传输文件，不等同于原子回滚。使用 GitHub Pages、Cloudflare Pages 或其他托管平台时，应使用对应平台的版本回退能力。
 
-此方式需要重新传输文件，不属于原子回滚。出现以下任一条件时，应升级为 `releases/<SHA>` 与 `current` 软链接：
+## 10. 验收清单
 
-- 发布切换期间不允许出现混合版本；
-- 要求在秒级恢复上一版本；
-- 部署频率明显提高；
-- 引入 CDN、Service Worker 或长期不可变资源缓存。
-
-## 10. 后续演进
-
-当资源数量、访问流量或性能预算需要长期缓存时，采用真正的文件名内容指纹：
-
-```text
-style.<content-hash>.css
-script.<content-hash>.js
-```
-
-指纹资源使用 `Cache-Control: public, max-age=31536000, immutable`，HTML 与资源映射清单继续使用 `no-cache`。旧指纹文件必须保留至所有旧 HTML 缓存失效，避免产生资源 `404`。
-
-当前阶段不引入该机制，避免为约 63 KB 的共享 CSS 与 JavaScript 增加构建复杂度。
-
-## 11. 运维检查清单
-
-### 发布
-
-- [ ] 本地验证通过；
-- [ ] 变更已提交并推送；
-- [ ] 执行 `./run.sh deploy [git-ref]`；
-- [ ] 输出的目标 SHA 与预期一致；
-- [ ] Artifact 校验通过；
-- [ ] 线上 Smoke Test 通过；
-- [ ] 受影响页面完成浏览器人工验证。
-
-### Nginx 变更
-
-- [ ] 仓库配置已更新；
-- [ ] 线上旧配置已备份；
-- [ ] `nginx -t` 通过；
-- [ ] reload 后响应头符合预期；
-- [ ] ETag 条件请求返回 `304`；
-- [ ] `www.huanfly.com` 重定向至 `https://huanfly.com/`。
+- [ ] 仓库内不存在 Nginx 或其他生产 Web Server 配置；
+- [ ] 仓库内不存在服务器账号、部署目录、证书路径或认证文件；
+- [ ] `DEPLOY_TARGET` 与 `PUBLIC_BASE_URL` 由运行环境注入；
+- [ ] Artifact 仅来自指定 Git 提交；
+- [ ] `deploy-version.json` 与目标提交一致；
+- [ ] 核心页面与静态资源可访问；
+- [ ] 平台专属缓存、TLS、MIME 和回退策略在仓库外验证。
