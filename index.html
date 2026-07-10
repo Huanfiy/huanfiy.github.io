@@ -75,6 +75,7 @@
             <p class="hero-kicker">Embedded · Maker · Blogger</p>
             <h1 class="hero-title">你好，我是 <span class="marker">Huanfly</span></h1>
             <p class="hero-sub">一名热衷于技术分享与科技制作的探索者。<br>在这里记录学习，分享生活，构建有趣的世界。</p>
+            <p class="hero-greeting" id="hero-greeting" aria-live="polite"></p>
             <div class="hero-actions">
                 <a href="#explore" class="btn">开始探索</a>
                 <a href="about.html" class="btn btn-outline">了解更多</a>
@@ -157,6 +158,14 @@
         </div>
     </section>
 
+    <!-- 最新动态：文章 + 站点更新合流时间线 -->
+    <section class="container activity-section">
+        <h2 class="section-title" data-aos="fade-up">最新动态</h2>
+        <div class="activity-timeline" id="activity-timeline" data-aos="fade-up">
+            <div class="loading-block"><i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+    </section>
+
     <!-- 页脚 -->
     <footer>
         <div class="container">
@@ -167,6 +176,11 @@
                 <a href="mailto:huanfly999@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
             </div>
             <p class="footer-note">&copy; 2026 Huanfly. Design with <i class="fas fa-heart"></i> &amp; 罗小黑</p>
+            <p class="footer-note site-stats" id="site-stats">
+                <span title="独立访客"><i class="fas fa-paw"></i> 访客 <span id="busuanzi_value_site_uv"></span></span>
+                <span aria-hidden="true">·</span>
+                <span title="总浏览量"><i class="far fa-eye"></i> 浏览 <span id="busuanzi_value_site_pv"></span></span>
+            </p>
             <p class="footer-note"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2025388790号</a></p>
         </div>
     </footer>

@@ -539,6 +539,22 @@ header .container {
     margin: 0 auto 2.4rem;
 }
 
+/* 时间感知问候语：手写便签风 */
+.hero-greeting {
+    font-size: 0.98rem;
+    color: var(--light-text);
+    font-style: italic;
+    margin: -1.4rem auto 2.2rem;
+    min-height: 1.8em;
+    opacity: 0;
+    animation: greeting-in 0.9s ease 0.4s forwards;
+}
+
+@keyframes greeting-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .hero-actions {
     display: flex;
     gap: 1.2rem;
@@ -1165,6 +1181,77 @@ header .container {
 }
 
 /* =========================================
+   首页：最新动态时间线
+   ========================================= */
+.activity-section {
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+}
+
+.activity-timeline {
+    position: relative;
+    max-width: 680px;
+    margin: 0 auto;
+    padding-left: 28px;
+    border-left: 3px dashed var(--line-soft);
+}
+
+.activity-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.activity-item:last-child {
+    margin-bottom: 0.3rem;
+}
+
+.activity-item .timeline-dot {
+    top: 4px;
+}
+
+.activity-body {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.activity-badge {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--tone, var(--primary-color));
+    background: var(--tone-soft, var(--primary-soft));
+    border: 1.5px solid color-mix(in srgb, var(--tone, var(--primary-color)) 45%, transparent);
+    border-radius: var(--wobble-btn);
+    padding: 0 10px;
+}
+
+.activity-title {
+    flex: 1;
+    min-width: 200px;
+    line-height: 1.6;
+}
+
+.activity-title a {
+    color: var(--dark-text);
+    font-weight: 700;
+    border-bottom: 2px dashed transparent;
+    transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.activity-title a:hover {
+    color: var(--primary-color);
+    border-bottom-color: color-mix(in srgb, var(--primary-color) 50%, transparent);
+}
+
+.activity-time {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    color: var(--light-text);
+}
+
+/* =========================================
    关于页：简介 / 时间线 / 兴趣
    ========================================= */
 .about-intro {
@@ -1637,6 +1724,23 @@ footer::before {
 
 .footer-note i {
     color: var(--rose);
+}
+
+/* 不蒜子访问统计：数字回填成功后渐显 */
+.site-stats {
+    display: none;
+    justify-content: center;
+    gap: 12px;
+}
+
+.site-stats.visible {
+    display: flex;
+    animation: greeting-in 0.8s ease both;
+}
+
+.site-stats i {
+    color: var(--primary-color);
+    margin-right: 2px;
 }
 
 .social-icons {

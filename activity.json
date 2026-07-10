@@ -1,0 +1,29 @@
+[
+    {
+        "type": "site",
+        "date": "2026-07-09",
+        "title": "站点体验升级：PWA 支持、文章 AI 摘要与最新动态时间线"
+    },
+    {
+        "type": "site",
+        "date": "2026-07-03",
+        "title": "全站重构为手绘绘本风罗小黑主题"
+    },
+    {
+        "type": "tool",
+        "date": "2026-07-03",
+        "title": "键盘刻意练习升级：转移建模与间隔重复算法",
+        "link": "tools/keyboard.html"
+    },
+    {
+        "type": "site",
+        "date": "2026-02-28",
+        "title": "上线暗色模式「夜之森林」与文章搜索"
+    },
+    {
+        "type": "tool",
+        "date": "2026-02-24",
+        "title": "上线键盘刻意练习工具",
+        "link": "tools/keyboard.html"
+    }
+]

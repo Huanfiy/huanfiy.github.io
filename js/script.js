@@ -352,11 +352,130 @@ function initAmbientSpirits() {
 }
 
 /* =============================================================
+ * 时间感知问候语：按时段输出森林世界观文案（仅首页）
+ * ============================================================= */
+function initTimeGreeting() {
+    const el = document.getElementById('hero-greeting');
+    if (!el) return;
+
+    const hour = new Date().getHours();
+    let text;
+    if (hour >= 5 && hour < 7) {
+        text = '清晨的森林刚醒，露水还挂在叶尖上。你来得真早 🌿';
+    } else if (hour < 11) {
+        text = '上午好！阳光穿过树叶洒下来，是个适合折腾的日子 ☀️';
+    } else if (hour < 13) {
+        text = '晌午了，小黑趴在树荫下打盹。记得吃饭休息哦 🍃';
+    } else if (hour < 17) {
+        text = '下午的风带着草木香，泡杯茶慢慢逛吧 🍵';
+    } else if (hour < 19) {
+        text = '夕阳把山丘染成了橘子色，今天过得怎么样？🌄';
+    } else if (hour < 23) {
+        text = '夜幕降临，萤火虫提着小灯笼出来巡山了 ✨';
+    } else {
+        text = '夜深了，连小黑都睡着了。早点休息，梦里也有森林 🌙';
+    }
+    el.textContent = text;
+}
+
+/* =============================================================
+ * 最新动态时间线：posts.json（文章）+ activity.json（站事）合流（仅首页）
+ * ============================================================= */
+function initActivityTimeline() {
+    const box = document.getElementById('activity-timeline');
+    if (!box) return;
+
+    const TYPE_BADGE = {
+        post: { label: '文章', tone: 'tone-green', icon: 'fa-pen-nib' },
+        tool: { label: '工具', tone: 'tone-teal', icon: 'fa-toolbox' },
+        site: { label: '站点', tone: 'tone-amber', icon: 'fa-seedling' }
+    };
+
+    function relativeTime(dateStr) {
+        const days = Math.floor((Date.now() - new Date(dateStr + 'T00:00:00')) / 86400000);
+        if (days <= 0) return '今天';
+        if (days < 30) return days + ' 天前';
+        if (days < 365) return Math.floor(days / 30) + ' 个月前';
+        return Math.floor(days / 365) + ' 年前';
+    }
+
+    Promise.all([
+        fetch('posts/posts.json').then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch('activity.json').then(r => r.ok ? r.json() : []).catch(() => [])
+    ]).then(([posts, activities]) => {
+        const items = [
+            ...posts.map(p => ({
+                type: 'post',
+                date: p.date,
+                title: p.title,
+                link: 'blog.html#post=' + encodeURIComponent(p.file)
+            })),
+            ...activities
+        ].filter(item => item.date && item.title)
+         .sort((a, b) => b.date.localeCompare(a.date))
+         .slice(0, 6);
+
+        if (!items.length) {
+            box.closest('section')?.remove();
+            return;
+        }
+
+        box.innerHTML = items.map(item => {
+            const badge = TYPE_BADGE[item.type] || TYPE_BADGE.site;
+            const title = item.link
+                ? `<a href="${item.link}">${item.title}</a>`
+                : item.title;
+            return `<div class="activity-item ${badge.tone}">
+                <span class="timeline-dot"></span>
+                <div class="activity-body">
+                    <span class="activity-badge"><i class="fas ${badge.icon}"></i> ${badge.label}</span>
+                    <span class="activity-title">${title}</span>
+                    <time class="activity-time" datetime="${item.date}" title="${item.date}">${relativeTime(item.date)}</time>
+                </div>
+            </div>`;
+        }).join('');
+    }).catch(() => {
+        box.closest('section')?.remove();
+    });
+}
+
+/* =============================================================
+ * 不蒜子访问统计：等待其脚本回填后再展示，失败则保持隐藏
+ * ============================================================= */
+function initBusuanzi() {
+    const box = document.getElementById('site-stats');
+    if (!box) return;
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js';
+    script.onerror = () => box.remove();
+    document.body.appendChild(script);
+
+    // 轮询等待不蒜子回填数字（其脚本无加载完成事件）
+    let tries = 0;
+    const timer = setInterval(() => {
+        const pv = document.getElementById('busuanzi_value_site_pv');
+        tries += 1;
+        if (pv && pv.textContent.trim() !== '') {
+            box.classList.add('visible');
+            clearInterval(timer);
+        } else if (tries > 40) {
+            box.remove();
+            clearInterval(timer);
+        }
+    }, 250);
+}
+
+/* =============================================================
  * 基础交互：主题切换 / 移动端菜单 / 平滑滚动
  * ============================================================= */
 document.addEventListener('DOMContentLoaded', () => {
     initSpiritBurstEffect();
     initAmbientSpirits();
+    initTimeGreeting();
+    initActivityTimeline();
+    initBusuanzi();
 
     // Theme Toggle Logic
     const themeToggles = document.querySelectorAll('.theme-toggle');
