@@ -10,13 +10,12 @@
 
 ## 设计风格
 
-采用罗小黑战记主题，以森林绿（`#6ab04c`）为主色调，搭配灵质蓝（`#7ed6df`）强调色，整体风格清新治愈。大圆角卡片、柔和阴影、玻璃拟态导航栏，配合 AOS 滚动动画，营造轻松自然的浏览体验。
+采用罗小黑战记主题，以森林绿（`#6ab04c`）为主色调，搭配灵质蓝（`#7ed6df`）强调色，整体风格清新治愈。大圆角卡片、柔和阴影、玻璃拟态导航栏，配合自托管的滚动入场动画（CSS 关键帧 + IntersectionObserver），营造轻松自然的浏览体验。
 
 ## 技术栈
 
 - HTML5 + CSS3 + 原生 JavaScript，无框架
 - [Marked.js](https://github.com/markedjs/marked) — Markdown 解析
-- [AOS.js](https://github.com/michalsnik/aos) — 滚动动画
 - [Font Awesome](https://fontawesome.com/) — 图标
 
 ## 项目结构

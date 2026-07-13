@@ -147,7 +147,9 @@
 
 - `prefers-reduced-motion: reduce`：萤火层不创建；点击迸发退化为单个扩散圆环（`.reduced-motion-click`）；
   CSS 关键帧动画与 hover 位移全部关闭；
-- AOS 滚动入场仅作增强，脚本加载失败不影响内容可见性。
+- 入场动画自托管：首屏 `.rise-in` 为纯 CSS 关键帧，首帧即播放；视口外元素 `[data-reveal]` 由
+  `js/script.js` 的 IntersectionObserver 触发，且仅在 `html.js`（head 内联脚本标记 JS 可用）时才隐藏，
+  脚本失效时内容直接可见。
 
 ### 6.4 z-index 秩序
 
@@ -157,9 +159,8 @@
 
 | 依赖 | 版本 | 源 | 失败行为 |
 |---|---|---|---|
-| LXGW WenKai Screen | 1.7.0 | jsDelivr | 落到 PingFang SC / 微软雅黑，布局不变 |
+| LXGW WenKai Screen | 1.7.0 | jsDelivr（非阻塞加载，两个直链 CSS） | 落到 PingFang SC / 微软雅黑，布局不变 |
 | Font Awesome | 6.4.0 | cdnjs | 图标缺失，文字信息完整 |
-| AOS | 2.3.1 | unpkg | 无滚动入场动画，内容直接可见 |
 | Marked.js | 4.0.12 | jsDelivr → unpkg → cdnjs 三级回退 | 三源均失败时文章页给出显式错误提示 |
 | busuanzi | 2.3 | `busuanzi.ibruce.info` | 页脚访问统计保持隐藏，不影响导航与正文 |
 | giscus | 未固定版本 | `giscus.app/client.js` | `categoryId` 为空或脚本失败时不显示评论区，不影响文章阅读 |

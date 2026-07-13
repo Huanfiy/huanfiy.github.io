@@ -237,7 +237,6 @@ const nodes = [
   // CDN 依赖
   { id: 'lxgw',   x: 48,  y: 448, w: 210, h: 44, label: '霞鹜文楷屏幕版 1.7.0', sub: 'jsDelivr · 失败落系统字体', color: 'var(--purple)' },
   { id: 'fa',     x: 48,  y: 512, w: 210, h: 44, label: 'Font Awesome 6.4.0',   sub: 'cdnjs · 失败仅缺图标',     color: 'var(--purple)' },
-  { id: 'aos',    x: 272, y: 448, w: 210, h: 44, label: 'AOS 2.3.1',            sub: 'unpkg · 失败无入场动画',   color: 'var(--purple)' },
   { id: 'marked', x: 272, y: 512, w: 210, h: 44, label: 'Marked.js 4.0.12',     sub: '三级回退 · 仅 blog 加载',  color: 'var(--purple)' },
   // tools/ 独立应用
   { id: 'tools',  x: 640, y: 480, w: 250, h: 56, label: 'keyboard / esp32 / buy', sub: '自带样式的独立工具页', color: 'var(--red)' },
@@ -264,7 +263,7 @@ const steps = [
   {
     label: '① 总览', title: '架构总览',
     desc: '纯静态多页站点：4 个页面共享一套设计 Token 与动效脚本，内容由 JSON/Markdown 客户端渲染；无构建步骤，rsync 直接部署。',
-    nodes: ['idx', 'blog', 'tool', 'about', 'css', 'js', 'ijs', 'posts', 'idata', 'pic', 'lxgw', 'fa', 'aos', 'marked', 'tools'],
+    nodes: ['idx', 'blog', 'tool', 'about', 'css', 'js', 'ijs', 'posts', 'idata', 'pic', 'lxgw', 'fa', 'marked', 'tools'],
     edges: ['link', 'fetch1', 'fetch2', 'cdn', 'alias'],
     kv: [['页面', '4 个 HTML'], ['共享资源', 'style.css + 2 个 JS'], ['构建 / 打包', '无'], ['部署', './run.sh deploy (rsync)']],
   },
@@ -291,10 +290,10 @@ const steps = [
   },
   {
     label: '⑤ CDN 依赖', title: '外部依赖：全部可降级',
-    desc: '4 项 CDN 依赖各自定义了失败行为，任一失败不阻断内容阅读。Marked.js 采用 jsDelivr → unpkg → cdnjs 三级回退，三源均失败时文章页显式报错。',
-    nodes: ['lxgw', 'fa', 'aos', 'marked'],
+    desc: '3 项 CDN 依赖各自定义了失败行为，任一失败不阻断内容阅读。入场动画已自托管（CSS 关键帧 + IntersectionObserver），不再依赖 CDN。Marked.js 采用 jsDelivr → unpkg → cdnjs 三级回退，三源均失败时文章页显式报错。',
+    nodes: ['lxgw', 'fa', 'marked'],
     edges: ['cdn'],
-    kv: [['字体失败', '落 PingFang / 雅黑，布局不变'], ['图标失败', '文字信息完整'], ['AOS 失败', '内容直接可见'], ['Marked 失败', '显式错误提示']],
+    kv: [['字体失败', '落 PingFang / 雅黑，布局不变'], ['图标失败', '文字信息完整'], ['入场动画', '自托管，JS 失效内容直接可见'], ['Marked 失败', '显式错误提示']],
   },
   {
     label: '⑥ 兼容边界', title: 'tools/ 兼容契约：删除即破坏',
