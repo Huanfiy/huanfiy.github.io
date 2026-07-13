@@ -13,6 +13,7 @@
             } catch (error) {
                 document.documentElement.setAttribute('data-theme', 'light');
             }
+            document.documentElement.classList.add('js');
         })();
     </script>
     <title>博客 - Huanfly</title>
@@ -40,7 +41,6 @@
     </noscript>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- Marked.js 用于解析 Markdown (主CDN + 备用CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/marked@4.0.12/marked.min.js"></script>
     <script>
@@ -79,9 +79,9 @@
 
     <!-- 列表展示区域 -->
     <main id="blog-list-view" class="container page">
-        <h2 class="section-title" data-aos="fade-up">最新文章</h2>
+        <h2 class="section-title" data-reveal>最新文章</h2>
 
-        <div class="blog-toolbar" data-aos="fade-up">
+        <div class="blog-toolbar" data-reveal>
             <div class="blog-search">
                 <i class="fas fa-search"></i>
                 <input type="text" id="blog-search-input" placeholder="搜索文章标题、简介或标签…">
@@ -123,11 +123,8 @@
         </div>
     </footer>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/script.js"></script>
     <script>
-        AOS.init({ duration: 800, once: true });
-
         // === 默认配图：基于 tag 生成 SVG 渐变图 ===
         const TAG_GRADIENTS = {
             'Git':   ['#8fa8e8', '#a58cd4'],
@@ -166,7 +163,7 @@
                 return;
             }
             grid.innerHTML = posts.map((post, i) => `
-                <article class="card blog-card" data-aos="fade-up" data-aos-delay="${Math.min(i, 4) * 80}"
+                <article class="card blog-card" data-reveal style="--rise-delay: ${Math.min(i, 4) * 80}ms"
                          onclick="openPost('${post.file}')">
                     <div class="blog-thumb">
                         <img src="${getCoverUrl(post)}" alt="${post.title || post.tag || '文章'}"
@@ -184,7 +181,7 @@
                     </div>
                 </article>
             `).join('');
-            AOS.refresh();
+            observeReveal(grid);
         }
 
         let allPosts = [];
@@ -243,7 +240,6 @@
             } else {
                 document.getElementById('blog-detail-view').style.display = 'none';
                 document.getElementById('blog-list-view').style.display = 'block';
-                setTimeout(() => AOS.refresh(), 100);
             }
         }
 
@@ -384,7 +380,6 @@
             history.pushState('', document.title, location.pathname + location.search);
             document.getElementById('blog-detail-view').style.display = 'none';
             document.getElementById('blog-list-view').style.display = 'block';
-            setTimeout(() => AOS.refresh(), 100);
         }
     </script>
 </body>

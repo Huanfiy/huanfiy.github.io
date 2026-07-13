@@ -468,9 +468,35 @@ function initBusuanzi() {
 }
 
 /* =============================================================
+ * 滚动浮现（替代 AOS）：进入视口后播放入场动画
+ * 动态渲染的内容（如博客卡片）插入后调用 observeReveal(容器) 登记
+ * ============================================================= */
+const revealObserver = ('IntersectionObserver' in window)
+    ? new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { rootMargin: '0px 0px -100px 0px' })
+    : null;
+
+window.observeReveal = root => {
+    (root || document).querySelectorAll('[data-reveal]:not(.revealed)').forEach(el => {
+        if (revealObserver) {
+            revealObserver.observe(el);
+        } else {
+            el.classList.add('revealed');
+        }
+    });
+};
+
+/* =============================================================
  * 基础交互：主题切换 / 移动端菜单 / 平滑滚动
  * ============================================================= */
 document.addEventListener('DOMContentLoaded', () => {
+    observeReveal(document);
     initSpiritBurstEffect();
     initAmbientSpirits();
     initTimeGreeting();

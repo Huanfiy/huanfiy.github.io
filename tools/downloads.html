@@ -13,6 +13,7 @@
                 } catch (error) {
                     document.documentElement.setAttribute("data-theme", "light");
                 }
+                document.documentElement.classList.add("js");
             })();
         </script>
         <title>下载中心 - Huanfly</title>
@@ -28,7 +29,6 @@
         </noscript>
         <link rel="stylesheet" href="../css/style.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-        <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
         <style>
             .download-grid {
                 grid-template-columns: repeat(auto-fill, minmax(300px, 380px));
@@ -217,15 +217,15 @@
             </a>
 
             <section aria-labelledby="downloads-title">
-                <h1 class="section-title" id="downloads-title" data-aos="fade-up">下载中心</h1>
-                <p class="section-lead" data-aos="fade-up">
+                <h1 class="section-title" id="downloads-title" data-reveal>下载中心</h1>
+                <p class="section-lead" data-reveal>
                     可直接复用的 Skills、配置与开发资源；下载次数来自公开 Release 的真实统计。
                 </p>
 
                 <div class="grid-3 download-grid">
                     <article
                         class="card tone-violet download-card"
-                        data-aos="fade-up"
+                        data-reveal
                         data-release-repo="Huanfiy/huanfiy.github.io"
                         data-release-tag="tech-visual-explainer-v1.0.0"
                         data-release-asset="tech-visual-explainer-v1.0.0.zip"
@@ -292,7 +292,7 @@
                     </article>
                 </div>
 
-                <p class="install-note" data-aos="fade-up">
+                <p class="install-note" data-reveal>
                     <strong>安装：</strong>将 ZIP 解压到 <code>~/.codex/skills/</code>，保持
                     <code>tech-visual-explainer/SKILL.md</code> 目录结构，然后新开 Codex 会话。包内暂未附加开源许可证。
                 </p>
@@ -308,7 +308,6 @@
             </div>
         </footer>
 
-        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
         <script src="../js/script.js"></script>
         <script>
             const RELEASE_CACHE_MS = 15 * 60 * 1000;
@@ -390,15 +389,6 @@
                     status.textContent = "统计暂不可用，下载链接仍可使用";
                     console.warn("download metadata unavailable", error);
                 }
-            }
-
-            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            if (window.AOS && !reducedMotion) {
-                AOS.init({ duration: 800, once: true });
-            } else {
-                document.querySelectorAll("[data-aos]").forEach((element) => {
-                    element.removeAttribute("data-aos");
-                });
             }
 
             document.querySelectorAll("[data-release-repo]").forEach(hydrateDownloadCard);

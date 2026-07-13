@@ -1713,6 +1713,36 @@ header .container {
 }
 
 /* =========================================
+   入场动画（原 AOS 替代，零外部依赖）
+   .rise-in      —— 首屏元素：首帧绘制即播放
+   [data-reveal] —— 视口外元素：滚动进入视口后由
+                    js/script.js 的 IntersectionObserver 加 .revealed
+   延迟统一用 --rise-delay 控制
+   ========================================= */
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 100px, 0);
+    }
+}
+
+.rise-in {
+    animation: rise-in 0.8s ease backwards;
+    animation-delay: var(--rise-delay, 0s);
+}
+
+/* 仅 JS 就绪（html.js）后才隐藏，脚本失效时内容保持可见 */
+html.js [data-reveal] {
+    opacity: 0;
+}
+
+html.js [data-reveal].revealed {
+    opacity: 1;
+    animation: rise-in 0.8s ease backwards;
+    animation-delay: var(--rise-delay, 0s);
+}
+
+/* =========================================
    灵气动效层（点击迸发 + 漂浮萤火）
    ========================================= */
 .burst-layer {
@@ -1888,6 +1918,15 @@ footer::before {
     .blog-card:hover,
     .btn:hover {
         transform: none;
+    }
+
+    .rise-in,
+    html.js [data-reveal].revealed {
+        animation: none;
+    }
+
+    html.js [data-reveal] {
+        opacity: 1;
     }
 }
 

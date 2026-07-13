@@ -13,6 +13,7 @@
                 } catch (error) {
                     document.documentElement.setAttribute("data-theme", "light");
                 }
+                document.documentElement.classList.add("js");
             })();
         </script>
         <title>技术可视化 - Huanfly</title>
@@ -26,7 +27,6 @@
         </noscript>
         <link rel="stylesheet" href="../css/style.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-        <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
         <style>
             .visualization-grid {
                 grid-template-columns: repeat(auto-fill, minmax(280px, 340px));
@@ -87,8 +87,8 @@
             <a href="../tool.html" class="btn btn-outline btn-back"> <i class="fas fa-arrow-left"></i> 返回工具库 </a>
 
             <section aria-labelledby="visualization-title">
-                <h1 class="section-title" id="visualization-title" data-aos="fade-up">技术可视化</h1>
-                <p class="section-lead" data-aos="fade-up">
+                <h1 class="section-title" id="visualization-title" data-reveal>技术可视化</h1>
+                <p class="section-lead" data-reveal>
                     从物理直觉到工程闭环，用交互图解理解技术系统为何这样工作。
                 </p>
 
@@ -96,7 +96,7 @@
                     <a
                         class="card entry-card tone-teal visualization-card"
                         href="visualizations/foc.html"
-                        data-aos="fade-up"
+                        data-reveal
                         aria-label="打开 FOC 场定向控制技术可视化"
                     >
                         <div class="card-icon"><i class="fas fa-wave-square"></i></div>
@@ -111,7 +111,7 @@
                     </a>
                 </div>
 
-                <p class="visualization-note" data-aos="fade-up">
+                <p class="visualization-note" data-reveal>
                     这里会持续加入嵌入式、控制算法、系统架构与 AI 原理的交互式图解。
                 </p>
             </section>
@@ -126,16 +126,6 @@
             </div>
         </footer>
 
-        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
         <script src="../js/script.js"></script>
-        <script>
-            if (window.AOS) {
-                AOS.init({ duration: 800, once: true });
-            } else {
-                document.querySelectorAll("[data-aos]").forEach((element) => {
-                    element.removeAttribute("data-aos");
-                });
-            }
-        </script>
     </body>
 </html>

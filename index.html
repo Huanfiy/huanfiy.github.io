@@ -13,6 +13,7 @@
             } catch (error) {
                 document.documentElement.setAttribute('data-theme', 'light');
             }
+            document.documentElement.classList.add('js');
         })();
     </script>
     <title>Huanfly的空间 - 记录与分享</title>
@@ -41,7 +42,6 @@
     </noscript>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 <body>
 
@@ -73,7 +73,7 @@
             <span class="blob blob-3"></span>
         </div>
 
-        <div class="hero-content container" data-aos="fade-up">
+        <div class="hero-content container rise-in">
             <div class="hero-avatar">
                 <img src="picture/icon.png" alt="Huanfly">
             </div>
@@ -135,10 +135,10 @@
 
     <!-- 核心板块入口 -->
     <section id="explore" class="container" style="padding-top: 2rem;">
-        <h2 class="section-title" data-aos="fade-up">随便逛逛</h2>
+        <h2 class="section-title" data-reveal>随便逛逛</h2>
         <div class="grid-3">
             <!-- 博客入口 -->
-            <article class="card entry-card tone-green" data-aos="fade-up" data-aos-delay="100" onclick="location.href='blog.html'">
+            <article class="card entry-card tone-green" data-reveal style="--rise-delay: .1s" onclick="location.href='blog.html'">
                 <div class="card-icon"><i class="fas fa-pen-nib"></i></div>
                 <h3>技术博客</h3>
                 <p>分享嵌入式开发、编程心得与折腾记录，记录成长的每一步。</p>
@@ -146,7 +146,7 @@
             </article>
 
             <!-- 工具入口 -->
-            <article class="card entry-card tone-teal" data-aos="fade-up" data-aos-delay="200" onclick="location.href='tool.html'">
+            <article class="card entry-card tone-teal" data-reveal style="--rise-delay: .2s" onclick="location.href='tool.html'">
                 <div class="card-icon"><i class="fas fa-toolbox"></i></div>
                 <h3>实用工具箱</h3>
                 <p>自制或收集的实用在线工具。提高效率，解决小问题。</p>
@@ -154,7 +154,7 @@
             </article>
 
             <!-- 关于入口 -->
-            <article class="card entry-card tone-violet" data-aos="fade-up" data-aos-delay="300" onclick="location.href='about.html'">
+            <article class="card entry-card tone-violet" data-reveal style="--rise-delay: .3s" onclick="location.href='about.html'">
                 <div class="card-icon"><i class="fas fa-user-astronaut"></i></div>
                 <h3>关于我</h3>
                 <p>了解更多关于我的故事、技能栈以及联系方式。</p>
@@ -165,8 +165,8 @@
 
     <!-- 最新动态：文章 + 站点更新合流时间线 -->
     <section class="container activity-section">
-        <h2 class="section-title" data-aos="fade-up">最新动态</h2>
-        <div class="activity-timeline" id="activity-timeline" data-aos="fade-up">
+        <h2 class="section-title" data-reveal>最新动态</h2>
+        <div class="activity-timeline" id="activity-timeline" data-reveal>
             <div class="loading-block"><i class="fas fa-spinner fa-spin"></i></div>
         </div>
     </section>
@@ -191,14 +191,6 @@
     </footer>
 
     <!-- 脚本 -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/script.js"></script>
-    <script>
-        AOS.init({
-            duration: 800,
-            once: true,
-            offset: 100
-        });
-    </script>
 </body>
 </html>

@@ -13,6 +13,7 @@
             } catch (error) {
                 document.documentElement.setAttribute('data-theme', 'light');
             }
+            document.documentElement.classList.add('js');
         })();
     </script>
     <title>关于我 - Huanfly</title>
@@ -40,7 +41,6 @@
     </noscript>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 <body>
 
@@ -66,7 +66,7 @@
     <main class="container page" style="max-width: 900px;">
 
         <!-- 个人简介 -->
-        <section class="about-intro" data-aos="fade-up">
+        <section class="about-intro rise-in">
             <h1>关于 <span class="marker">Huanfly</span></h1>
             <p>
                 你好！我是 Huanfly，主职是嵌入式软件工程师。日常主要围绕 MCU、RTOS 与外设系统做开发，也长期进行软硬件协同实践, 目前有一间小工作室， 可以做一些小型嵌入式产品的全流程开发。
@@ -85,7 +85,7 @@
         </section>
 
         <!-- 经历时间线 -->
-        <section data-aos="fade-up" data-aos-delay="100" style="margin-bottom: 4rem;">
+        <section data-reveal style="margin-bottom: 4rem; --rise-delay: .1s">
             <h2 class="section-title">我的旅程</h2>
             <div class="timeline">
                 <div class="timeline-item tone-green">
@@ -112,7 +112,7 @@
         </section>
 
         <!-- 兴趣 -->
-        <section id="interest-section" data-aos="fade-up" data-aos-delay="200" style="margin-bottom: 4rem;">
+        <section id="interest-section" data-reveal style="margin-bottom: 4rem; --rise-delay: .2s">
             <h2 class="section-title">兴趣爱好</h2>
 
             <!-- 兴趣卡片列表视图 -->
@@ -197,11 +197,7 @@
         </div>
     </footer>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="js/script.js"></script>
     <script src="js/interests.js"></script>
-    <script>
-        AOS.init({ duration: 800, once: true });
-    </script>
 </body>
 </html>
