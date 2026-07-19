@@ -27,7 +27,7 @@ Deploys never copy the working tree directly. `run.sh deploy` requires a clean w
 - `blog.html` — Blog system: article grid + Markdown detail view (toggles visibility); article head renders date/tag/word-count/reading-time + AI summary from front matter; giscus comments (disabled until `categoryId` is filled in `GISCUS_CONFIG`)
 - `tool.html` — Tools hub with inline ICO converter + links to standalone tools
 - `about.html` — Profile with timeline and interest cards
-- `tools/` — Standalone tool pages (keyboard practice, ESP32 pin mapper, link converter)
+- `tools/` — Standalone tool pages (keyboard practice, link converter)
 - `posts/*.md` — Blog articles fetched and parsed client-side with Marked.js; front matter supports `title/date/tag/summary/cover/coverFit/publish/ai_summary` (`ai_summary` is read by blog.html only, ignored by `run.sh gen`)
 - `activity.json` — Site/tool events merged with posts.json into homepage activity timeline (types: `post`/`tool`/`site`)
 - `css/style.css` — Single unified stylesheet with CSS custom properties for theming

@@ -5,7 +5,7 @@
 ## 功能
 
 - **博客系统** — Markdown 驱动，客户端渲染，文章存放于 `posts/` 目录
-- **工具箱** — 图片转 ICO、ESP32-S3 引脚映射器、键位练习、链接转换器
+- **工具箱** — 图片转 ICO、键位练习、链接转换器
 - **个人展示** — 首页、关于页面，响应式布局
 
 ## 设计风格
@@ -29,7 +29,6 @@
 ├── js/script.js          # 通用脚本
 ├── posts/                # Markdown 博客文章
 ├── tools/                # 独立工具页面
-│   ├── esp32_pinmapper.html
 │   ├── keyboard.html
 │   └── buy.html
 ├── picture/              # 图片资源
