@@ -368,7 +368,7 @@ function initTimeGreeting() {
     } else if (hour < 11) {
         text = '上午好！阳光穿过树叶洒下来，是个适合折腾的日子 ☀️';
     } else if (hour < 13) {
-        text = '晌午了，小黑趴在树荫下打盹。记得吃饭休息哦 🍃';
+        text = '晌午了，小羽趴在树荫下打盹。记得吃饭休息哦 🍃';
     } else if (hour < 17) {
         text = '下午的风带着草木香，泡杯茶慢慢逛吧 🍵';
     } else if (hour < 19) {
@@ -376,7 +376,7 @@ function initTimeGreeting() {
     } else if (hour < 23) {
         text = '夜幕降临，萤火虫提着小灯笼出来巡山了 ✨';
     } else {
-        text = '夜深了，连小黑都睡着了。早点休息，梦里也有森林 🌙';
+        text = '夜深了，连小羽都睡着了。早点休息，梦里也有森林 🌙';
     }
     el.textContent = text;
 }

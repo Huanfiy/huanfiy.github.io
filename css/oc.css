@@ -1,0 +1,187 @@
+/* 首页独立的幻羽组件。共享颜色定义在 style.css；角色配色取自 OC 原型。 */
+.home-oc {
+    --oc-ink: #6c5186;
+    --oc-soft: #eee5f6;
+    --oc-paper: #fffaf8;
+    --oc-line: #c8b4d9;
+    --oc-pink: #e8a3c3;
+}
+[data-theme="dark"] .home-oc {
+    --oc-ink: #d8c2f0;
+    --oc-soft: #342f42;
+    --oc-paper: #252d29;
+    --oc-line: #6e5f7e;
+    --oc-pink: #e9b3cf;
+}
+.home-oc .hero { min-height: 760px; padding: 30px 0 125px; }
+.home-oc .hero-content { display: grid; grid-template-columns: 1fr 1.05fr; align-items: center; gap: 36px; padding-top: 0; }
+.home-intro { text-align: left; padding-bottom: 18px; }
+.home-byline { display: flex; align-items: center; gap: 15px; margin-bottom: 34px; }
+.home-byline img { width: 54px; height: 54px; object-fit: cover; border: 2px solid var(--line); border-radius: var(--wobble-sm); transform: rotate(-5deg); box-shadow: var(--shadow-sm); }
+.home-byline span { font-size: .78rem; color: var(--light-text); letter-spacing: .16em; }
+.home-oc .hero-kicker { font-size: .8rem; letter-spacing: .12em; color: var(--primary-hover); margin-bottom: 14px; }
+.home-oc .hero-title { font-size: clamp(2.4rem, 4.2vw, 3.6rem); line-height: 1.4; letter-spacing: -.04em; margin-bottom: 20px; }
+.home-oc .hero-sub { margin: 0 0 26px; max-width: 410px; font-size: 1.06rem; }
+.home-oc .hero-greeting { margin: 0 0 26px; font-size: .9rem; max-width: 360px; }
+.home-oc .hero-actions { justify-content: flex-start; gap: 14px; }
+.home-side-note { display: flex; align-items: center; gap: 12px; color: var(--oc-ink); font-size: .82rem; margin-top: 35px; }
+.home-side-note::before { content: ''; width: 28px; border-top: 1px solid var(--oc-line); }
+.oc { min-width: 0; position: relative; color: var(--oc-ink); text-align: center; --oc-lean: 0deg; }
+.oc [hidden] { display: none !important; }
+.oc button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.oc button:disabled { cursor: default; }
+.oc button:focus-visible, .oc a:focus-visible { outline: 3px solid var(--oc-ink); outline-offset: 5px; }
+.oc-icon { display: block; width: 32px; height: 32px; flex-shrink: 0; }
+.oc-scene { height: 376px; position: relative; }
+.oc-aura { position: absolute; width: 340px; height: 320px; left: 50%; top: 30px; transform: translateX(-50%) rotate(-8deg); background: radial-gradient(ellipse, color-mix(in srgb, var(--oc-soft) 85%, transparent), transparent 72%); border: 1px dashed color-mix(in srgb, var(--oc-line) 65%, transparent); border-radius: 45% 55% 48% 52%; pointer-events: none; }
+.oc-aura::before, .oc-aura::after { content: '✦'; position: absolute; color: var(--oc-line); font-size: 20px; }
+.oc-aura::before { left: 25px; top: 45px; }
+.oc-aura::after { right: -6px; bottom: 76px; }
+.oc-world-label { position: absolute; top: 10px; left: 8px; text-align: left; transform: rotate(-8deg); z-index: 2; pointer-events: none; }
+.oc-world-label span { display: block; font-size: .68rem; letter-spacing: .15em; opacity: .8; }
+.oc-world-label strong { font-weight: 400; font-size: 1.15rem; letter-spacing: .2em; }
+.oc-character { position: absolute; inset: 0 50px; display: block; width: calc(100% - 100px); height: 365px; padding: 0; background: none; border: 0; border-radius: 40%; transform: rotate(var(--oc-lean)); transition: transform .25s ease; touch-action: manipulation; }
+.oc-character::after { content: ''; position: absolute; height: 18px; width: 45%; left: 28%; bottom: -4px; background: color-mix(in srgb, var(--oc-ink) 12%, transparent); border-radius: 50%; filter: blur(5px); z-index: -1; }
+.oc-character img { width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none; animation: oc-breathe 5s ease-in-out infinite; filter: drop-shadow(0 5px 3px color-mix(in srgb, var(--oc-ink) 10%, transparent)); }
+.oc-character:hover img { filter: drop-shadow(0 3px 9px color-mix(in srgb, var(--oc-pink) 40%, transparent)); }
+.oc[data-state="sleep"] .oc-character img { animation-duration: 7s; }
+.oc-name { position: absolute; bottom: 24px; right: 9px; text-align: left; pointer-events: none; transform: rotate(5deg); }
+.oc-name strong { font-size: 1.65rem; font-weight: 500; letter-spacing: .15em; }
+.oc-name span { display: block; font-size: .72rem; letter-spacing: .06em; }
+.oc-float { position: absolute; width: 55px; height: 55px; pointer-events: none; animation: oc-float 6s ease-in-out infinite; }
+.oc-float--butterfly { right: 8px; top: 56px; transform: rotate(17deg); }
+.oc-float--cloud { left: 0; bottom: 66px; animation-delay: -3s; transform: rotate(-12deg); }
+.oc-touch-hint { position: absolute; left: 0; top: 118px; font-size: .8rem; writing-mode: vertical-rl; letter-spacing: .16em; opacity: .85; }
+.oc-touch-hint::after { content: ' ⤴'; font-size: 1.2rem; }
+.oc-bubble { position: relative; padding: 13px 20px; margin: 10px 8px 17px; min-height: 101px; text-align: left; background: var(--oc-paper); border: 1.5px solid var(--oc-line); border-radius: var(--wobble-card); box-shadow: 3px 4px 0 color-mix(in srgb, var(--oc-line) 22%, transparent); }
+.oc-bubble::before { content: ''; width: 13px; height: 13px; position: absolute; top: -8px; left: 48%; transform: rotate(45deg); border-top: 1.5px solid var(--oc-line); border-left: 1.5px solid var(--oc-line); background: var(--oc-paper); }
+.oc-bubble-label { font-size: .72rem; display: flex; align-items: center; gap: 7px; margin-bottom: 2px; color: var(--light-text); }
+.oc-bubble-label::before { content: ''; width: 5px; height: 5px; background: var(--primary-color); border-radius: 50%; }
+.oc-bubble p { font-size: .95rem; line-height: 1.7; margin: 0; }
+.oc-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; padding: 0 8px; }
+.oc-actions button { display: grid; place-items: center; gap: 2px; min-height: 70px; padding: 6px 2px; border: 1px solid var(--oc-line); border-radius: var(--wobble-sm); background: color-mix(in srgb, var(--oc-paper) 94%, transparent); font-size: .78rem; box-shadow: 2px 3px 0 color-mix(in srgb, var(--oc-line) 18%, transparent); transition: background .2s, transform .2s; }
+.oc-actions button:hover { background: var(--oc-soft); transform: translateY(-3px); }
+.oc-actions button:active { transform: translateY(1px); }
+.oc-actions .oc-text-icon { font-family: serif; font-size: 26px; height: 32px; line-height: 32px; }
+.oc-meta { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 4px 16px; margin-top: 10px; }
+.oc-book-button { padding: 8px; min-height: 44px; display: inline-flex; align-items: center; gap: 7px; background: none; border: 0; font-size: .78rem !important; }
+.oc-book-button .oc-icon { width: 22px; height: 22px; }
+.oc-book-button b { font-family: ui-monospace, monospace; font-size: .65rem; padding: 1px 7px; background: var(--oc-soft); border-radius: 20px; font-weight: 400; }
+.oc-book-button:hover { text-decoration: underline; text-underline-offset: 4px; }
+.oc-mood { font-size: .72rem; color: var(--light-text); }
+.oc-notice { position: absolute; top: calc(100% + 1px); margin: 0; width: 100%; min-height: 24px; font-size: .72rem; }
+.oc-voice-controls { display: flex; justify-content: center; gap: 10px; }
+.oc-voice-controls button { background: var(--oc-paper); border: 1px solid var(--oc-line); border-radius: 20px; padding: 8px 12px; min-height: 44px; font-size: .8rem; }
+.oc-sparkles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.oc-sparkles span { position: absolute; left: calc(15% + var(--i) * 11%); top: 55%; color: var(--oc-pink); font-size: 22px; opacity: 0; animation: oc-spark 1.25s calc(var(--i) * .02s) ease-out forwards; }
+.oc-fallback { font-size: .75rem; color: var(--light-text); }
+.oc[data-ready] .oc-fallback { display: none; }
+.home-oc footer::after { content: none; }
+.oc-footer { position: absolute; right: max(6%, calc((100% - 1100px) / 2)); top: -70px; width: 112px; height: 90px; object-fit: contain; pointer-events: none; }
+
+/* 星屿手记：原生 dialog 的焦点圈与 Escape，所有内容在首页内。 */
+.oc-book { margin: auto; width: min(780px, calc(100% - 32px)); max-height: min(84dvh, 840px); padding: 0; color: var(--dark-text); background: var(--card-bg); border: 2px solid var(--oc-line); border-radius: var(--wobble-card); box-shadow: 8px 10px 0 color-mix(in srgb, var(--oc-ink) 15%, transparent); text-align: left; overscroll-behavior: contain; }
+.oc-book::backdrop { background: rgba(22, 29, 24, .48); backdrop-filter: blur(5px); }
+.oc-book-heading { display: flex; justify-content: space-between; align-items: center; padding: 24px 28px 15px; }
+.oc-book-heading p { font-size: .67rem; letter-spacing: .22em; color: var(--oc-ink); margin: 0; }
+.oc-book-heading h2 { font-size: 1.65rem; margin: 0; }
+.oc-close { align-self: flex-start; width: 44px; height: 44px; border: 1px solid var(--oc-line); background: var(--oc-soft); border-radius: 50%; font-size: 1.5rem !important; }
+.oc-tabs { display: flex; padding: 0 24px; gap: 20px; border-bottom: 1px solid var(--line-soft); }
+.oc-tabs button { background: none; border: 0; padding: 10px 3px; min-height: 44px; font-size: .92rem; color: var(--light-text); border-bottom: 2px solid transparent; }
+.oc-tabs [aria-selected="true"] { color: var(--oc-ink); border-bottom-color: var(--oc-ink); }
+.oc-panel { padding: 25px 28px; }
+.oc-profile { display: grid; grid-template-columns: 185px 1fr; gap: 26px; align-items: center; }
+.oc-profile > img { width: 100%; height: 245px; object-fit: contain; }
+.oc-profile h3 { color: var(--oc-ink); font-size: 1.5rem; margin-bottom: 10px; }
+.oc-profile h3 small { font-size: .8rem; font-weight: 400; margin-left: 10px; }
+.oc-profile p { font-size: .9rem; margin-bottom: 12px; }
+.oc-profile-tags { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 15px; }
+.oc-profile-tags span { font-size: .72rem; color: var(--oc-ink); background: var(--oc-soft); border-radius: 20px; padding: 3px 10px; }
+.oc-world-note { display: flex; align-items: center; gap: 15px; margin-top: 16px; padding: 18px; background: var(--bg-soft); border-radius: var(--wobble-sm); }
+.oc-world-note p { font-size: .82rem; margin: 0; }
+.oc-world-note .oc-icon { width: 48px; height: 48px; }
+.oc-world-note button { flex-shrink: 0; padding: 10px; font-size: .78rem; background: var(--card-bg); border: 1px solid var(--oc-line); border-radius: var(--wobble-sm); }
+.oc-collection { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.oc-keepsake { padding: 16px; border: 1px dashed var(--oc-line); border-radius: var(--wobble-sm); display: flex; align-items: flex-start; gap: 12px; }
+.oc-keepsake > .oc-icon { width: 47px; height: 55px; opacity: .5; filter: grayscale(.8); }
+.oc-keepsake.is-collected { border-style: solid; background: color-mix(in srgb, var(--oc-soft) 42%, transparent); }
+.oc-keepsake.is-collected .oc-icon { opacity: 1; filter: none; }
+.oc-keepsake h3 { font-size: .94rem; }
+.oc-keepsake p { font-size: .78rem; color: var(--light-text); margin: 6px 0; }
+.oc-keepsake small { color: var(--oc-ink); font-size: .67rem; }
+.oc-keepsake a { display: block; font-size: .8rem; padding-top: 8px; color: var(--primary-hover); }
+.oc-memory { font-size: .75rem; margin: 16px 0 0; color: var(--light-text); }
+.oc-gallery-intro { font-size: .85rem; color: var(--light-text); margin: 0 0 18px; }
+.oc-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.oc-pose-card { padding: 12px 8px; background: color-mix(in srgb, var(--oc-soft) 38%, transparent); border: 1px solid var(--oc-line); border-radius: var(--wobble-sm); }
+.oc-pose-card img { width: 100%; height: 155px; object-fit: contain; }
+.oc-pose-card span { display: block; font-size: .82rem; margin-top: 8px; }
+.oc-pose-card:hover { background: var(--oc-soft); }
+@keyframes oc-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes oc-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+@keyframes oc-spark { 10% { opacity: 1; } 100% { transform: translateY(-115px) rotate(16deg); opacity: 0; } }
+.oc[data-paused="true"] *, .oc[data-paused="true"] *::before, .oc[data-paused="true"] *::after { animation-play-state: paused !important; }
+@media (min-width: 1600px) { .home-oc .hero { min-height: 820px; } }
+@media (max-width: 1000px) {
+    .home-oc .hero-content { gap: 20px; }
+    .home-oc .hero-title { font-size: 2.55rem; }
+    .oc-character { inset-inline: 30px; width: calc(100% - 60px); }
+    .oc-world-label { top: 3px; left: 0; }
+    .oc-name { right: 0; }
+}
+@media (max-width: 768px) {
+    .home-oc .hero { padding: 38px 0 100px; min-height: auto; }
+    .home-oc .hero-content { grid-template-columns: 1fr; gap: 24px; }
+    .home-intro { text-align: center; padding: 0; }
+    .home-byline { justify-content: center; margin-bottom: 20px; gap: 12px; }
+    .home-byline img { width: 42px; height: 42px; }
+    .home-byline span { font-size: .65rem; }
+    .home-oc .hero-title { font-size: clamp(2rem, 7vw, 2.7rem); margin-bottom: 14px; }
+    .home-oc .hero-kicker { font-size: .72rem; margin-bottom: 8px; }
+    .home-oc .hero-sub { margin: 0 auto 20px; max-width: 430px; font-size: .95rem; }
+    .home-oc .hero-greeting { margin: 0 auto 20px; font-size: .82rem; max-width: 330px; }
+    .home-oc .hero-actions { justify-content: center; }
+    .home-oc .hero-actions .btn { padding: 10px 20px; font-size: .85rem; }
+    .home-side-note { display: none; }
+    .oc { width: min(470px, 100%); margin: 0 auto; }
+    .oc-scene { height: 306px; }
+    .oc-character { height: 302px; inset-inline: 30px; width: calc(100% - 60px); }
+    .oc-aura { width: 280px; height: 265px; top: 18px; }
+    .oc-world-label { top: 15px; left: 5px; }
+    .oc-world-label strong { font-size: .95rem; }
+    .oc-world-label span { font-size: .55rem; }
+    .oc-float--butterfly { right: 5px; top: 58px; width: 44px; }
+    .oc-float--cloud { left: 2px; bottom: 44px; width: 44px; }
+    .oc-touch-hint { top: 92px; font-size: .7rem; }
+    .oc-name { bottom: 5px; right: 5px; }
+    .oc-name strong { font-size: 1.3rem; }
+    .oc-name span { font-size: .62rem; }
+    .oc-bubble { margin-inline: 0; padding: 13px 15px; min-height: 101px; }
+    .oc-actions { padding: 0; gap: 5px; }
+    .oc-actions button { font-size: .72rem; }
+    .oc-profile { grid-template-columns: 130px 1fr; gap: 16px; }
+    .oc-profile > img { height: 200px; }
+}
+@media (max-width: 480px) {
+    .oc-book { max-height: 88dvh; }
+    .oc-book-heading { padding: 18px 18px 12px; }
+    .oc-tabs { padding-inline: 18px; gap: 17px; }
+    .oc-tabs button { font-size: .82rem; }
+    .oc-panel { padding: 20px 18px; }
+    .oc-profile { grid-template-columns: 1fr; gap: 12px; }
+    .oc-profile > img { height: 185px; }
+    .oc-profile h3 { text-align: center; }
+    .oc-profile-tags { justify-content: center; }
+    .oc-collection { grid-template-columns: 1fr; }
+    .oc-gallery { grid-template-columns: 1fr 1fr; }
+    .oc-pose-card img { height: 132px; }
+    .oc-world-note { flex-wrap: wrap; padding: 13px; }
+    .oc-world-note p { flex: 1; min-width: 135px; }
+    .oc-world-note button { margin-left: 60px; }
+    .oc-notice { font-size: .66rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .oc *, .oc *::before, .oc *::after { animation: none !important; transition: none !important; }
+    .oc-character { transform: none; }
+    .oc-actions button:hover { transform: none; }
+}

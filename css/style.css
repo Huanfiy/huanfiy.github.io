@@ -59,11 +59,6 @@
     --trunk: #7a5a3e;
     --grass: #67aa4c;
     --grass-fg: #4f8f3c;
-    --cat-ink: #23281f;
-    --cat-sheen: #363e35;
-    --cat-eye: #74e2d6;
-    --cat-iris: #27a49b;
-    --cat-pupil: #10302d;
     --footer-bg: #edf3df;
 
     /* --- 布局 --- */
@@ -135,10 +130,6 @@
     --trunk: #3a2e24;
     --grass: #2f5335;
     --grass-fg: #24402b;
-    --cat-ink: #10140e;
-    --cat-sheen: #1f2a20;
-    --cat-eye: #7fe9dd;
-    --cat-iris: #2bb3a8;
     --footer-bg: #101711;
 
     --shadow-sm: 3px 4px 0 rgba(0, 0, 0, 0.25);
@@ -697,270 +688,10 @@ header .container {
     to { transform: skewX(2.5deg); }
 }
 
-/* --- 小黑 --- */
-.hero-cat {
-    pointer-events: auto;
-    cursor: pointer;
-    outline: none;
-}
-
-.hero-cat:focus-visible {
-    outline: 2px dashed var(--primary-color);
-    outline-offset: 8px;
-}
-
-[data-theme="dark"] .hero-cat {
-    filter: drop-shadow(0 0 6px rgba(111, 216, 226, 0.35));
-}
-
-.cat-figure,
-.cat-tail,
-.cat-body,
-.cat-head,
-.cat-ear-l,
-.cat-ear-r,
-.cat-eyes,
-.cat-hearts path,
-.cat-zzz text {
-    transform-box: fill-box;
-}
-
-.cat-figure {
-    transform-origin: 50% 100%;
-}
-
-.cat-tail {
-    transform-origin: 0% 100%;
-    animation: tail-swish 3.6s ease-in-out infinite;
-}
-
-@keyframes tail-swish {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(14deg); }
-}
-
-.cat-body {
-    transform-origin: 50% 100%;
-    animation: cat-breathe 4s ease-in-out infinite;
-}
-
-@keyframes cat-breathe {
-    0%, 100% { transform: scale(1, 1); }
-    50% { transform: scale(1.015, 1.03); }
-}
-
-.cat-head {
-    transform-origin: 50% 100%;
-    transition: transform 0.45s cubic-bezier(0.34, 1.3, 0.64, 1);
-}
-
-.cat-pupil {
-    transition: transform 0.16s ease-out;
-}
-
-.cat-eyes {
-    transform-origin: center;
-    animation: cat-blink 5s ease-in-out infinite;
-}
-
-@keyframes cat-blink {
-    0%, 90%, 100% { transform: scaleY(1); }
-    93%, 96% { transform: scaleY(0.08); }
-}
-
-.cat-ear-l,
-.cat-ear-r {
-    transform-origin: 50% 100%;
-    transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
-}
-
-.cat-ear-r {
-    animation: ear-twitch 7s ease-in-out infinite;
-}
-
-@keyframes ear-twitch {
-    0%, 88%, 100% { transform: rotate(0deg); }
-    91%, 95% { transform: rotate(-12deg); }
-}
-
-.hero-cat.is-hover .cat-ear-l {
-    transform: rotate(-9deg) translateY(-3px);
-}
-
-.hero-cat.is-hover .cat-ear-r {
-    transform: rotate(9deg) translateY(-3px);
-    animation: none;
-}
-
-.hero-cat.is-hover .cat-eyes {
-    animation: none;
-    transform: scale(1.06);
-}
-
-/* 表情状态：开心 / 打瞌睡 */
-.cat-eyes-happy,
-.cat-eyes-closed,
-.cat-hearts,
-.cat-zzz {
-    visibility: hidden;
-}
-
-.hero-cat.is-happy .cat-eyes,
-.hero-cat.is-sleepy .cat-eyes,
-.hero-cat.is-sleepy .cat-mouth {
-    visibility: hidden;
-}
-
-.hero-cat.is-happy .cat-eyes-happy,
-.hero-cat.is-happy .cat-hearts,
-.hero-cat.is-sleepy .cat-eyes-closed,
-.hero-cat.is-sleepy .cat-zzz {
-    visibility: visible;
-}
-
-.hero-cat.is-happy .cat-figure {
-    animation: cat-hop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes cat-hop {
-    0% { transform: translateY(0) scale(1, 1); }
-    30% { transform: translateY(-10px) scale(0.96, 1.06); }
-    60% { transform: translateY(0) scale(1.05, 0.95); }
-    100% { transform: translateY(0) scale(1, 1); }
-}
-
-.hero-cat.is-happy .cat-hearts path {
-    transform-origin: center;
-    animation: heart-float 1.5s ease-out var(--d, 0s) both;
-}
-
-@keyframes heart-float {
-    0% { opacity: 0; transform: translateY(8px) scale(0.5); }
-    30% { opacity: 1; transform: translateY(-6px) scale(1.05); }
-    100% { opacity: 0; transform: translateY(-38px) scale(0.9); }
-}
-
-.hero-cat.is-sleepy .cat-tail {
-    animation-duration: 8s;
-}
-
-.hero-cat.is-sleepy .cat-zzz text {
-    animation: zzz-float 2.6s ease-in-out var(--d, 0s) infinite;
-}
-
-@keyframes zzz-float {
-    0% { opacity: 0; transform: translate(0, 4px); }
-    35% { opacity: 1; }
-    100% { opacity: 0; transform: translate(10px, -18px); }
-}
-
-/* --- 小黑的对话气泡（桌面端）：挂在耳朵旁，left/top 由脚本写入，data-side 决定尾巴在哪一侧 --- */
-.cat-bubble {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 3;
-    width: max-content;
-    max-width: min(300px, 40vw);
-    padding: 8px 16px;
-    background: var(--card-bg);
-    color: var(--dark-text);
-    border: 2px solid var(--ink);
-    border-radius: var(--wobble-btn);
-    box-shadow: var(--shadow-ink);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    text-align: left;
-    pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    transform-origin: 0 100%;
-    transform: translateY(-100%) scale(0.92);
-    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1), visibility 0s linear 0.3s;
-}
-
-.cat-bubble::after {
-    content: '';
-    position: absolute;
-    left: 18px;
-    bottom: -8px;
-    width: 12px;
-    height: 12px;
-    background: inherit;
-    border-left: 2px solid var(--ink);
-    border-bottom: 2px solid var(--ink);
-    transform: skewX(24deg) rotate(45deg);
-}
-
-.cat-bubble[data-side="left"] {
-    transform-origin: 100% 100%;
-}
-
-.cat-bubble[data-side="left"]::after {
-    left: auto;
-    right: 18px;
-    transform: skewX(-24deg) rotate(45deg);
-}
-
-.cat-bubble.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(-100%) scale(1);
-    transition-delay: 0s;
-}
-
 .hero-content {
     position: relative;
     z-index: 2;
     padding-top: 3rem;
-}
-
-/* 头像：手绘相框 + 胶带 */
-.hero-avatar {
-    position: relative;
-    width: 128px;
-    margin: 0 auto 2rem;
-    transform: rotate(-2deg);
-    animation: gentle-bob 5s ease-in-out infinite;
-}
-
-.hero-avatar img {
-    width: 128px;
-    height: 128px;
-    object-fit: cover;
-    border-radius: 46% 54% 52% 48% / 54% 46% 54% 46%;
-    border: 3px solid var(--ink);
-    background: var(--card-bg);
-    box-shadow: var(--shadow-md);
-}
-
-.hero-avatar::before,
-.hero-avatar::after {
-    content: '';
-    position: absolute;
-    width: 56px;
-    height: 16px;
-    background: color-mix(in srgb, var(--accent-color) 42%, transparent);
-    border-radius: 2px;
-    z-index: 2;
-}
-
-.hero-avatar::before {
-    top: -6px;
-    left: -18px;
-    transform: rotate(-38deg);
-}
-
-.hero-avatar::after {
-    bottom: -2px;
-    right: -20px;
-    transform: rotate(-32deg);
-    background: color-mix(in srgb, var(--warm) 42%, transparent);
-}
-
-@keyframes gentle-bob {
-    0%, 100% { transform: rotate(-2deg) translateY(0); }
-    50% { transform: rotate(-2deg) translateY(-8px); }
 }
 
 .hero-kicker {
@@ -2385,7 +2116,6 @@ footer::after {
         scroll-behavior: auto;
     }
 
-    .hero-avatar,
     .hero-rays,
     .hero-stars .stars circle,
     .hero-stars .sparkles path,
@@ -2393,14 +2123,7 @@ footer::after {
     .hero-birds,
     .hero-birds .bird,
     .sway-slow,
-    .sway-fg,
-    .cat-tail,
-    .cat-body,
-    .cat-eyes,
-    .cat-ear-r,
-    .hero-cat.is-happy .cat-figure,
-    .hero-cat.is-happy .cat-hearts path,
-    .hero-cat.is-sleepy .cat-zzz text {
+    .sway-fg {
         animation: none;
     }
 
@@ -2410,14 +2133,6 @@ footer::after {
     .cloud-3 { transform: translateX(84vw); }
     .cloud-4 { transform: translateX(30vw); }
     .hero-birds { transform: translate(26vw, 0); }
-
-    .cat-head,
-    .cat-pupil,
-    .cat-ear-l,
-    .cat-ear-r,
-    .cat-bubble {
-        transition: none;
-    }
 
     .card:hover,
     .blog-card:hover,
@@ -2493,17 +2208,13 @@ footer::after {
         letter-spacing: 0.16em;
     }
 
-    /* 窄屏：太阳与云收小，气泡让位给正文里的问候 */
+    /* 窄屏：太阳与云收小 */
     .hero {
         --sun-x: 78%;
     }
 
     .hero-birds {
         top: 14%;
-    }
-
-    .cat-bubble {
-        display: none;
     }
 
     .blog-card {

@@ -3,9 +3,9 @@
  * 1. 时段天空：按主题与本地时间写入 .hero[data-daypart]，并推算太阳在弧线上的位置
  * 2. 视差：精细指针设备跟随指针，所有设备跟随滚动；远 / 中 / 近三层与云层位移不同
  * 3. 粒子：白天飘落叶与花瓣、夜晚草间萤火；指针快速移动会起一阵风
- * 4. 小黑：眼神追随指针（无指针时四处张望）、悬停竖耳、点击开心 + 气泡、久不动打瞌睡
+ * 角色交互独立于景观，由 oc-character.js 管理。
  * 渲染循环只在 Hero 可见且标签页前台运行；prefers-reduced-motion 下退化为静态插画，
- * 但小黑仍可点击。脚本失效时 HTML / CSS 本身就是一幅完整的静态插画。
+ * 脚本失效时 HTML / CSS 本身就是一幅完整的静态插画。
  * ============================================================= */
 (function () {
     'use strict';
@@ -25,8 +25,6 @@
         clouds: hero.querySelector('.hero-clouds')
     };
     const scene = hero.querySelector('.hero-scene');
-    const cat = document.getElementById('hero-cat');
-    const bubble = document.getElementById('cat-bubble');
 
     let forcedDaypart = null;
     let daypart = null;
@@ -271,196 +269,6 @@
         return { ensure, destroy, resize, tick, gust, setMode };
     })();
 
-    /* ---------------- 小黑 ---------------- */
-    const GREETINGS = {
-        dawn: '早呀，露水还没干呢 🌿',
-        day: '喵～ 欢迎来我家的山坡坐坐',
-        dusk: '晚霞真好看，看一眼再走吧',
-        night: '夜深啦，我在等萤火虫出来 ✨'
-    };
-    const QUIPS = {
-        common: ['喵～', '别戳啦，痒痒的', '你的鼠标好好玩', '要去工作室看看吗？', '今天也要好好吃饭哦', '我在这儿看家呢', '嘘——听，有风声', '再摸一下我就要打呼了'],
-        dawn: ['清晨的空气凉凉的', '太阳快爬上山啦'],
-        day: ['风把叶子吹下来了', '树荫下最适合打盹'],
-        dusk: ['天边像被染了颜色', '快到吃晚饭的时候了'],
-        night: ['萤火虫提着小灯笼出来了', '星星比昨天多了一颗', '夜里的森林很安静']
-    };
-
-    const catCtl = (() => {
-        if (!cat) return null;
-        const head = cat.querySelector('.cat-head');
-        const pupils = cat.querySelectorAll('.cat-pupil');
-        const look = { x: 0, y: 0 };
-        let lastPointerLookAt = 0;
-        let lastLookApply = 0;
-        let idleTimer = null;
-        let happyTimer = null;
-        let sleepTimer = null;
-        let bubbleTimer = null;
-        let ambientTimer = null;
-        let bubbleShown = false;
-
-        function applyLook() {
-            pupils.forEach((p) => {
-                p.style.transform = `translate(${(look.x * 3.4).toFixed(2)}px, ${(look.y * 3).toFixed(2)}px)`;
-            });
-            if (head) head.style.transform = `rotate(${(look.x * 4).toFixed(2)}deg)`;
-        }
-
-        function lookAt(clientX, clientY) {
-            if (!head) return;
-            const rect = head.getBoundingClientRect();
-            const hx = rect.left + rect.width / 2;
-            const hy = rect.top + rect.height / 2;
-            look.x = clamp((clientX - hx) / (window.innerWidth * 0.32), -1, 1);
-            look.y = clamp((clientY - hy) / (window.innerHeight * 0.32), -1, 1);
-            applyLook();
-        }
-
-        function onPointerMove(event) {
-            const now = performance.now();
-            lastPointerLookAt = now;
-            if (now - lastLookApply < 48) return;
-            lastLookApply = now;
-            lookAt(event.clientX, event.clientY);
-        }
-
-        // 无指针活动时每隔几秒随意张望一下
-        function scheduleIdleLook() {
-            clearTimeout(idleTimer);
-            idleTimer = setTimeout(() => {
-                if (heroVisible && performance.now() - lastPointerLookAt > 3500 && !cat.classList.contains('is-sleepy')) {
-                    look.x = (Math.random() - 0.5) * 1.6;
-                    look.y = (Math.random() - 0.5) * 1.2;
-                    applyLook();
-                }
-                scheduleIdleLook();
-            }, 2600 + Math.random() * 3000);
-        }
-
-        function bubbleAvailable() {
-            return bubble && getComputedStyle(bubble).display !== 'none';
-        }
-
-        // 气泡挂在小黑耳朵旁：优先放右侧（正文居中，右侧通常空着），放不下再翻到左侧
-        function positionBubble() {
-            if (!bubble || !head) return;
-            const heroRect = hero.getBoundingClientRect();
-            const rect = head.getBoundingClientRect();
-            const width = bubble.offsetWidth;
-            const margin = 12;
-            const headLeft = rect.left - heroRect.left;
-            const headRight = rect.right - heroRect.left;
-            const top = rect.top - heroRect.top + 10;
-            let left = headRight + 6;
-            let side = 'right';
-            if (left + width > heroRect.width - margin) {
-                left = Math.max(margin, headLeft - 6 - width);
-                side = 'left';
-            }
-            bubble.style.left = left.toFixed(1) + 'px';
-            bubble.style.top = top.toFixed(1) + 'px';
-            bubble.dataset.side = side;
-        }
-
-        function say(text, duration) {
-            if (!bubbleAvailable()) return;
-            bubble.textContent = text;
-            positionBubble();
-            bubble.classList.add('show');
-            bubbleShown = true;
-            clearTimeout(bubbleTimer);
-            bubbleTimer = setTimeout(hush, duration || 3200);
-        }
-
-        function hush() {
-            if (!bubble) return;
-            bubble.classList.remove('show');
-            bubbleShown = false;
-        }
-
-        function pickQuip() {
-            const pool = QUIPS.common.concat(QUIPS[daypart] || []);
-            return pick(pool);
-        }
-
-        function poke() {
-            wake();
-            cat.classList.remove('is-happy');
-            // 强制一次样式刷新，让开心动画从头重放
-            void cat.getBoundingClientRect();
-            cat.classList.add('is-happy');
-            clearTimeout(happyTimer);
-            happyTimer = setTimeout(() => cat.classList.remove('is-happy'), 1500);
-            say(pickQuip(), 3200);
-        }
-
-        function scheduleSleep() {
-            clearTimeout(sleepTimer);
-            sleepTimer = setTimeout(() => {
-                if (heroVisible && !cat.classList.contains('is-hover')) {
-                    cat.classList.add('is-sleepy');
-                    hush();
-                }
-            }, 45000);
-        }
-
-        function wake() {
-            if (cat.classList.contains('is-sleepy')) {
-                cat.classList.remove('is-sleepy');
-                applyLook();
-            }
-            scheduleSleep();
-        }
-
-        function scheduleAmbient() {
-            clearTimeout(ambientTimer);
-            ambientTimer = setTimeout(() => {
-                if (heroVisible && !document.hidden && !cat.classList.contains('is-sleepy') && !bubbleShown) {
-                    say(pick(QUIPS[daypart] || QUIPS.common), 3600);
-                }
-                scheduleAmbient();
-            }, 40000 + Math.random() * 30000);
-        }
-
-        cat.addEventListener('click', poke);
-        cat.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                poke();
-            }
-        });
-        if (finePointer.matches) {
-            cat.addEventListener('pointerenter', () => {
-                cat.classList.add('is-hover');
-                wake();
-            });
-            cat.addEventListener('pointerleave', () => cat.classList.remove('is-hover'));
-        }
-
-        // 首次问候：等待入场动画落定后由小黑开口
-        setTimeout(() => {
-            if (heroVisible && !document.hidden) say(GREETINGS[daypart] || GREETINGS.day, 6500);
-        }, 1600);
-
-        scheduleIdleLook();
-        scheduleSleep();
-        scheduleAmbient();
-
-        return {
-            onPointerMove,
-            wake,
-            poke,
-            say,
-            tick() {
-                if (bubbleShown) positionBubble();
-            },
-            relayout() {
-                if (bubbleShown) positionBubble();
-            }
-        };
-    })();
-
     /* ---------------- 渲染循环 ---------------- */
     function shouldRun() {
         return heroVisible && !document.hidden && !motionQuery.matches;
@@ -473,7 +281,6 @@
         lastTick = t;
         updateParallax();
         particles.tick(t, dt);
-        if (catCtl) catCtl.tick();
         rafId = requestAnimationFrame(frame);
     }
 
@@ -507,15 +314,10 @@
         pointer.tx = (event.clientX / window.innerWidth - 0.5) * 2;
         pointer.ty = (event.clientY / window.innerHeight - 0.5) * 2;
         if (Math.abs(event.movementX) > 18) particles.gust(event.movementX);
-        if (catCtl) {
-            catCtl.onPointerMove(event);
-            catCtl.wake();
-        }
     }, { passive: true });
 
     window.addEventListener('scroll', () => {
         scrollOffset = clamp(window.scrollY, 0, heroHeight);
-        if (catCtl) catCtl.wake();
         if (!rafId && shouldRun()) start();
     }, { passive: true });
 
@@ -523,7 +325,6 @@
         heroHeight = hero.offsetHeight;
         particles.resize();
         applyDaypart();
-        if (catCtl) catCtl.relayout();
     }, { passive: true });
 
     document.addEventListener('visibilitychange', () => {
@@ -553,14 +354,14 @@
     scrollOffset = clamp(window.scrollY, 0, heroHeight);
     start();
 
-    // 供访客终端 / 诊断使用：手动切换时段或让小黑说话
+    // 供访客终端 / 诊断使用：手动切换时段；旧角色入口转发给独立的幻羽组件
     window.HeroScene = {
         setDaypart(dp) {
             forcedDaypart = ['dawn', 'day', 'dusk', 'night'].includes(dp) ? dp : null;
             applyDaypart();
         },
         get daypart() { return daypart; },
-        poke() { if (catCtl) catCtl.poke(); },
-        say(text, ms) { if (catCtl) catCtl.say(text, ms); }
+        poke() { return window.HuanYu?.interact('pat'); },
+        say(text) { window.HuanYu?.say(text); }
     };
 })();

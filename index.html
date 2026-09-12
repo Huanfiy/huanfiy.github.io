@@ -42,9 +42,11 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/lxgwwenkaiscreen.css">
     </noscript>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/oc.css">
+    <link rel="preload" as="image" href="picture/oc/welcome.webp">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="home-oc">
 
     <!-- 导航栏 -->
     <header>
@@ -205,85 +207,6 @@
                     <path fill="var(--bg-color)" d="M-80 300 L-80 293 Q-20 285 40 293 Q100 299 160 293 Q220 285 280 293 Q340 299 400 293 Q460 285 520 293 Q580 299 640 293 Q700 285 760 293 Q820 299 880 293 Q940 285 1000 293 Q1060 299 1120 293 Q1180 285 1240 293 Q1300 299 1360 293 Q1420 285 1480 293 Q1540 299 1600 293 Q1660 285 1720 293 Q1780 299 1840 293 Q1900 285 1960 293 Q2020 299 2080 293 L2000 300 Z"/>
                 </g>
 
-                <!-- 小黑：可聚焦、可点击的吉祥物。眼神跟随指针，悬停竖耳，点击开心，久不动会打瞌睡 -->
-                <g class="hero-cat" id="hero-cat" role="button" tabindex="0" aria-label="摸摸小黑" transform="translate(1240 246) scale(0.92)">
-                    <ellipse class="cat-shadow" cx="0" cy="2" rx="46" ry="6" fill="var(--ink)" opacity="0.12"/>
-                    <g class="cat-figure">
-                    <g class="cat-tail">
-                        <path d="M26 -22 C62 -18 82 -50 66 -78" fill="none" stroke="var(--cat-ink)" stroke-width="14" stroke-linecap="round"/>
-                        <circle cx="66" cy="-78" r="10" fill="var(--cat-ink)"/>
-                    </g>
-                    <g class="cat-body">
-                        <ellipse cx="0" cy="-36" rx="37" ry="34" fill="var(--cat-ink)"/>
-                        <ellipse cx="-8" cy="-32" rx="20" ry="24" fill="var(--cat-sheen)" opacity="0.55"/>
-                        <ellipse cx="-17" cy="-4" rx="12" ry="7" fill="var(--cat-ink)"/>
-                        <ellipse cx="17" cy="-4" rx="12" ry="7" fill="var(--cat-ink)"/>
-                        <g fill="none" stroke="var(--cat-sheen)" stroke-width="1.4" stroke-linecap="round" opacity="0.7">
-                            <path d="M-21 -2 v3 M-16 -3 v4 M13 -3 v4 M18 -2 v3"/>
-                        </g>
-                    </g>
-                    <g class="cat-head">
-                        <g class="cat-ear-l">
-                            <path d="M-38 -112 Q-50 -134 -44 -156 Q-28 -140 -12 -130 Z" fill="var(--cat-ink)"/>
-                            <path d="M-36 -118 Q-43 -132 -40 -146 Q-30 -136 -20 -128 Z" fill="var(--cat-sheen)" opacity="0.6"/>
-                        </g>
-                        <g class="cat-ear-r">
-                            <path d="M38 -112 Q50 -134 44 -156 Q28 -140 12 -130 Z" fill="var(--cat-ink)"/>
-                            <path d="M36 -118 Q43 -132 40 -146 Q30 -136 20 -128 Z" fill="var(--cat-sheen)" opacity="0.6"/>
-                        </g>
-                        <ellipse cx="0" cy="-90" rx="47" ry="44" fill="var(--cat-ink)"/>
-                        <path d="M-46 -84 l-10 4 l9 6z M46 -84 l10 4 l-9 6z" fill="var(--cat-ink)"/>
-                        <ellipse cx="-14" cy="-110" rx="20" ry="13" fill="var(--cat-sheen)" opacity="0.5"/>
-                        <ellipse cx="-31" cy="-75" rx="7" ry="4" fill="var(--rose)" opacity="0.4"/>
-                        <ellipse cx="31" cy="-75" rx="7" ry="4" fill="var(--rose)" opacity="0.4"/>
-                        <g class="cat-eyes">
-                            <g class="cat-eye" transform="translate(-19 -90)">
-                                <ellipse rx="12" ry="16" fill="var(--cat-eye)"/>
-                                <g class="cat-pupil">
-                                    <ellipse cy="2" rx="8" ry="12" fill="var(--cat-iris)"/>
-                                    <ellipse cy="3" rx="3.4" ry="9" fill="var(--cat-pupil)"/>
-                                </g>
-                                <ellipse cx="-4" cy="-6.5" rx="4" ry="5" fill="#ffffff"/>
-                                <circle cx="4.5" cy="5.5" r="1.7" fill="#ffffff" opacity="0.9"/>
-                            </g>
-                            <g class="cat-eye" transform="translate(19 -90)">
-                                <ellipse rx="12" ry="16" fill="var(--cat-eye)"/>
-                                <g class="cat-pupil">
-                                    <ellipse cy="2" rx="8" ry="12" fill="var(--cat-iris)"/>
-                                    <ellipse cy="3" rx="3.4" ry="9" fill="var(--cat-pupil)"/>
-                                </g>
-                                <ellipse cx="-4" cy="-6.5" rx="4" ry="5" fill="#ffffff"/>
-                                <circle cx="4.5" cy="5.5" r="1.7" fill="#ffffff" opacity="0.9"/>
-                            </g>
-                        </g>
-                        <g class="cat-eyes-happy" fill="none" stroke="var(--cat-eye)" stroke-width="3.6" stroke-linecap="round">
-                            <path d="M-29 -86 q10 -13 20 0"/>
-                            <path d="M9 -86 q10 -13 20 0"/>
-                        </g>
-                        <g class="cat-eyes-closed" fill="none" stroke="var(--cat-eye)" stroke-width="3" stroke-linecap="round">
-                            <path d="M-29 -90 q10 7 20 0"/>
-                            <path d="M9 -90 q10 7 20 0"/>
-                        </g>
-                        <path class="cat-mouth" d="M-6 -70 q3 5 6 0 q3 5 6 0" fill="none" stroke="var(--cat-eye)" stroke-width="1.8" stroke-linecap="round"/>
-                        <g class="cat-whiskers" fill="none" stroke="var(--cat-eye)" stroke-width="1.5" stroke-linecap="round" opacity="0.36">
-                            <path d="M-50 -84 q-12 -2 -22 0"/>
-                            <path d="M-49 -76 q-12 3 -21 7"/>
-                            <path d="M50 -84 q12 -2 22 0"/>
-                            <path d="M49 -76 q12 3 21 7"/>
-                        </g>
-                    </g>
-                    </g>
-                    <g class="cat-hearts" fill="var(--rose)">
-                        <g transform="translate(-30 -150)"><path style="--d:0s" d="M0 4 C-5 -1 -9 -5 -5 -9 C-3 -11 0 -9 0 -6 C0 -9 3 -11 5 -9 C9 -5 5 -1 0 4Z"/></g>
-                        <g transform="translate(6 -166) scale(0.8)"><path style="--d:0.18s" d="M0 4 C-5 -1 -9 -5 -5 -9 C-3 -11 0 -9 0 -6 C0 -9 3 -11 5 -9 C9 -5 5 -1 0 4Z"/></g>
-                        <g transform="translate(38 -150) scale(0.7)"><path style="--d:0.34s" d="M0 4 C-5 -1 -9 -5 -5 -9 C-3 -11 0 -9 0 -6 C0 -9 3 -11 5 -9 C9 -5 5 -1 0 4Z"/></g>
-                    </g>
-                    <g class="cat-zzz" fill="var(--accent-color)" font-weight="700" font-family="inherit">
-                        <text style="--d:0s" x="46" y="-140" font-size="15">z</text>
-                        <text style="--d:0.9s" x="60" y="-158" font-size="12">z</text>
-                    </g>
-                </g>
-
                 <g class="hero-fg sway-fg" aria-hidden="true">
                     <use href="#grass-big" transform="translate(70 302) scale(1.2)"/>
                     <use href="#grass-big" transform="translate(1850 302) scale(1.1) scale(-1 1)"/>
@@ -293,21 +216,73 @@
             </svg>
         </div>
 
-        <!-- 小黑的对话气泡：桌面端首次展示按时段问候，之后随互动出现（装饰性，问候文案仍由 #hero-greeting 承载） -->
-        <div class="cat-bubble" id="cat-bubble" aria-hidden="true"></div>
-
         <div class="hero-content container rise-in">
-            <div class="hero-avatar">
-                <img src="picture/icon.png" alt="Huanfly">
+            <div class="home-intro">
+                <div class="home-byline"><img src="picture/icon.png" alt="Huanfly" width="54" height="54"><span>A LITTLE CORNER OF MY WORLD</span></div>
+                <p class="hero-kicker">Embedded · Maker · Blogger</p>
+                <h1 class="hero-title">你好，我是<br><span class="marker">Huanfly</span></h1>
+                <p class="hero-sub">一名热衷于技术分享与科技制作的探索者。<br>在这里记录学习，分享生活，<br>也给奇思妙想，留一小片森林。</p>
+                <p class="hero-greeting" id="hero-greeting" aria-live="polite"></p>
+                <div class="hero-actions">
+                    <a href="#explore" class="btn">开始探索 <span aria-hidden="true">↗</span></a>
+                    <a href="about.html" class="btn btn-outline">认识我</a>
+                </div>
+                <p class="home-side-note">代码、生活，还有从星屿来的小小陪伴。</p>
             </div>
-            <p class="hero-kicker">Embedded · Maker · Blogger</p>
-            <h1 class="hero-title">你好，我是 <span class="marker">Huanfly</span></h1>
-            <p class="hero-sub">一名热衷于技术分享与科技制作的探索者。<br>在这里记录学习，分享生活，构建有趣的世界。</p>
-            <p class="hero-greeting" id="hero-greeting" aria-live="polite"></p>
-            <div class="hero-actions">
-                <a href="#explore" class="btn">开始探索</a>
-                <a href="about.html" class="btn btn-outline">了解更多</a>
-            </div>
+
+            <section class="oc" data-oc data-state="welcome" aria-label="与幻羽一起探索">
+                <div class="oc-scene">
+                    <div class="oc-aura" aria-hidden="true"></div>
+                    <div class="oc-world-label"><span>FROM MISTGARDEN</span><strong>雾庭星屿来信</strong></div>
+                    <span class="oc-touch-hint" aria-hidden="true">轻轻摸摸我</span>
+                    <svg class="oc-float oc-float--butterfly" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#butterfly"/></svg>
+                    <svg class="oc-float oc-float--cloud" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#cloud"/></svg>
+                    <button type="button" class="oc-character" data-oc-character aria-label="摸摸幻羽，叫醒或和小羽打招呼" disabled>
+                        <img data-oc-portrait src="picture/oc/welcome.webp" alt="幻羽：银紫短发、猫耳与紫色披风的星雾猫灵，带着云朵猫挂包向你挥手" width="768" height="768" fetchpriority="high" draggable="false">
+                    </button>
+                    <div class="oc-name"><strong>幻羽</strong><span>小羽 · 梦境缝补师</span></div>
+                    <div class="oc-sparkles" data-oc-sparkles aria-hidden="true"></div>
+                </div>
+                <div class="oc-bubble">
+                    <span class="oc-bubble-label">小羽轻声说</span>
+                    <p data-oc-speech role="status" aria-live="polite" aria-atomic="true">你好呀，我是幻羽，从雾庭星屿带了一点星光来。要一起在这片森林里走走吗？</p>
+                </div>
+                <div class="oc-actions" aria-label="选择与小羽的互动">
+                    <button type="button" data-oc-action="pat" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#butterfly"/></svg><span>摸摸头</span></button>
+                    <button type="button" data-oc-action="hug" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#cloud"/></svg><span>抱一下</span></button>
+                    <button type="button" data-oc-action="milk" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#milk"/></svg><span>递杯甜奶</span></button>
+                    <button type="button" data-oc-action="magic" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#wand"/></svg><span>缝补梦境</span></button>
+                    <button type="button" data-oc-action="read" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#journal"/></svg><span>一起读书</span></button>
+                </div>
+                <div class="oc-meta">
+                    <button type="button" class="oc-book-button" data-oc-open aria-haspopup="dialog" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#journal"/></svg>星屿手记 <b data-oc-count aria-label="收藏进度">0 / 6</b><span aria-hidden="true">↗</span></button>
+                    <span class="oc-mood" data-oc-mood>陪你慢慢探索</span>
+                </div>
+                <div class="oc-voice-controls">
+                    <button type="button" data-oc-voice aria-pressed="false" hidden>开启小羽的声音</button>
+                    <button type="button" data-oc-listen aria-pressed="false" hidden>对小羽说话</button>
+                </div>
+                <p class="oc-notice" data-oc-notice role="status" aria-live="polite"></p>
+                <p class="oc-fallback">小羽的互动需要 JavaScript，先让这张小小的她陪你逛逛吧。</p>
+
+                <dialog class="oc-book" data-oc-book aria-labelledby="oc-book-title">
+                    <div class="oc-book-heading"><div><p>LETTERS FROM MISTGARDEN</p><h2 id="oc-book-title">星屿手记</h2></div><button type="button" class="oc-close" data-oc-close aria-label="合上星屿手记" autofocus>×</button></div>
+                    <div class="oc-tabs" role="tablist" aria-label="手记内容">
+                        <button type="button" role="tab" id="oc-tab-profile" data-oc-tab="profile" aria-controls="oc-panel-profile" aria-selected="true">认识小羽</button>
+                        <button type="button" role="tab" id="oc-tab-collection" data-oc-tab="collection" aria-controls="oc-panel-collection" aria-selected="false" tabindex="-1">相遇收藏</button>
+                        <button type="button" role="tab" id="oc-tab-gallery" data-oc-tab="gallery" aria-controls="oc-panel-gallery" aria-selected="false" tabindex="-1">小羽的日常</button>
+                    </div>
+                    <div class="oc-panel" role="tabpanel" id="oc-panel-profile" data-oc-panel="profile" aria-labelledby="oc-tab-profile" tabindex="0">
+                        <div class="oc-profile">
+                            <img src="picture/oc/magic.webp" alt="幻羽挥动星铃钥杖，托起一颗梦境泡泡" width="280" height="280" loading="lazy">
+                            <div><h3>幻羽 <small>HuanYu / 小羽</small></h3><div class="oc-profile-tags"><span>星雾猫灵</span><span>梦境缝补师</span><span>生日 10 / 17</span></div><p>从雾庭星屿来的小小访客。带着星铃钥杖，收集散落的梦境碎片，把不开心慢慢缝成柔软的好梦。</p><p>有一点害羞，又忍不住想靠近你。喜欢甜牛奶、蝴蝶结、软乎乎的玩偶，还有夜里轻轻吹过的风。</p></div>
+                        </div>
+                        <div class="oc-world-note"><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#circuit"/></svg><p>来到这片森林后，小羽发现代码也像星轨。博客是旅行手记，工具箱装着小发明，工作室里还有一块会发光的电路。</p><button type="button" data-oc-action="circuit">一起找找灵感</button></div>
+                    </div>
+                    <div class="oc-panel" role="tabpanel" id="oc-panel-collection" data-oc-panel="collection" aria-labelledby="oc-tab-collection" tabindex="0" hidden><div class="oc-collection" data-oc-collection></div><p class="oc-memory" data-oc-memory></p></div>
+                    <div class="oc-panel" role="tabpanel" id="oc-panel-gallery" data-oc-panel="gallery" aria-labelledby="oc-tab-gallery" tabindex="0" hidden><p class="oc-gallery-intro">六张来自星屿的小小日常。点一张，让这个样子的小羽陪你待一会儿。</p><div class="oc-gallery" data-oc-gallery></div></div>
+                </dialog>
+            </section>
         </div>
     </section>
 
@@ -349,6 +324,7 @@
 
     <!-- 页脚 -->
     <footer>
+        <img class="oc-footer" src="picture/oc/sleep.webp" alt="小羽在页脚睡着了" width="112" height="90" loading="lazy">
         <div class="container">
             <div class="social-icons">
                 <a href="https://github.com/Huanfiy" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub"><i class="fab fa-github"></i></a>
@@ -356,7 +332,7 @@
                 <a href="https://space.bilibili.com/179895513" target="_blank" rel="noopener" title="Bilibili" aria-label="Bilibili"><i class="fab fa-bilibili"></i></a>
                 <a href="mailto:huanfly999@gmail.com" title="Email" aria-label="Email"><i class="fas fa-envelope"></i></a>
             </div>
-            <p class="footer-note">&copy; 2026 Huanfly. Design with <i class="fas fa-heart"></i> &amp; 罗小黑</p>
+            <p class="footer-note">&copy; 2026 Huanfly. Design with <i class="fas fa-heart"></i> &amp; 幻羽</p>
             <p class="footer-note site-stats" id="site-stats">
                 <span title="独立访客"><i class="fas fa-paw"></i> 访客 <span id="busuanzi_value_site_uv"></span></span>
                 <span aria-hidden="true">·</span>
@@ -369,5 +345,6 @@
     <!-- 脚本 -->
     <script src="js/script.js"></script>
     <script src="js/hero-scene.js"></script>
+    <script type="module" src="js/oc-character.js"></script>
 </body>
 </html>

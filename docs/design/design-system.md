@@ -35,11 +35,14 @@ Three.js 工作室是 Huanfly 个人设计风格在三维空间中的延展。
 
 | 文件 | 职责 |
 |---|---|
-| `css/style.css` | 设计 Token 唯一定义处 + 全部组件样式 + 深色模式覆盖 + 响应式 |
+| `css/style.css` | 共享设计 Token 定义处 + 通用组件样式 + 深色模式覆盖 + 响应式 |
 | `js/script.js` | 灵气动效、主题切换（圆形揭示过渡）、卡片光斑与倾斜、吸顶导航滚动态、移动端菜单、首页问候与动态时间线、busuanzi 访问统计 |
-| `js/hero-scene.js` | 首页 Hero 景观：时段天空与太阳位置、指针 / 滚动视差、落叶 / 萤火粒子、小黑的眼神追随与互动、气泡 |
+| `js/hero-scene.js` | 首页 Hero 景观：时段天空与太阳位置、指针 / 滚动视差、落叶 / 萤火粒子 |
+| `css/oc.css` / `js/oc-character.js` | 首页幻羽视觉、交互状态、手记、按需姿态加载与可见性清理 |
+| `js/oc-world.js` / `js/oc-voice.js` | 离线世界观与收藏数据 / 语音 provider 边界 |
+| `picture/oc/` | 幻羽六种 WebP 姿态与六件原生 SVG 收藏图标 |
 | `js/interests.js` | 关于页兴趣详情视图（摄影 / 科技制作 / 阅读）渲染，Toast 与 Lightbox |
-| `index.html` | Hero 景观（天空、远山、森林、山丘、草丛与小黑全部内联 SVG，见 §4.1）、板块入口卡片、动态时间线 |
+| `index.html` | Hero 景观（天空、远山、森林、山丘、草丛为内联 SVG，幻羽为独立交互组件，见 §4.1）、板块入口卡片、动态时间线 |
 | `blog.html` | 文章列表 / 详情双视图、标签筛选、搜索、`#post=` hash 路由、Markdown 渲染、文章信息、AI 摘要与可选评论 |
 | `tool.html` | 5 个工具入口（均为真实链接）+ 页内 ICO 转换器（`#ico` hash 视图，含拖拽上传） |
 | `about.html` | 简介、时间线、兴趣卡片与详情视图容器 |
@@ -76,8 +79,6 @@ Three.js 工作室是 Huanfly 个人设计风格在三维空间中的延展。
 | `--hill-back/mid/front` | `#cfe6b8` / `#a8d38a` / `#7cba5e` | `#223528` / `#2a4430` / `#34573b` | 三层山丘 |
 | `--tree` / `--tree-light` / `--trunk` | `#58924a` / `#7ab266` / `#7a5a3e` | `#26402c` / `#325538` / `#3a2e24` | 树冠、树冠高光、树干 |
 | `--grass` / `--grass-fg` | `#67aa4c` / `#4f8f3c` | `#2f5335` / `#24402b` | 山丘草丛 / 前景草簇 |
-| `--cat-ink` / `--cat-sheen` | `#23281f` / `#363e35` | `#10140e` / `#1f2a20` | 小黑毛色与体积高光 |
-| `--cat-eye` / `--cat-iris` / `--cat-pupil` | `#74e2d6` / `#27a49b` / `#10302d` | `#7fe9dd` / `#2bb3a8` / 同浅色 | 小黑的眼睛三层 |
 | `--footer-bg` | `#edf3df` | `#101711` | 草地页脚 |
 
 晨昏变体只在浅色主题下由 `js/hero-scene.js` 写入 `.hero[data-daypart="dawn" | "dusk"]`，覆盖天空、太阳、远山、雾气与树冠带的值（定义在 `style.css` 的 Hero 段落）；深色主题固定为 `night`，直接使用深色 Token。
@@ -115,7 +116,7 @@ Three.js 工作室是 Huanfly 个人设计风格在三维空间中的延展。
 ### 3.5 布局
 
 - 容器宽 `--container-width: 1100px`；Header 高 `--header-height: 68px`；
-- Hero 景观图层高度 `--scene-h: clamp(150px, 15.625vw, 480px)`，与 `1920 × 300` 的 viewBox 等比：宽屏不裁切，窄屏以 `xMidYMax slice` 保留画面中心；Hero 只为景观下部 72% 预留 `padding-bottom`，淡色远山允许被正文覆盖；
+- Hero 景观图层高度 `--scene-h: clamp(150px, 15.625vw, 480px)`，与 `1920 × 300` 的 viewBox 等比：宽屏不裁切，窄屏以 `xMidYMax slice` 保留画面中心；首页以左侧介绍、右侧幻羽分栏展示，768 px 以下纵向排列；底部为森林预留空间，淡色远山允许被正文覆盖；
 - 栅格 `.grid-3`：`repeat(auto-fit, minmax(280px, 1fr))`，间距 28 px；
 - 响应式断点：768 px（导航折叠、博客卡片纵排、山丘缩放）。
 
@@ -126,28 +127,34 @@ Three.js 工作室是 Huanfly 个人设计风格在三维空间中的延展。
 | 纸纹噪点 | `body::after` 全屏覆盖 SVG `feTurbulence`（alpha ≤ 0.05）data URI | 全站 |
 | 波浪线下划线 | 内联 SVG data URI，用于 `.section-title::after`、导航激活态、Markdown `hr` | 全站 |
 | 马克笔高亮 | `.marker`：青→绿 45% 透明渐变，`background-size: 100% 42%` 压在文字下沿 | Hero、关于页标题 |
-| 胶带贴纸 | 半透明色块 + 旋转（`::before/::after`） | Hero 头像、博客缩略图 |
-| 森林景观 | 天空 + 三层内联 SVG 景观 + 小黑，见 §4.1 | `index.html` |
-| 草地页脚 | `footer::before` 波浪草丛 SVG data URI，颜色与 `--footer-bg` 同值衔接；`footer::after` 是蜷在草地上睡着的小黑（data URI，浅 / 深各一套） | 全站 |
+| 胶带贴纸 | 半透明色块 + 旋转（`::before/::after`） | 博客缩略图 |
+| 森林景观 | 天空 + 三层内联 SVG 景观 + 独立幻羽互动区，见 §4.1 | `index.html` |
+| 草地页脚 | `footer::before` 波浪草丛 SVG data URI，颜色与 `--footer-bg` 同值衔接；`footer::after` 是蜷在草地上睡着的小黑（data URI，浅 / 深各一套）；首页覆盖为幻羽睡姿 WebP | 全站 |
 | 卡片光斑 | `.card::after` 跟随指针的色调径向光，`--mx/--my` 由 `js/script.js` 写入；悬停时卡片按 `--rx/--ry` 作 ≤ 3.5° 的纸片倾斜（宽幅博客卡片只有光斑） | 全站卡片 |
 
 ### 4.1 首页 Hero 景观
 
-Hero 是一幅随时段变化的手绘绘本插画，全部元素内联在 `index.html`，颜色只引用 §3.1 的 Token，脚本失效时仍是完整的静态画面：
+Hero 是一幅随时段变化的手绘绘本插画，森林元素内联在 `index.html`，景观颜色只引用 §3.1 的 Token，脚本失效时仍是完整的静态画面：
 
 | 层 | 内容 | 实现 |
 |---|---|---|
 | 天空 `.hero-sky` | 三段渐变；太阳（`--sun-x/--sun-y`，随本地时间沿偏右上的弧线移动）与从太阳散出的 `conic-gradient` 光束；夜晚换成月牙（`mask` 挖出的弧）、34 颗闪烁星星与 4 枚星芒；4 朵云以 150–230 s 漂过；白天 3 只飞鸟掠过 | CSS + 内联 SVG |
 | 远景 `.hero-far` | 两层远山 + 山脚雾气渐变，viewBox `1920 × 520`，高度为 `--scene-h × 1.7333` 以保持与其他层等比 | 内联 SVG |
 | 中景 `.hero-mid` | 圆形树冠组成的森林带 + 后山 + 6 棵树 | 内联 SVG |
-| 近景 `.hero-near` | 中山、前山、7 棵树、草丛、花朵、小黑、前景草簇，底边一条纸面波浪把山丘接回页面底色 | 内联 SVG |
+| 近景 `.hero-near` | 中山、前山、7 棵树、草丛、花朵、前景草簇，底边一条纸面波浪把山丘接回页面底色 | 内联 SVG |
 | 粒子 `.hero-particles` | 白天 22 片落叶 / 花瓣（窄屏 9），随指针快速移动起风；夜晚 16 只草间萤火（窄屏 7）。Hero 不可见或标签页隐藏时停止 | `js/hero-scene.js` Canvas |
 
 树、草、花、云、鸟定义为 `.hero-defs` 里的 `<g id>`，各层用 `<use>` 复用；山脉、森林带、山丘、草丛位置与星星由一次性脚本按固定种子生成后直接写入 HTML，不在运行时生成。
 
 **视差**：精细指针设备上 `js/hero-scene.js` 把指针偏移平滑写到各层 `transform`（云 10 px、远 6 px、中 14 px、近 24 px），所有设备随滚动让远层下沉（远 0.30、中 0.16、云 0.22 倍滚动量，近景不动以保住底边）；图层预放大 `scale(1.04)` 遮住位移露边。
 
-**小黑**：近景 SVG 里可聚焦的 `<g role="button" tabindex="0" aria-label="摸摸小黑">`，眼神跟随指针（无指针时每 2.6–5.6 s 随机张望），悬停竖耳、眼睛放大，点击 / Enter / 空格触发开心表情、跳一下、三颗爱心与气泡短句，45 s 无操作闭眼打瞌睡并冒出 `z`。CSS 待机动画：眨眼 `cat-blink` 5 s、摇尾 `tail-swish` 3.6 s、抖耳 `ear-twitch` 7 s、呼吸 `cat-breathe` 4 s。桌面端加载 1.6 s 后小黑以气泡说一句按时段的问候（`.cat-bubble`，窄屏隐藏，正文中的 `#hero-greeting` 仍是无障碍文本）；语料离线内置在 `js/hero-scene.js`。
+**幻羽**：角色从景观中独立，以原生按钮承载自托管 WebP 插画。银紫短发、猫耳、蝴蝶结、毛绒披风与云朵猫挂包沿用用户 OC 设定；局部淡紫 Token 定义在 `css/oc.css`，森林仍用共享主题。点击角色或五个互动入口切换姿态、离线短句并发现收藏；按需解码完成后才换图，快速操作以最后一次为准。静置 45 s 打盹，重新点击可唤醒，气泡在桌面与手机均可读。
+
+**星屿手记**：首页内的原生 `<dialog>`，包含角色设定、六件收藏和六种姿态画廊；支持 Escape、焦点回归、方向键切换标签。收藏只保存已知 ID 到 `huanyu.keepsakes.v1`，存储不可用时退化到当前会话。页面隐藏或角色离开视口会停止计时、语音与角色动画；减少动态偏好下仍可切换姿态与阅读文本。
+
+**模块边界**：`oc-world.js` 保存内容；`oc-character.js` 管交互与生命周期；`oc-voice.js` 只管可替换适配器。`window.HuanYu` 暴露 `interact / say / getState / setVoiceProvider / destroy`，组件发出 `oc:state / oc:speech / oc:collect` 事件。旧 `HeroScene.poke / say` 转发给幻羽，不再维护另一套角色状态。
+
+**预留语音**：默认无 provider、无音频或麦克风请求。接入 `setVoiceProvider({ speak, listen?, stop?, dispose? })` 后才显示声音开关，访客还需主动开启；`speak({ text, character, signal })` 在播放完成时 resolve，`listen({ signal })` 返回一次转写。适配器必须响应 AbortSignal、释放播放与录音资源；切换动作、隐藏页面、换 provider 和销毁均取消旧请求，20 s 超时回到文字交互。识别结果仅映射已知本地动作，不执行任意文本。浏览器接入不得嵌入私有密钥。
 
 **时段**：深色主题固定 `night`；浅色主题按本地时间 5–7 时 `dawn`、17–19:30 `dusk`、其余 `day`，每分钟复查一次，主题切换时立即重算。`window.HeroScene.setDaypart()` 可强制时段供诊断。
 
@@ -172,12 +179,10 @@ Hero 是一幅随时段变化的手绘绘本插画，全部元素内联在 `inde
 
 | 动画 | 时长 | 对象 |
 |---|---|---|
-| `gentle-bob` | 5 s | Hero 头像悬浮 |
 | `cloud-drift` / `birds-fly` / `bird-flap` | 150–230 s / 52 s / 0.9 s | Hero 云、飞鸟群、翅膀 |
 | `rays-breathe` / `twinkle` | 9 s 往返 / 2.4–5 s 往返 | Hero 光束、星星与星芒 |
 | `grass-sway` | 4.2–5.5 s 往返（`skewX ±2.5°`） | Hero 草丛与前景草簇 |
-| `tail-swish` / `cat-blink` / `ear-twitch` / `cat-breathe` | 3.6 s / 5 s / 7 s / 4 s | 小黑待机 |
-| `cat-hop` / `heart-float` / `zzz-float` | 0.55 s / 1.5 s / 2.6 s | 小黑被戳、爱心、打瞌睡 |
+| `oc-breathe` / `oc-float` / `oc-spark` | 5 s（睡姿 7 s） / 6 s / 1.25 s | 幻羽轻浮、收藏装饰与互动星光 |
 | hover 位移 + 微旋 + 纸片倾斜 | 0.25–0.35 s | 卡片、按钮、图标 |
 
 ### 6.2 Canvas 层
@@ -191,7 +196,7 @@ Hero 是一幅随时段变化的手绘绘本插画，全部元素内联在 `inde
 ### 6.3 降级策略
 
 - `prefers-reduced-motion: reduce`：萤火层与 Hero 粒子不创建，视差不启用，云与飞鸟停在固定位置；点击迸发退化为单个扩散圆环（`.reduced-motion-click`）；
-  CSS 关键帧动画与 hover 位移全部关闭；小黑仍可点击，只切换表情不做位移；主题切换与跨页导航不使用 View Transition；
+  CSS 关键帧动画与 hover 位移全部关闭；幻羽仍可点击，只切换姿态和文字不做位移；主题切换与跨页导航不使用 View Transition；
 - 入场动画自托管：首屏 `.rise-in` 为纯 CSS 关键帧，首帧即播放；视口外元素 `[data-reveal]` 由
   `js/script.js` 的 IntersectionObserver 触发，且仅在 `html.js`（head 内联脚本标记 JS 可用）时才隐藏，
   脚本失效时内容直接可见；
@@ -204,7 +209,7 @@ Hero 是一幅随时段变化的手绘绘本插画，全部元素内联在 `inde
 
 ### 6.5 z-index 秩序
 
-`5` 萤火 → `99` 移动端菜单 → `100` Header → `9950` 点击迸发 → `9960` 纸纹 → `9990` Toast → `9999` Lightbox。Hero 内部：`0` 天空 → `1` 景观与粒子 → `2` 正文 → `3` 小黑气泡。
+`5` 萤火 → `99` 移动端菜单 → `100` Header → `9950` 点击迸发 → `9960` 纸纹 → `9990` Toast → `9999` Lightbox。Hero 内部：`0` 天空 → `1` 景观与粒子 → `2` 正文与幻羽；手记使用浏览器 dialog 顶层。
 
 ## 7. 外部依赖与降级行为
 
@@ -250,5 +255,6 @@ View Transitions（跨页 Chrome 126+ / Safari 18.2+，同页 Chrome 111+ / Safa
 
 - **新增卡片色调**：在 style.css 追加 `.tone-x { --tone: …; --tone-soft: …; }` 并补深色值，组件自动适配；
 - **新增文章**：在 `posts/` 创建 Markdown 文件，执行 `./run.sh gen` 并同时审查、提交 `posts/posts.json`；不得只手工编辑索引。完整流程见 [blog-auto-publish.md](blog-auto-publish.md)；
-- **调整 Hero 景观 / 小黑**：直接编辑 `index.html` 内联 SVG，颜色务必继续引用 §3.1 的场景 Token 以保持主题与晨昏联动；三层景观共用 `1920 × 300` 的坐标系（远景 `1920 × 520`），新增树 / 草 / 花请复用 `.hero-defs` 里的符号并把落点放在山丘轮廓上；小黑的局部坐标以脚底为原点、向上为负，`transform="translate(1240 246)"` 决定它坐在前山的哪一点；有 `transform` 属性又要做 CSS 动画的元素必须外包一层 `<g>`，否则 CSS transform 会覆盖属性位移；
+- **调整 Hero 景观**：编辑 `index.html` 内联 SVG，颜色继续引用 §3.1 的场景 Token；三层景观共用 `1920 × 300` 坐标系（远景 `1920 × 520`），新增树 / 草 / 花复用 `.hero-defs` 并把落点放在山丘轮廓上；有 `transform` 属性又做 CSS 动画时外包 `<g>`，避免覆盖属性位移；
+- **调整幻羽**：世界观与动作内容在 `oc-world.js`，交互在 `oc-character.js`，语音契约在 `oc-voice.js`；资产保持完整角色、透明边缘和一致身份。运行 `node --test tests/oc.test.js`；启动 `./run.sh test 8081` 后，以现有 Puppeteer 运行 `OC_TEST_URL=http://localhost:8081 PUPPETEER_MODULE=/abs/path/puppeteer-core node tests/oc-browser.cjs`。
 - **改动共享类名前**：先按 §8.1 检查 `tools/` 引用（`rg -n 'var\\(--|class=' tools -g '*.html'`）。

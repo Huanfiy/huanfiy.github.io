@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <style>.line{stroke:#806595;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.lilac{fill:#d9c9ed}.paper{fill:#fff9f3}.pink{fill:#f5c8dc}.gold{fill:#f4d897}.green{fill:#b9d2b2}</style>
+    <symbol id="butterfly" viewBox="0 0 64 64">
+      <g class="line"><path class="lilac" d="M31 30C12 2 0 16 13 33 0 46 24 55 31 35c8 21 31 10 20-2C65 12 48 4 33 30Z"/><path class="pink" d="M28 36 17 57l13-7 3 6 4-20"/><path fill="none" d="m29 22-4-7m9 7 4-7M16 22l10 8m20-8-9 8"/><ellipse class="paper" cx="32" cy="32" rx="5" ry="8"/></g>
+    </symbol>
+    <symbol id="cloud" viewBox="0 0 64 64">
+      <g class="line"><path fill="none" d="M16 25C7 0 58 0 49 25"/><path class="paper" d="m15 25 2-12 12 9c7-3 10-1 12 0l9-9 2 15c14 5 7 17 0 17-1 12-18 11-21 7-9 8-22 0-19-7-12-3-10-16 3-20Z"/><path fill="none" d="m20 34 6 1m13-1 5-1m-13 6 2 2 2-2"/><path class="lilac" d="m42 44 12-3-2 10-10-2-7 7-3-10Z"/></g><g class="pink"><ellipse cx="21" cy="40" rx="4" ry="2"/><ellipse cx="44" cy="39" rx="4" ry="2"/></g>
+    </symbol>
+    <symbol id="milk" viewBox="0 0 64 64">
+      <g class="line"><path fill="none" d="M45 25c18-6 18 20 0 17"/><path class="paper" d="m13 22 3 25c1 13 28 13 29 0l2-25"/><ellipse fill="#f1dfc6" cx="30" cy="23" rx="17" ry="5"/><path class="lilac" d="M29 37c-10-12-17 3-1 8 17-5 12-18 2-8Z"/><path fill="none" d="M25 15c-6-7 7-6 1-13m9 14c-6-6 5-5 1-10M10 56q21 8 40 0"/></g>
+    </symbol>
+    <symbol id="wand" viewBox="0 0 64 64">
+      <g class="line"><path class="lilac" d="m28 34 5-2 14 27-5 2Z"/><circle class="paper" cx="25" cy="20" r="16"/><circle fill="none" cx="25" cy="20" r="12"/><path class="gold" d="m25 8 4 8 9 1-7 7 1 9-8-5-8 4 2-9-6-7 9-1Z"/><path class="lilac" d="m29 36-6-7-5 12 11-1 11 8 1-13Z"/><path fill="none" d="M10 24v18"/><path class="gold" d="m7 42-3 9h13l-3-9Z"/><path fill="none" d="m50 7 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/></g>
+    </symbol>
+    <symbol id="journal" viewBox="0 0 64 64">
+      <g class="line"><path class="green" d="M8 12q12-5 24 3 12-8 24-3v39q-14-5-24 2-11-6-24-2Z"/><path class="paper" d="M12 8q11-3 20 6 10-9 20-6v37q-10-1-20 7-9-8-20-7Z"/><path fill="none" d="M32 15v35M18 21l8 3m-8 4 8 3m-8 4 8 3m12-15 8-3m-8 10 8-3"/><path class="lilac" d="M41 8v20l4-4 4 2V7"/></g>
+    </symbol>
+    <symbol id="circuit" viewBox="0 0 64 64">
+      <g class="line"><rect class="green" x="11" y="11" width="43" height="43" rx="7" transform="rotate(-6 32 32)"/><rect fill="#f4f3d8" x="23" y="23" width="19" height="19" rx="3"/><path fill="none" d="M17 19v12h6m19 3h7v10M31 42v8m-5-27v-8m10 8v-5h8M23 36h-7v9"/><path class="gold" d="m32 26 2 4 5 1-4 3 1 4-4-2-4 2 1-5-3-2 4-1Z"/><circle class="pink" cx="44" cy="18" r="3"/><circle class="paper" cx="16" cy="45" r="2"/><path fill="none" d="m54 2 1 4 4 1-4 2-1 4-2-4-4-2 4-1Z"/></g>
+    </symbol>
+  </defs>
+</svg>
