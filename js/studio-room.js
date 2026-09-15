@@ -9,6 +9,7 @@ import { createStudioFigures } from './studio-figures.js';
 import { createStudioSpirit } from './studio-spirit.js';
 import { createStudioWindow } from './studio-window.js';
 import { createStudioLandscape } from './studio-landscape.js';
+import { createStudioArm } from './studio-arm.js';
 
 export function createStudioRoom({ container, state, reducedMotion, onSelect, onFrame, onEvent, onError, onWindowToggle, onReady = () => {} }) {
     const mobile = () => window.innerWidth <= 700;
@@ -909,26 +910,7 @@ export function createStudioRoom({ container, state, reducedMotion, onSelect, on
     const screenFace=group(motor.root,-.44,.04,-.43);screenFace.rotation.x=screenTilt;
     const motorTex=canvasTexture(320,200,()=>{});surface(screenFace,.42,.26,0,.165,-.019,motorTex.texture).rotation.y=Math.PI;
     const arm=device('arm',-1.65,1.31,1.45,[-1.70,2.75,1.30]);
-    box(arm.fixed,1.60,.06,1.36,0,0,0,m.teal,.06);
-    cylinder(arm.fixed,.29,.33,.13,0,.10,0,m.black);
-    const armYaw=group(arm.root,0,.20,0);
-    cylinder(armYaw,.245,.245,.16,0,.015,0,m.orange);
-    const shoulder=group(armYaw,0,.12,0);
-    const armJoint=(parent,x,y,z,r)=>{const obj=cylinder(parent,r,r,.26,x,y,z,m.metal);obj.rotation.x=Math.PI/2;const cap=cylinder(parent,r*.67,r*.67,.275,x,y,z,m.silver);cap.rotation.x=Math.PI/2;};
-    armJoint(shoulder,0,0,0,.18);
-    box(shoulder,.25,.85,.20,0,.45,0,m.orange,.08);box(shoulder,.13,.52,.215,0,.48,0,m.cream,.035);
-    const elbow=group(shoulder,0,.90,0);armJoint(elbow,0,0,0,.155);
-    box(elbow,.19,.71,.18,0,.38,0,m.orange,.055);box(elbow,.08,.41,.195,0,.40,0,m.cream,.03);
-    const wrist=group(elbow,0,.78,0);armJoint(wrist,0,0,0,.11);
-    const gripper=group(wrist);box(gripper,.19,.15,.19,0,.13,0,m.black);
-    const jawA=box(gripper,.035,.17,.12,-.08,.27,0,m.silver,.007);const jawB=box(gripper,.035,.17,.12,.08,.27,0,m.silver,.007);
-    const carried=box(gripper,.10,.08,.10,0,.34,0,m.pcb,.008);carried.visible=false;
-    cable(shoulder,[[0,.02,-.18],[.18,.35,-.18],[.16,.75,-.18],[0,.93,-.17]],m.black,.023);
-    box(arm.fixed,.24,.045,.23,-.64,.06,.30,m.cream);
-    const pickupPart=box(arm.root,.13,.07,.12,-.64,.11,.30,m.pcb,.009);
-    box(arm.fixed,.36,.05,.40,.56,.05,-.40,m.black);
-    for(let i=0;i<4;i++)box(arm.fixed,.10,.045,.10,.47+(i%2)*.14,.10,-.51+Math.floor(i/2)*.15,m.pcb,.008);
-    const deliveredPart=box(arm.root,.13,.07,.12,.56,.15,-.40,m.pcb,.009);deliveredPart.visible=false;
+    const robotArm=createStudioArm({root:arm.root,fixed:arm.fixed,group,box,cylinder,bar,cable,material,canvasTexture,batch,own,m});
 
     // Move the entire robotics bench to the window wall, leaving the centre of the room open.
     const wingTransform=new THREE.Matrix4().makeTranslation(-4.05,.48,.10)
@@ -1065,7 +1047,7 @@ export function createStudioRoom({ container, state, reducedMotion, onSelect, on
     const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:'#fff4c9',size:.017,map:glowTexture,transparent:true,opacity:.28,depthWrite:false}));scene.add(dust);
 
     let selected=null, hovered=null, view='overview', tween=null, paused=false, night=false, lost=false;
-    let lastTime=performance.now(), elapsed=0, scopeTime=0, textureElapsed=0, reportElapsed=0, currentRPM=0, armTime=0, breezeTime=0, interactiveUntil=0;
+    let lastTime=performance.now(), elapsed=0, scopeTime=0, textureElapsed=0, reportElapsed=0, currentRPM=0, armPhase=0, breezeTime=0, interactiveUntil=0;
     let renderedFrames=0,shadowUpdates=0,shadowUntil=3,lastMotionState='';
     const presets={
         overview:{pos:[10.8,8.4,14.8],target:[-.20,2.0,0]},
@@ -1290,22 +1272,7 @@ export function createStudioRoom({ container, state, reducedMotion, onSelect, on
         if(smoke.visible){for(let i=0;i<18;i++){const t=(elapsed*.5+i/18)%1;smokeArray[i*3]=.80-t*1.30+Math.sin(t*9+i)*.03;smokeArray[i*3+1]=.24+Math.sin(t*Math.PI)*.42+t*.12;smokeArray[i*3+2]=-t*.16+Math.cos(t*7+i)*.02;}smokeGeo.attributes.position.needsUpdate=true;}
         currentRPM=THREE.MathUtils.damp(currentRPM,state.motor?state.rpm:0,3,dt);
         if(!reducedMotion)motorRotor.rotation.y+=dt*currentRPM/60*.65;
-        if(state.arm)armTime+=dt;
-        const phase=(armTime%10)/10;
-        let reachX=.58,reachY=1.1,yaw=.1;
-        if(state.armStarted){
-            const smooth=THREE.MathUtils.smoothstep,pickYaw=Math.atan2(-.30,-.64)+Math.PI*2,dropYaw=Math.atan2(.40,.56);
-            const outbound=smooth(phase,.44,.61),returning=smooth(phase,.86,1),turn=outbound-returning;
-            yaw=THREE.MathUtils.lerp(pickYaw,dropYaw,turn);
-            reachX=THREE.MathUtils.lerp(Math.hypot(.64,.30),Math.hypot(.56,.40),turn);
-            const downPick=smooth(phase,.12,.25)-smooth(phase,.32,.44),downDrop=smooth(phase,.61,.72)-smooth(phase,.78,.86);
-            reachY=1.0-.87*downPick-.83*downDrop;
-        }
-        const l1=.90,l2=.78,c2=THREE.MathUtils.clamp((reachX*reachX+reachY*reachY-l1*l1-l2*l2)/(2*l1*l2),-1,1),q2=Math.acos(c2),q1=Math.atan2(reachX,reachY)-Math.atan2(l2*Math.sin(q2),l1+l2*Math.cos(q2));
-        shoulder.rotation.z=THREE.MathUtils.damp(shoulder.rotation.z,-q1,5,dt);elbow.rotation.z=THREE.MathUtils.damp(elbow.rotation.z,-q2,5,dt);armYaw.rotation.y=THREE.MathUtils.damp(armYaw.rotation.y,yaw,4,dt);wrist.rotation.z=-(shoulder.rotation.z+elbow.rotation.z)+Math.PI;
-        carried.visible=state.armStarted&&phase>.28&&phase<.75;
-        pickupPart.visible=!state.armStarted||phase<.28||phase>.93;deliveredPart.visible=state.armStarted&&phase>=.75&&phase<.93;
-        jawA.position.x=carried.visible?-.07:-.11;jawB.position.x=-jawA.position.x;
+        armPhase=robotArm.update(dt,{running:state.arm,started:state.armStarted});
         dust.visible=state.breeze&&!reducedMotion;dust.rotation.y=Math.sin(breezeTime*.11)*.06;
         spirit.setHovered(hovered==='spirit');spirit.update(dt,camera.position);
     }
@@ -1332,7 +1299,7 @@ export function createStudioRoom({ container, state, reducedMotion, onSelect, on
         renderedFrames++;
         if(renderedFrames===1)onReady();
         if(disposed)return;
-        if(active||reportElapsed>.1){onFrame({markers:projectedMarkers(),selected,rpm:Math.round(currentRPM),armPhase:Math.round((armTime%10)/10*100),update:reportElapsed>.1});if(reportElapsed>.1)reportElapsed=0;}
+        if(active||reportElapsed>.1){onFrame({markers:projectedMarkers(),selected,rpm:Math.round(currentRPM),armPhase,update:reportElapsed>.1});if(reportElapsed>.1)reportElapsed=0;}
         if(!paused||tween)frameId=requestAnimationFrame(render);
         } catch (error) {
             // RAF errors do not reach createStudioRoom's initialization catch.

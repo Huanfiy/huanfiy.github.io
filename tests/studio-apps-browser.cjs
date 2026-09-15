@@ -36,7 +36,7 @@ async function assertPlaceholder(page) {
 
 async function assertFrontOn(page) {
     // Measure the projected DOM corners, not just the axis-aligned bounding box.
-    const error = await page.$eval('#monitor-focus', (screen) => {
+    const measure = (screen) => {
         const corners = [[0,0],[100,0],[100,100],[0,100]].map(([x,y]) => {
             const point = document.createElement('span');
             point.style.cssText = `position:absolute;left:${x}%;top:${y}%;width:0;height:0;pointer-events:none`;
@@ -46,7 +46,16 @@ async function assertFrontOn(page) {
         });
         const [a,b,c,d] = corners;
         return Math.max(Math.abs(a.y-b.y), Math.abs(c.y-d.y), Math.abs(a.x-d.x), Math.abs(b.x-c.x));
-    });
+    };
+    // SwiftShader can finish a frame after the fixed animation delay. Wait for
+    // actual alignment, without relaxing the geometric tolerance or hiding errors.
+    const deadline = Date.now() + 15000;
+    let error;
+    do {
+        error = await page.$eval('#monitor-focus', measure);
+        if (error < .1) break;
+        await pause(100);
+    } while (Date.now() < deadline);
     assert.ok(error < .1, `Focused monitor has perspective/tilt drift: ${error}px`);
 }
 
@@ -251,7 +260,14 @@ async function exerciseAlbum(page, label) {
         const result = await outdoor.$eval('#results', (el) => ({ status: el.dataset.status, text: el.textContent }));
         fs.writeFileSync(path.join(output, 'outdoor-contracts.txt'), result.text);
         assert.equal(result.status, 'passed', result.text);
-        console.log(JSON.stringify({ staticServer: 'pass', researchPlaceholder: 'pass', noBotRequests: 'pass', noTerminalTransport: 'pass', noNewPage: 'pass', cameraAndAppSwitch: 'pass', refresh: 'pass', guestTerminal: 'pass', album: 'pass', fullImageFit: 'pass', frontOnMonitor: 'pass', mobile: 'pass', fallback: 'pass', outdoor: 'pass', screenshots: output }));
+        const arm = await browser.newPage();
+        page = arm;
+        await arm.goto(origin + '/tests/studio-arm.html');
+        await arm.waitForFunction(() => document.querySelector('#results').dataset.status !== 'running', { timeout: 120000 });
+        const armResult = await arm.$eval('#results', (el) => ({ status: el.dataset.status, text: el.textContent }));
+        fs.writeFileSync(path.join(output, 'arm-contracts.txt'), armResult.text);
+        assert.equal(armResult.status, 'passed', armResult.text);
+        console.log(JSON.stringify({ arm: 'pass', staticServer: 'pass', researchPlaceholder: 'pass', noBotRequests: 'pass', noTerminalTransport: 'pass', noNewPage: 'pass', cameraAndAppSwitch: 'pass', refresh: 'pass', guestTerminal: 'pass', album: 'pass', fullImageFit: 'pass', frontOnMonitor: 'pass', mobile: 'pass', fallback: 'pass', outdoor: 'pass', screenshots: output }));
     } catch (error) {
         if (page && !page.isClosed()) await page.screenshot({ path: path.join(output, 'failure.png') }).catch(() => {});
         throw error;

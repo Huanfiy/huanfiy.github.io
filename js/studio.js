@@ -18,7 +18,7 @@ const devices = {
     solder: { n: '04', label: '焊接台', title: '把想法焊在一起', category: 'REWORK / T12 SOLDERING STATION', description: '打开焊台，烙铁进入工作状态，排烟风扇随之启动。工作结束后，记得让它休息。' },
     printer: { n: '05', label: '3D 打印', title: '一层一层，成为实物', category: 'FABRICATION / COREXY FDM PRINTER', description: '从空白热床开始，打印一副四轴无人机机架。看喷头在导轨上穿梭、热床随层高缓缓下降，中心板、机臂与电机座逐层长出来。' },
     motor: { n: '06', label: '电机测试', title: '让代码转起来', category: 'MOTION / BLDC + FOC DRIVER', description: 'FOC 驱动板经三相线驱动外转子无刷电机，磁编码器回读转子角度。启动测试台、调节目标转速，看三相电流与电角度在小屏上同步变化。' },
-    arm: { n: '07', label: '机械臂', title: '重复的事，交给机械', category: 'ROBOTICS / PICK & PLACE', description: '让机械臂执行一轮又一轮的取放装配。底座、肩部、肘部与夹爪协同完成运动。' },
+    arm: { n: '07', label: '机械臂', title: '重复的事，交给机械', category: 'ROBOTICS / PICK & PLACE', description: '一台桌面取放机械臂。回转底座、肩肘关节与调平腕部协同运动，平行夹爪把电路模块从取料位送入定位治具。' },
     plant: { n: '08', label: '绿植与传感器', title: '也照顾一下小小的绿意', category: 'LITTLE GARDEN / SOIL SENSOR', description: '给桌边绿植浇一点水，观察模拟土壤湿度的变化。开发板烧录完成后，OLED 也会显示它的读数。' }
 };
 const views = { overview: '窗边工作室', bench: '木头工作桌', fabrication: '打印角', robotics: '窗边的小实验', panorama: '房间全景' };

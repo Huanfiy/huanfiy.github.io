@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio arm contracts</title>
+<style>body{font:15px/1.6 monospace;background:#eee5d2;color:#344840;margin:24px}pre{white-space:pre-wrap}#stage{width:800px;height:500px;position:relative;overflow:hidden}#stage>canvas,.lab-screen-layer,.lab-orbit-surface{position:absolute;inset:0}.lab-screen-layer{pointer-events:none}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<h1>机械臂契约测试</h1>
+<p>由 <code>./run.sh test</code> 预览。以受控时钟运行真实房间，检查取放对齐、夹爪、暂停、拾取及资源预算；不代表真机性能验收。</p>
+<pre id="results" data-status="running">RUNNING</pre>
+<div id="home"><div id="monitor-focus">test desktop</div></div><div id="stage"></div>
+<script type="module">
+import * as THREE from 'three';
+import { createStudioRoom } from '../js/studio-room.js';
+import { ARM, ARM_PHASE as p } from '../js/studio-arm-motion.js';
+const output = document.getElementById('results'), log = [];
+const assert = (condition, message) => { if (!condition) throw Error(message); };
+const pass = message => { log.push('PASS ' + message); output.textContent = log.join('\n'); };
+const nativeRAF = window.requestAnimationFrame, nativeCancel = window.cancelAnimationFrame, nativeNow = performance.now;
+const beforeRender = THREE.Scene.prototype.onBeforeRender;
+const callbacks = new Map(); let id = 0, now = performance.now(), room, scene, camera, phase = 0, armRoot;
+performance.now = () => now;
+window.requestAnimationFrame = callback => { callbacks.set(++id, callback); return id; };
+window.cancelAnimationFrame = id => callbacks.delete(id);
+THREE.Scene.prototype.onBeforeRender = function(renderer, value, view, ...args) { beforeRender.call(this, renderer, value, view, ...args); scene = value; camera = view; };
+const step = .1;
+const frame = (dt = step) => { now += dt * 1000; const next = [...callbacks.values()]; callbacks.clear(); next.forEach(callback => callback(now)); };
+const yieldPaint = () => new Promise(resolve => nativeRAF.call(window, resolve));
+const state = { arm: false, armStarted: false, breeze: false, scope: 'sine', frequency: 2, scopeRunning: false, printer: 'idle', printProgress: 0, firmware: 'idle', flashProgress: 0, soilMoisture: 42, rpm: 2400 };
+const named = name => { const object = armRoot.getObjectByName(name); assert(object, `missing ${name}`); return object; };
+const matricesMatch = (a, b) => a.matrixWorld.elements.every((value, i) => Math.abs(value - b.matrixWorld.elements[i]) < 1e-7);
+const identity = new THREE.Matrix4().elements;
+const poseNames = ['arm-yaw', 'arm-shoulder', 'arm-elbow', 'arm-wrist', 'arm-tool-roll', 'arm-jaw-left', 'arm-jaw-right'];
+const snapshot = () => JSON.stringify(poseNames.map(name => named(name).matrixWorld.elements));
+try {
+    const selections = [];
+    room = createStudioRoom({ container: document.getElementById('stage'), state, reducedMotion: true, onSelect: id => selections.push(id), onFrame: report => { phase = report.armPhase; }, onEvent() {}, onError(message) { throw Error(message); }, onWindowToggle() {} });
+    room.setView('robotics', true); frame(); await yieldPaint(); frame();
+    armRoot = scene.children.find(object => object.userData.device === 'arm'); assert(armRoot, 'arm lost device identity');
+    const pickup = named('arm-pickup-part'), delivered = named('arm-delivered-part'), carried = named('arm-carried-part');
+    const loops = []; armRoot.traverse(object => { if (object.name === 'arm-joint-service-loop') loops.push(object); });
+    assert(loops.length === 3, 'shoulder, elbow and wrist require continuous service loops');
+    const home = snapshot(), geometryIds = loops.map(object => object.geometry.uuid);
+    for (let i = 0; i < 8; i++) frame();
+    assert(snapshot() === home && phase === 0 && pickup.visible && !carried.visible && !delivered.visible, 'idle arm moved without an action');
+    pass('待机无自行动作，独立关节/夹爪和三段柔性线束保留');
+    const transform = armRoot.matrixWorld.clone().invert();
+    let picked = false, placed = false, paused = false, previousCarried = false, previousPlaced = false;
+    state.arm = state.armStarted = true;
+    for (let i = 0; i < Math.ceil(ARM.cycle / step) + 3; i++) {
+        frame();
+        assert(Number(pickup.visible) + Number(carried.visible) + Number(delivered.visible) === 1, 'missing or duplicate workpiece');
+        const tool = named('arm-tool-roll');
+        const local = tool.matrixWorld.clone().premultiply(transform);
+        const down = new THREE.Vector3(0, 1, 0).transformDirection(local);
+        assert(down.distanceTo(new THREE.Vector3(0, -1, 0)) < 1e-8, 'tool no longer faces down');
+        const partRotation = new THREE.Matrix4().extractRotation(carried.matrixWorld.clone().premultiply(transform));
+        assert(partRotation.elements.every((v, index) => Math.abs(v - identity[index]) < 1e-7), 'carried PCB twisted relative to the fixtures');
+        for (const loop of loops) {
+            const p = loop.geometry.attributes.position;
+            assert([...p.array].every(Number.isFinite), 'non-finite cable geometry');
+            // Tube index winding agrees with its normals, so it is visible from outside.
+            const a = new THREE.Vector3().fromBufferAttribute(p, 0), b = new THREE.Vector3().fromBufferAttribute(p, 1), c = new THREE.Vector3().fromBufferAttribute(p, 7);
+            const n = new THREE.Vector3().fromBufferAttribute(loop.geometry.attributes.normal, 0);
+            assert(b.sub(a).cross(c.sub(a)).dot(n) > 0, 'inside-out or degenerate service loop');
+        }
+        if (carried.visible && !previousCarried) {
+            assert(matricesMatch(carried, pickup), 'pickup teleported the part position/orientation'); picked = true;
+            assert(Math.abs(named('arm-jaw-right').position.x - ARM.fit.padInnerX - ARM.part.width / 2) < 1e-9, 'closed pads do not contact the PCB edges');
+        }
+        if (delivered.visible && !previousPlaced) { assert(matricesMatch(carried, delivered), 'release teleported the part position/orientation'); placed = true; }
+        // Both fingers, including contour shells, must clear the solid nest floor.
+        const atPick = phase > p.PICK_LOWER_END * 100 && phase < p.PICK_LIFT_START * 100;
+        const atPlace = phase > p.PLACE_LOWER_END * 100 && phase < p.PLACE_LIFT_START * 100;
+        if (atPick || atPlace) {
+            for (const name of ['arm-jaw-left', 'arm-jaw-right']) {
+                const bounds = new THREE.Box3();
+                named(name).traverse(object => {
+                    if (!object.isMesh) return;
+                    object.geometry.computeBoundingBox();
+                    bounds.union(object.geometry.boundingBox.clone().applyMatrix4(object.matrixWorld.clone().premultiply(transform)));
+                });
+                assert(bounds.min.y > ARM.fixture.floorTop, 'finger intersects the nest floor');
+            }
+        }
+        if (carried.visible && phase >= (p.PICK_LIFT_END + p.TRANSFER_END) / 2 * 100 && !paused) {
+            state.arm = false;
+            const pose = snapshot(), before = phase, versions = loops.map(object => object.geometry.attributes.position.version);
+            for (let j = 0; j < 12; j++) frame();
+            assert(snapshot() === pose && phase === before && carried.visible, 'pause changed the pose, phase or workpiece');
+            assert(loops.every((object, index) => object.geometry.attributes.position.version === versions[index]), 'paused cable uploaded new vertices');
+            state.arm = true; paused = true;
+        }
+        previousCarried = carried.visible; previousPlaced = delivered.visible;
+        if (i % 8 === 0) await yieldPaint();
+    }
+    assert(picked && placed && paused && phase < 5 * step / ARM.cycle * 100, 'full cycle/pause/resume was not exercised');
+    assert(loops.every((object, index) => object.geometry.uuid === geometryIds[index]), 'animation allocated replacement cable geometry');
+    pass('完整取放：实物矩阵无跳变、腕部调平与方向补偿、夹持接触、治具间隙、暂停/继续');
+    pass('柔性线束全周期有限值、朝外三角形及复用缓冲；暂停时不上传顶点');
+    state.arm = false;
+    room.setView('robotics', true); frame();
+    const point = named('arm-elbow').getWorldPosition(new THREE.Vector3()).project(camera);
+    const bounds = document.getElementById('stage').getBoundingClientRect();
+    const event = { bubbles: true, pointerId: 1, pointerType: 'mouse', clientX: bounds.left + (point.x * .5 + .5) * bounds.width, clientY: bounds.top + (.5 - point.y * .5) * bounds.height };
+    const surface = document.querySelector('.lab-orbit-surface');
+    surface.dispatchEvent(new PointerEvent('pointerdown', event)); surface.dispatchEvent(new PointerEvent('pointerup', event));
+    assert(selections.at(-1) === 'arm', 'joint detail no longer selects its parent device');
+    pass('合批后的机械臂仍可拾取，点击关节不会误选窗户或其他设备');
+    const stats = room.getStats();
+    assert(stats.drawCalls <= 350 && stats.triangles <= 260000 && stats.geometries <= 320 && stats.textures <= 42, 'existing room budget exceeded');
+    output.dataset.status = 'passed'; pass('保持现有整房主通道预算；全部机械臂契约通过');
+} catch (error) {
+    output.dataset.status = 'failed'; output.textContent = log.join('\n') + '\nFAIL ' + error.stack; console.error(error);
+} finally {
+    room?.dispose(); callbacks.clear();
+    window.requestAnimationFrame = nativeRAF; window.cancelAnimationFrame = nativeCancel; performance.now = nativeNow;
+    THREE.Scene.prototype.onBeforeRender = beforeRender;
+}
+</script>
+</html>
