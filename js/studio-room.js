@@ -10,6 +10,7 @@ import { createStudioSpirit } from './studio-spirit.js';
 import { createStudioWindow } from './studio-window.js';
 import { createStudioLandscape } from './studio-landscape.js';
 import { createStudioArm } from './studio-arm.js';
+import { createStudioInstruments, INSTRUMENT_MOUNTS } from './studio-instruments.js';
 
 export function createStudioRoom({ container, state, reducedMotion, onSelect, onFrame, onEvent, onError, onWindowToggle, onReady = () => {} }) {
     const mobile = () => window.innerWidth <= 700;
@@ -603,34 +604,23 @@ export function createStudioRoom({ container, state, reducedMotion, onSelect, on
     box(architecture,.075,.026,.048,-2.056,usbY,-2.38,toolDark,.008);
     cable(architecture,[[-2.09,usbY,-2.38],[-2.20,usbY-.01,-2.395],[-2.33,1.88,-2.50],[-2.42,1.80,-2.80],[-2.41,1.785,-3.20],[-2.38,1.785,-3.52],[-2.37,1.72,-3.64],[-2.39,1.40,-3.67]],m.orange,.014);
 
-    // Oscilloscope and bench power supply.
-    const scope=device('scope',-3.23,1.81,-2.90,[-3.20,2.83,-2.90]);
-    box(scope.fixed,1.27,.75,.63,0,.39,0,m.cream,.065);
-    box(scope.fixed,.88,.56,.035,-.13,.43,.325,m.black,.025);
-    const scopeTex=canvasTexture(512,320,()=>{});surface(scope.root,.81,.49,-.13,.43,.347,scopeTex.texture);
-    for(let row=0;row<3;row++)for(let col=0;col<2;col++){
-        const knob=cylinder(scope.fixed,row===0?.065:.042,row===0?.065:.042,.04,.41+col*.135,.58-row*.16,.34,col?m.silver:m.metal,18);knob.rotation.x=Math.PI/2;
-    }
-    for(let i=0;i<4;i++){const port=cylinder(scope.fixed,.038,.038,.055,-.36+i*.20,.11,.35,[m.amberGlow,m.blueGlow,m.silver,m.silver][i],16);port.rotation.x=Math.PI/2;}
-    // Model badge sits low beside the ports, clear of the supply resting on top.
-    textLabel(scope.fixed,'SIGNAL / DSO',.26,.06,.44,.105,.321,{color:'#29463e',size:58,align:'center'});
-    box(scope.fixed,.16,.065,.49,-.46,-.02,.02,m.black);box(scope.fixed,.16,.065,.49,.46,-.02,.02,m.black);
+    // The room owns placement/state; the instrument module owns local hardware/art.
+    const scope=device('scope',-3.23,1.81,-2.90,[-3.20,3.13,-2.90]);
+    const supply=group(scene);supply.position.copy(scope.root.position).add(new THREE.Vector3(...INSTRUMENT_MOUNTS.supply));
+    const instruments=createStudioInstruments({scopeRoot:scope.root,scopeFixed:scope.fixed,supplyRoot:supply,group,box,cylinder,bar,material,canvasTexture,surface,batch,own,m});
+    const updateInstruments=()=>instruments.updateDisplay({waveform:state.scope,frequency:state.frequency,running:state.scopeRunning,time:reducedMotion?0:scopeTime});
     // CH1 probe: a BNC plug on the first port, the lead kept to the strip between the
     // instruments and the bench front (clear of the soldering station and iron stand),
     // then a probe body resting on the mat with its nose on the front header and the
     // hook tip on PA0, instead of a bare cable ending on the board face.
-    cylinder(architecture,.032,.032,.05,-3.59,1.92,-2.495,toolDark,14).rotation.x=Math.PI/2;
-    cylinder(architecture,.018,.018,.04,-3.59,1.92,-2.45,m.black,10).rotation.x=Math.PI/2;
+    const probeOutlet=scope.root.localToWorld(new THREE.Vector3(...INSTRUMENT_MOUNTS.probe));
     const probeTip=new THREE.Vector3(-1.845,2.03,-2.075),probeRear=new THREE.Vector3(-2.005,1.83,-1.868);
     const probeDir=probeTip.clone().sub(probeRear).normalize(),probeNose=probeTip.clone().addScaledVector(probeDir,-.06);
     const probeAt=t=>probeRear.clone().addScaledVector(probeDir,t).toArray();
     bar(architecture,probeAt(0),probeNose.toArray(),.02,toolDark);
     bar(architecture,probeAt(.05),probeAt(.07),.024,toolYellow);
     bar(architecture,probeNose.toArray(),probeTip.toArray(),.006,toolSteel);
-    cable(architecture,[probeAt(-.01),[-2.13,1.80,-1.83],[-2.40,1.79,-1.85],[-2.70,1.79,-2.08],[-2.95,1.79,-2.30],[-3.30,1.79,-2.36],[-3.55,1.83,-2.38],[-3.60,1.90,-2.41],[-3.59,1.92,-2.43]],m.gold,.014);
-    box(architecture,1.10,.30,.64,-3.22,2.725,-2.98,m.metal,.035);
-    textLabel(architecture,['DC POWER','05.00 V   0.32 A'],.70,.16,-3.30,2.75,-2.65,{size:53,color:'#a7eace',background:'#122c2b'});
-    const psuKnob=cylinder(architecture,.06,.06,.04,-2.78,2.74,-2.64,m.orange);psuKnob.rotation.x=Math.PI/2;
+    cable(architecture,[probeAt(-.01),[-2.13,1.80,-1.83],[-2.40,1.79,-1.85],[-2.70,1.79,-2.08],[-2.95,1.79,-2.30],[-3.30,1.79,-2.36],[-3.55,1.83,-2.35],probeOutlet.clone().add(new THREE.Vector3(-.01,-.02,.04)).toArray(),probeOutlet.toArray()],m.gold,.014);
 
     // Soldering station on rubber feet, with the iron parked tip-down in a coil holder
     // and a fume extractor beside it that faces the iron rather than the room.
@@ -1194,14 +1184,6 @@ export function createStudioRoom({ container, state, reducedMotion, onSelect, on
     listen(renderer.domElement,'webglcontextlost',e=>{e.preventDefault();lost=true;cancelAnimationFrame(frameId);frameId=null;onError('显卡连接已中断，可以重新加载场景。');});
     listen(document,'visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(frameId);frameId=null;}else if(!disposed&&!paused&&!lost&&!frameId){lastTime=performance.now();frameId=requestAnimationFrame(render);}});
 
-    function drawScope(ctx,w,h,t){
-        ctx.fillStyle='#0b2325';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#294446';ctx.lineWidth=1;for(let x=24;x<w;x+=46){ctx.beginPath();ctx.moveTo(x,30);ctx.lineTo(x,h-35);ctx.stroke();}for(let y=38;y<h-28;y+=36){ctx.beginPath();ctx.moveTo(20,y);ctx.lineTo(w-20,y);ctx.stroke();}
-        ctx.font='15px monospace';ctx.fillStyle='#e0c583';ctx.fillText('CH1   '+(state.scope==='sine'?'SINE':state.scope==='square'?'PWM':'SAW'),20,24);ctx.fillStyle='#97bfac';ctx.textAlign='right';ctx.fillText(state.frequency.toFixed(1)+' kHz',w-20,24);ctx.textAlign='left';
-        const wave=(x)=>{const a=(x/w)*Math.PI*2*state.frequency+t*2;return state.scope==='sine'?Math.sin(a):state.scope==='square'?(Math.sin(a)>0?1:-1):2*((a/(Math.PI*2))%1)-1;};
-        ctx.strokeStyle='#a5ebc1';ctx.shadowColor='#7fe1b0';ctx.shadowBlur=6;ctx.lineWidth=2.5;ctx.beginPath();for(let x=20;x<w-20;x++){const y=h*.47-wave(x)*h*.19;if(x===20)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.shadowBlur=0;
-        ctx.strokeStyle='#e1b278';ctx.lineWidth=1.4;ctx.beginPath();for(let x=20;x<w-20;x++){const y=h*.66-Math.sin(x*.035+t)*16;if(x===20)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();
-        ctx.fillStyle='#80a593';ctx.font='12px monospace';ctx.fillText('3.30 Vpp   500us/div   '+(state.scopeRunning?'RUN':'STOP'),20,h-12);
-    }
     function smallDisplay(display,top,bottom,tint='#a7eac8'){
         const {ctx,canvas,texture}=display;ctx.fillStyle='#102b2b';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#698e83';ctx.font='16px monospace';ctx.fillText(top,13,25);ctx.fillStyle=tint;ctx.font='30px monospace';ctx.fillText(bottom,13,canvas.height-17);texture.needsUpdate=true;
     }
@@ -1289,7 +1271,7 @@ export function createStudioRoom({ container, state, reducedMotion, onSelect, on
         controls.update();
         devices.forEach(item=>{item.brackets.visible=item.id!=='monitor'&&!paused&&(item.id===selected||item.id===hovered);if(item.brackets.visible&&reportElapsed+dt>.1)updateBrackets(item);});
         textureElapsed+=dt;reportElapsed+=dt;
-        if(textureElapsed>(active?.15:.35)){textureElapsed=0;drawScope(scopeTex.ctx,512,320,reducedMotion?0:scopeTime);scopeTex.texture.needsUpdate=true;smallDisplay(solderTex,'T12 STATION',state.iron?'350°C':'STANDBY',state.iron?'#f0bd7e':'#7aaca0');smallDisplay(printerTex,'CoreXY · 0.2 mm',state.printer==='idle'?'READY':state.printer==='done'?'DONE':Math.round(state.printProgress)+'%');drawMotorDisplay(motorTex,currentRPM,motorRotor.rotation.y);smallDisplay(boardOLED,state.firmware==='done'?'SOIL / ADC':'STM32 H7',state.firmware==='flashing'?Math.round(state.flashProgress)+'%':state.firmware==='done'?Math.round(state.soilMoisture)+'%':'480 MHz');smallDisplay(soilDisplay,'SOIL / DEMO',Math.round(state.soilMoisture)+'%');}
+        if(textureElapsed>(active?.15:.35)){textureElapsed=0;updateInstruments();smallDisplay(solderTex,'T12 STATION',state.iron?'350°C':'STANDBY',state.iron?'#f0bd7e':'#7aaca0');smallDisplay(printerTex,'CoreXY · 0.2 mm',state.printer==='idle'?'READY':state.printer==='done'?'DONE':Math.round(state.printProgress)+'%');drawMotorDisplay(motorTex,currentRPM,motorRotor.rotation.y);smallDisplay(boardOLED,state.firmware==='done'?'SOIL / ADC':'STM32 H7',state.firmware==='flashing'?Math.round(state.flashProgress)+'%':state.firmware==='done'?Math.round(state.soilMoisture)+'%':'480 MHz');smallDisplay(soilDisplay,'SOIL / DEMO',Math.round(state.soilMoisture)+'%');}
         const motionState=`${state.arm}:${state.boardExploded}:${state.printer}:${state.iron}:${state.breeze}`;
         if(motionState!==lastMotionState){lastMotionState=motionState;shadowUntil=elapsed+2;}
         if(elapsed<shadowUntil||state.printer==='printing'||currentRPM>1||state.arm||state.iron||spirit.isActive())renderer.shadowMap.needsUpdate=true;
@@ -1311,7 +1293,7 @@ export function createStudioRoom({ container, state, reducedMotion, onSelect, on
     }
     resize();setView('overview',true);setNight(false);
     // Render the first instrument display before exposing the workspace.
-    drawScope(scopeTex.ctx,512,320,0);scopeTex.texture.needsUpdate=true;
+    updateInstruments();
     frameId=requestAnimationFrame(render);
     return {setView,select,focusMonitor,setNight,setPaused,dispose,projectedMarkers,pokeSpirit:()=>{if(!disposed&&!paused)spirit.poke();},setHovered:id=>{if(!disposed)hovered=id;},getStats:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,renderedFrames,shadowUpdates}),getView:()=>view};
     } catch (error) {

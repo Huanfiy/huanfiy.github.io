@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio instrument contracts</title>
+<style>body{font:15px/1.6 monospace;background:#eee5d2;color:#344840;margin:24px}pre{white-space:pre-wrap}#stage{width:800px;height:500px;position:relative;overflow:hidden}#stage>canvas,.lab-screen-layer,.lab-orbit-surface{position:absolute;inset:0}.lab-screen-layer{pointer-events:none}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<h1>测量仪器契约测试</h1>
+<p>由 <code>./run.sh test</code> 预览。检查真实房间中的叠放、接口凹槽、显示状态、静态纹理、拾取与资源；软件渲染不代表真机性能。</p>
+<pre id="results" data-status="running">RUNNING</pre>
+<div id="home"><div id="monitor-focus">test desktop</div></div><div id="stage"></div>
+<script type="module">
+import * as THREE from 'three';
+import { createStudioRoom } from '../js/studio-room.js';
+const output = document.getElementById('results'), log = [], stage = document.getElementById('stage');
+const assert = (condition, message) => { if (!condition) throw Error(message); };
+const pass = message => { log.push('PASS ' + message); output.textContent = log.join('\n'); };
+const nativeRAF = window.requestAnimationFrame, nativeCancel = window.cancelAnimationFrame, nativeNow = performance.now;
+const beforeRender = THREE.Scene.prototype.onBeforeRender;
+const callbacks = new Map(); let id = 0, now = performance.now(), room, scene, camera;
+performance.now = () => now;
+window.requestAnimationFrame = callback => { callbacks.set(++id, callback); return id; };
+window.cancelAnimationFrame = id => callbacks.delete(id);
+THREE.Scene.prototype.onBeforeRender = function(renderer, value, view, ...args) { beforeRender.call(this, renderer, value, view, ...args); scene = value; camera = view; };
+const frame = () => { now += 100; const next = [...callbacks.values()]; callbacks.clear(); next.forEach(callback => callback(now)); };
+const frames = (n = 8) => { for (let i = 0; i < n; i++) frame(); };
+const yieldPaint = () => new Promise(resolve => nativeRAF.call(window, resolve));
+const solidMeshes = root => { const meshes = []; root.traverse(o => { if (o.isMesh && !o.material.transparent) meshes.push(o); }); return meshes; };
+try {
+    for (const reducedMotion of [false, true]) {
+        const state = { breeze: false, scope: 'sine', frequency: 2, scopeRunning: true, printer: 'idle', printProgress: 0, firmware: 'idle', flashProgress: 0, soilMoisture: 42, rpm: 2400 };
+        const selections = [];
+        room = createStudioRoom({ container: stage, state, reducedMotion, onSelect: id => selections.push(id), onFrame() {}, onEvent() {}, onError(message) { throw Error(message); }, onWindowToggle() {} });
+        room.select('scope'); frames(16); await yieldPaint(); frame();
+        const named = name => { const object = scene.getObjectByName(name); assert(object, `missing ${name}`); return object; };
+        const scope = named('bench-oscilloscope'), supply = named('bench-power-supply');
+        const lcd = named('scope-display'), power = named('power-supply-display');
+        const scopeLabels = named('scope-face-legends'), supplyLabels = named('power-supply-face-legends');
+        assert(scope.userData.device === 'scope' && supply.parent === scene && !supply.userData.device, 'measurement picking identity changed');
+        assert(scopeLabels.material.map === supplyLabels.material.map, 'faceplates no longer share an atlas');
+        assert(lcd.material.map !== scopeLabels.material.map && power.material.map !== lcd.material.map, 'static panels coupled to the animated screen');
+        const textures = [lcd.material.map, power.material.map, scopeLabels.material.map];
+        assert(textures.every(texture => texture.colorSpace === THREE.SRGBColorSpace), 'instrument texture colour space changed');
+        const scopeSolids = solidMeshes(scope), supplySolids = solidMeshes(supply);
+        assert(scopeSolids.length <= 12 && supplySolids.length <= 12, 'fixed details are not batched by material');
+        for (const mesh of [...scopeSolids, ...supplySolids]) assert([...mesh.geometry.attributes.position.array].every(Number.isFinite), 'invalid instrument geometry');
+        const ray = new THREE.Raycaster();
+        function hit(root, point, direction, meshes) {
+            ray.set(root.localToWorld(new THREE.Vector3(...point)), new THREE.Vector3(...direction).transformDirection(root.matrixWorld));
+            const result = ray.intersectObjects(meshes, false)[0]; assert(result, 'expected physical support/socket surface'); return result;
+        }
+        // Down from each power-supply foot: the scope lid is exactly the foot base,
+        // not a gap, and not the rounded edge. Ignore the transparent ink shells.
+        for (const x of [-.44, .44]) for (const z of [-.21, .21]) {
+            const origin = supply.localToWorld(new THREE.Vector3(x, 0, z));
+            const top = hit(supply, [x, .002, z], [0, -1, 0], scopeSolids).point;
+            assert(Math.abs(top.y - origin.y) < 1e-6, 'power-supply foot floats or intersects the lid');
+        }
+        for (const x of [-.46, .46]) {
+            const bottom = hit(scope, [x, -.06, 0], [0, 1, 0], scopeSolids).point;
+            assert(Math.abs(bottom.y - 1.77) < 1e-6, 'scope feet do not rest on the workbench');
+        }
+        // Bare sockets must have recessed centres, not a coloured solid-cylinder cap.
+        for (const x of [-.15, .06, .27]) {
+            const centre = hit(scope, [x, .110, .50], [0, 0, -1], scopeSolids);
+            const rim = hit(scope, [x + .027, .110, .50], [0, 0, -1], scopeSolids);
+            assert(centre.distance - rim.distance > .008, 'BNC lost its hollow barrel');
+        }
+        for (const x of [.146, .285, .424]) {
+            const centre = hit(supply, [x, .123, .50], [0, 0, -1], supplySolids);
+            const rim = hit(supply, [x + .016, .123, .50], [0, 0, -1], supplySolids);
+            assert(centre.distance - rim.distance > .012, 'binding post lost its recessed socket');
+        }
+        pass(`${reducedMotion ? '减少动态' : '普通模式'}：实体支撑、BNC/输出端子凹槽、材质合批与共用面板图集`);
+        const versions = textures.map(texture => texture.version), geometries = [...scopeSolids, ...supplySolids].map(mesh => mesh.geometry.uuid);
+        const original = lcd.material.map.image.toDataURL(); frames();
+        assert(reducedMotion ? lcd.material.map.version === versions[0] : lcd.material.map.version > versions[0], 'live/reduced scope upload contract');
+        state.scopeRunning = false; frames();
+        const stopped = lcd.material.map.image.toDataURL(), stoppedVersion = lcd.material.map.version;
+        frames(12); assert(lcd.material.map.image.toDataURL() === stopped && lcd.material.map.version === stoppedVersion, 'paused scope repaints or uploads');
+        const waveImages = new Set();
+        for (const waveform of ['sine', 'square', 'saw']) {
+            state.scope = waveform; frames(); waveImages.add(lcd.material.map.image.toDataURL());
+        }
+        assert(waveImages.size === 3, 'waveform selection does not change the physical screen');
+        const lowFrequency = lcd.material.map.image.toDataURL(); state.frequency = 5; frames();
+        assert(lcd.material.map.image.toDataURL() !== lowFrequency, 'frequency changes lost');
+        state.scopeRunning = true; frames();
+        assert(lcd.material.map.image.toDataURL() !== stopped && lcd.material.map.image.toDataURL() !== original, 'resume did not update status/waveform');
+        for (const night of [true, false, true, false]) { room.setNight(night); frames(); }
+        assert(power.material.map.version === versions[1] && scopeLabels.material.map.version === versions[2], 'static readout or legends repainted during theme/capture changes');
+        assert([...scopeSolids, ...supplySolids].every((mesh, i) => mesh.geometry.uuid === geometries[i]), 'display updates replaced hardware buffers');
+        pass('三种波形、频率、暂停/继续与减少动态；日夜切换不重绘静态面板或电源读数');
+        room.select('scope'); frames(16);
+        const point = scope.localToWorld(new THREE.Vector3(-.48, .730, .365)).project(camera), bounds = stage.getBoundingClientRect();
+        const event = { bubbles: true, pointerId: 1, pointerType: 'mouse', clientX: bounds.left + (point.x * .5 + .5) * bounds.width, clientY: bounds.top + (.5 - point.y * .5) * bounds.height };
+        const surface = stage.querySelector('.lab-orbit-surface');
+        surface.dispatchEvent(new PointerEvent('pointerdown', event)); surface.dispatchEvent(new PointerEvent('pointerup', event));
+        assert(selections.at(-1) === 'scope', 'refined scope no longer selects its device');
+        const stats = room.getStats();
+        assert(stats.drawCalls <= 350 && stats.triangles <= 260000 && stats.geometries <= 320 && stats.textures <= 42, 'existing room resource budget exceeded');
+        const resources = new Set(textures), released = new Map();
+        for (const root of [scope, supply]) root.traverse(object => { if (object.geometry) resources.add(object.geometry); if (object.material) resources.add(object.material); });
+        for (const resource of resources) resource.addEventListener('dispose', () => released.set(resource, (released.get(resource) || 0) + 1));
+        room.dispose(); room.dispose();
+        assert([...resources].every(resource => released.get(resource) === 1), 'instrument resource not released exactly once');
+        assert(!stage.children.length, 'room cleanup left instrument DOM behind');
+        pass('拾取身份不变、现有整房预算、仪器资源一次性释放与重复销毁');
+    }
+    output.dataset.status = 'passed'; pass('全部测量仪器契约通过');
+} catch (error) {
+    output.dataset.status = 'failed'; output.textContent = log.join('\n') + '\nFAIL ' + error.stack; console.error(error);
+} finally {
+    room?.dispose(); callbacks.clear();
+    window.requestAnimationFrame = nativeRAF; window.cancelAnimationFrame = nativeCancel; performance.now = nativeNow;
+    THREE.Scene.prototype.onBeforeRender = beforeRender;
+}
+</script>
+</html>

@@ -260,6 +260,13 @@ async function exerciseAlbum(page, label) {
         const result = await outdoor.$eval('#results', (el) => ({ status: el.dataset.status, text: el.textContent }));
         fs.writeFileSync(path.join(output, 'outdoor-contracts.txt'), result.text);
         assert.equal(result.status, 'passed', result.text);
+        const instruments = await browser.newPage();
+        page = instruments;
+        await instruments.goto(origin + '/tests/studio-instruments.html');
+        await instruments.waitForFunction(() => document.querySelector('#results').dataset.status !== 'running', { timeout: 120000 });
+        const instrumentResult = await instruments.$eval('#results', (el) => ({ status: el.dataset.status, text: el.textContent }));
+        fs.writeFileSync(path.join(output, 'instrument-contracts.txt'), instrumentResult.text);
+        assert.equal(instrumentResult.status, 'passed', instrumentResult.text);
         const arm = await browser.newPage();
         page = arm;
         await arm.goto(origin + '/tests/studio-arm.html');
@@ -267,7 +274,7 @@ async function exerciseAlbum(page, label) {
         const armResult = await arm.$eval('#results', (el) => ({ status: el.dataset.status, text: el.textContent }));
         fs.writeFileSync(path.join(output, 'arm-contracts.txt'), armResult.text);
         assert.equal(armResult.status, 'passed', armResult.text);
-        console.log(JSON.stringify({ arm: 'pass', staticServer: 'pass', researchPlaceholder: 'pass', noBotRequests: 'pass', noTerminalTransport: 'pass', noNewPage: 'pass', cameraAndAppSwitch: 'pass', refresh: 'pass', guestTerminal: 'pass', album: 'pass', fullImageFit: 'pass', frontOnMonitor: 'pass', mobile: 'pass', fallback: 'pass', outdoor: 'pass', screenshots: output }));
+        console.log(JSON.stringify({ instruments: 'pass', arm: 'pass', staticServer: 'pass', researchPlaceholder: 'pass', noBotRequests: 'pass', noTerminalTransport: 'pass', noNewPage: 'pass', cameraAndAppSwitch: 'pass', refresh: 'pass', guestTerminal: 'pass', album: 'pass', fullImageFit: 'pass', frontOnMonitor: 'pass', mobile: 'pass', fallback: 'pass', outdoor: 'pass', screenshots: output }));
     } catch (error) {
         if (page && !page.isClosed()) await page.screenshot({ path: path.join(output, 'failure.png') }).catch(() => {});
         throw error;

@@ -108,7 +108,7 @@ try {
     assert(selections.at(-1) === 'arm', 'joint detail no longer selects its parent device');
     pass('合批后的机械臂仍可拾取，点击关节不会误选窗户或其他设备');
     const stats = room.getStats();
-    assert(stats.drawCalls <= 350 && stats.triangles <= 260000 && stats.geometries <= 320 && stats.textures <= 42, 'existing room budget exceeded');
+    assert(stats.drawCalls <= 350 && stats.triangles <= 260000 && stats.geometries <= 320 && stats.textures <= 42, `existing room budget exceeded: ${JSON.stringify(stats)}`);
     output.dataset.status = 'passed'; pass('保持现有整房主通道预算；全部机械臂契约通过');
 } catch (error) {
     output.dataset.status = 'failed'; output.textContent = log.join('\n') + '\nFAIL ' + error.stack; console.error(error);

@@ -14,6 +14,7 @@ huanfly.com 的开源纯静态个人网站：原生 HTML5 + CSS3 + JavaScript，
 | [studio.html](studio.html)、[css/studio.css](css/studio.css)、[css/studio-apps.css](css/studio-apps.css) | 全视口 Three.js 嵌入式工作室；`studio.css` 管房间控件，`studio-apps.css` 管屏内终端 / 相册 / Robot 静态占位的样式 |
 | [js/studio.js](js/studio.js) | 设备状态、按需标签、八站导览、镜头预设、日夜灯光、窗与微风状态、键盘控制 |
 | [js/studio-room.js](js/studio-room.js) | 有界房间、靠墙承重的 L 形工作台、落地打印机与设备模型；拥有布局 / 配色、共享时钟、窗风平滑，以及由允许镜头目标与轨道距离推导的背景半径与远裁剪面；固定网格与描边合批 |
+| [js/studio-instruments.js](js/studio-instruments.js)、[js/studio-instrument-art.js](js/studio-instrument-art.js) | 示波器与直流稳压电源的局部模型、共享面板布局与 Canvas 图集 / 读数；房间负责摆放、状态快照、共享时钟和资源清理 |
 | [js/studio-arm.js](js/studio-arm.js)、[js/studio-arm-motion.js](js/studio-arm-motion.js) | 桌面机械臂的分关节合批模型、柔性线束与夹爪；共享工位 / 工具尺寸的纯运动学采样，暂停保留取放状态 |
 | [js/studio-art.js](js/studio-art.js)、[js/studio-figures.js](js/studio-figures.js) | Canvas 生成的纸张 / 木纹 / 布料 / 光斑纹理；架上三个程序化动漫手办 |
 | [js/studio-window.js](js/studio-window.js)、[js/studio-landscape.js](js/studio-landscape.js)、[js/studio-landscape-art.js](js/studio-landscape-art.js) | 窗户只负责外开窗扇、玻璃与点击区；景观负责近乎同层的庭院、墙脚石、连续粗粒远地表、闭合的世界固定天空、实例化果园 / 花草与独立云鸟网格；景观画布只在主题或质量档位变化时确定性重绘 |
@@ -61,6 +62,7 @@ DEPLOY_TARGET=... PUBLIC_BASE_URL=... ./run.sh deploy <ref>  # 部署指定提�
 ```
 
 - 改动工作室后：启动本地服务器并打开 `tests/studio-outdoor.html` 运行浏览器契约测试（复用同一 pinned Three.js CDN，无需包管理器）；有 Puppeteer 环境时运行 `PUPPETEER_MODULE=/abs/path/puppeteer-core node tests/studio-apps-browser.cjs`。软件渲染与移动视口模拟不等于真机性能验收，待验收项见 [工作室真机验收](docs/todo/studio-real-device-acceptance.md)。
+- 改动示波器或电源后：浏览器页 `tests/studio-instruments.html`（实体叠放、接口凹槽、波形 / 暂停、静态纹理、拾取与清理）；也由 `tests/studio-apps-browser.cjs` 一并回归。
 - 改动机械臂后：`node --test tests/studio-arm.test.js`，浏览器页 `tests/studio-arm.html`（真实房间中的取放矩阵、夹爪间隙、暂停 / 继续、线束缓冲与拾取）；也由 `tests/studio-apps-browser.cjs` 一并回归。
 - 改动博客封面或文章索引后：`node --test tests/blog-covers.test.js`，浏览器页 `tests/blog-covers.html`。
 - 改动键位练习算法后：`node tools/keyboard-algo.test.js`。
