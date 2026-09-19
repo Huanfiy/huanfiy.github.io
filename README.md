@@ -1,22 +1,79 @@
-# Personal Web
+<p align="center">
+  <img src="picture/icon-192.png" width="96" height="96" alt="Huanfly 头像">
+</p>
 
-开源的纯静态个人网站，包含博客、在线工具箱、个人展示和 Three.js 工作室。无需前端构建、包管理器或应用后端，可直接部署到静态托管平台。线上实例为 [huanfly.com](https://huanfly.com)。
+<h1 align="center">Huanfly · Personal Web</h1>
+
+<p align="center">在一片手绘森林里，记录、分享、创造。</p>
+
+<p align="center">
+  <a href="https://huanfly.com">在线体验</a> ·
+  <a href="#功能">站点地图</a> ·
+  <a href="#技术栈">运行架构</a> ·
+  <a href="#使用">快速开始</a>
+</p>
+
+开源的纯静态个人网站，包含博客、在线工具箱、个人展示和 Three.js 工作室。
+
+> **原生 HTML / CSS / JavaScript** · **无前端构建** · **无包管理器** · **无应用后端**
 
 ## 功能
 
-- **博客** — Markdown 文章、标签筛选、搜索、主题封面与可选评论。写作和发布见[博客发布流程](docs/design/blog-auto-publish.md)。
-- **工具箱** — 图片转 ICO、键位练习、链接转换器、下载中心和技术可视化。
-- **工作室** — 可环视的手绘 3D 房间，支持设备模拟、昼夜切换、开窗与导览；显示器内可操作访客终端和相册。终端始终是浏览器内模拟，Robot 仅为「研究中」占位，能力边界见[工作室约束](docs/design/workbench.md#终端与-robot-的能力边界)。
-- **个人展示** — 首页、关于页，以及摄影、科技制作和阅读内容。
-- **幻羽 OC** — 首页小羽的点击互动、临时气泡、星屿手记与本地收藏；共享草地页脚使用睡姿小羽。
+```mermaid
+flowchart TB
+    accTitle: Huanfly 站点地图
+    accDescr: 首页连接博客、工具箱、工作室和关于页。幻羽陪伴位于首页，各页面的详情在页内切换。
+    HOME["首页 · 森林与幻羽<br/>index.html"]
+    HOME --> BLOG["博客<br/>blog.html"]
+    HOME --> TOOLS["工具箱<br/>tool.html"]
+    HOME --> STUDIO["工作室<br/>studio.html"]
+    HOME --> ABOUT["关于<br/>about.html"]
+    classDef default fill:#fffdf5,stroke:#a8bba1,color:#2f3630
+    classDef home fill:#edf3df,stroke:#5da844,color:#2f3630,stroke-width:2px
+    class HOME home
+```
+
+| 入口 | 可以做什么 |
+| --- | --- |
+| 🌿 **首页** | 时段森林、活动时间线、小羽点击互动、临时气泡与星屿手记 |
+| ✍️ **博客** | Markdown 文章、标签筛选、搜索、主题封面与可选评论 |
+| 🧰 **工具箱** | 图片转 ICO、键位练习、链接转换器、下载中心与技术可视化 |
+| 🛠️ **工作室** | 环视 3D 房间、设备模拟、昼夜切换、开窗导览，以及屏内终端和相册 |
+| 📷 **关于** | 个人介绍、摄影、科技制作与阅读内容 |
+
+博客正文、ICO 转换和兴趣详情均在各自页面内切换。写作见[博客发布流程](docs/design/blog-auto-publish.md)；终端与 Robot 的能力边界见[工作室约束](docs/design/workbench.md#终端与-robot-的能力边界)。
 
 ## 设计风格
 
-罗小黑风格的手绘绘本：暖纸底、森林绿与灵气青，深色模式切换为夜森林。首页景观随时段变化，工作室延续温暖、克制的科技感；交互尊重减少动态偏好。视觉规则见[设计系统](docs/design/design-system.md)，房间构图与设备约束见[工作室要素约束](docs/design/workbench.md)。
+**暖纸绘本 → 时段森林 → 夜森林。** 罗小黑风格的手绘笔触，搭配森林绿与灵气青；首页景观随时段变化，工作室延续温暖、克制的科技感，共享页脚由睡着的小羽陪伴。交互尊重减少动态偏好。
+
+视觉规则见[设计系统](docs/design/design-system.md)，房间构图与设备约束见[工作室要素约束](docs/design/workbench.md)。
 
 ## 技术栈
 
-原生 HTML5、CSS3、JavaScript；Markdown 使用 Marked.js，图标使用 Font Awesome，工作室使用 Three.js。前端依赖经 CDN 加载，站点源文件按原样托管。
+**浏览器负责渲染与交互，托管端只提供静态文件。** 前端库、字体和图标按页面需要经 CDN 加载。
+
+```mermaid
+flowchart TB
+    accTitle: 纯静态网站的运行架构
+    accDescr: 静态托管提供页面、脚本和内容文件，CDN 提供前端依赖。主站、Markdown 解析和 Three.js 工作室均在访客浏览器中运行；主题与收藏保存在本地。
+    HOST["静态托管<br/>HTML / CSS / JS · Markdown / JSON / 图片"]
+    CDN["CDN<br/>前端库 / 字体 / 图标"]
+    HOST --> APP
+    CDN -.-> APP
+    subgraph BROWSER["访客浏览器"]
+        APP["原生 JavaScript"]
+        APP --> MAIN["主站页面<br/>DOM / CSS · Marked.js"]
+        APP --> ROOM["3D 工作室<br/>Three.js · CSS3D"]
+        APP <--> LOCAL["localStorage<br/>主题 / 收藏"]
+    end
+    classDef default fill:#fffdf5,stroke:#a8bba1,color:#2f3630
+    classDef runtime fill:#e3f3f1,stroke:#4fc4cf,color:#2f3630,stroke-width:2px
+    class APP runtime
+    style BROWSER fill:transparent,stroke:#a8bba1
+```
+
+> **能力边界：**终端始终是浏览器内模拟，不连接真实 shell；Robot 仅为「研究中」静态占位。giscus 评论是可选外部服务，未配置时不加载，不属于自建后端。
 
 ## 项目结构
 
@@ -36,16 +93,33 @@
 
 ## 使用
 
+### 本地预览与验证
+
 ```bash
 ./run.sh test          # 本地预览，默认端口 8080
 ./run.sh test 3000     # 指定预览端口
-./run.sh gen           # 生成文章索引；发布前需审查并提交
+./run.sh gen           # 文章变更后生成索引，审查并随文章提交
 node --test tests/*.test.js
 ```
 
 按改动范围运行相应浏览器回归，命令及环境要求见 [开发与验证](AGENTS.md#开发与验证)。浏览器视口模拟不能替代[工作室真机验收](docs/todo/studio-real-device-acceptance.md)。
 
-**部署：**提交并推送后，在干净工作区中执行：
+### 发布到静态托管
+
+```mermaid
+flowchart LR
+    accTitle: 仓库发布流程
+    accDescr: 编辑内容并完成本地验证，提交和推送后，从指定 Git 提交打包、校验和同步静态产物，最后验证线上版本与资源。
+    EDIT["编辑内容"] --> CHECK["预览 / 测试"]
+    CHECK --> GIT["提交 / 推送"]
+    GIT --> DEPLOY["run.sh deploy<br/>打包 / 校验 / 同步"]
+    DEPLOY --> VERIFY["线上冒烟验证"]
+    classDef default fill:#fffdf5,stroke:#a8bba1,color:#2f3630
+    classDef release fill:#edf3df,stroke:#5da844,color:#2f3630,stroke-width:2px
+    class DEPLOY release
+```
+
+提交并推送后，在干净工作区中执行：
 
 ```bash
 DEPLOY_TARGET='user@example.com:/srv/www/blog/' \
