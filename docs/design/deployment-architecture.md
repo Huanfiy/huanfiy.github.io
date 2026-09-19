@@ -1,117 +1,53 @@
 # 发布产物与外部部署边界
 
-> 对应实现：`run.sh`、`.gitattributes`
+> 对应实现：[run.sh](../../run.sh)、[.gitattributes](../../.gitattributes)
 
 ## 1. 架构原则
 
-本仓库是公开的纯静态博客项目，管理站点源文件、文章索引、发布产物规则和通用预览/部署入口，不提供应用后端，也不保存生产服务器的实际配置或秘密。Robot 仅保留「研究中」占位；通用 Server 计划已移出工作区（git 历史 `2d9c4e7` 可查），不属于当前部署流程。
+本仓库只管理纯静态站点源文件、文章索引与发布产物规则，不提供应用后端。Web Server、DNS、TLS、缓存、认证、CDN、主机目录、SSH 凭据等实例配置必须留在仓库外，由私有基础设施仓库、托管平台或运行环境管理；禁止把秘密写入前端、Git 或静态产物。
 
-实际服务器与托管平台的实例配置必须位于仓库之外，包括但不限于：
-
-- Nginx、Apache、Caddy 或其他 Web Server 配置；
-- 域名解析、TLS 证书路径与续期策略；
-- 服务器账号、主机地址、部署目录与 SSH 配置；
-- 反向代理、访问认证、重定向、缓存头和 MIME 映射；
-- CDN、对象存储、Release 目录、软链接与回滚策略；
-- 密码文件、Token、Cookie 规则和受保护下载目录。
-
-上述内容应由私有基础设施仓库、托管平台控制台或运行环境管理。`/deploy/nginx/` 已加入 `.gitignore`，防止本机配置重新进入版本控制。
+终端、Robot 与已移出的 Server 研究计划见[工作室能力边界](workbench.md#终端与-robot-的能力边界)，不属于部署服务。
 
 ## 2. 覆盖范围与非覆盖范围
 
 ### 2.1 仓库覆盖范围
 
-- `./run.sh gen`：从 `posts/*.md` 生成 `posts/posts.json`；
-- `git archive`：从指定 Git 提交生成临时发布产物；
-- `.gitattributes`：排除开发、文档与运维文件；
-- `deploy-version.json`：记录产物对应的完整 Git SHA；
-- Artifact 校验：检查必需文件、JSON 和 JavaScript 语法；
-- 可选 rsync 传输：目标地址由环境变量注入；
-- 通用线上 Smoke Test：检查版本标记、核心页面与静态资源可访问性。
+文章索引生成、基于 Git 提交的产物打包与校验、版本标记、可选 rsync 传输，以及通用线上冒烟验证。
 
 ### 2.2 仓库不覆盖范围
 
-- Web Server、容器、虚拟机或托管平台配置；
-- 生产环境的缓存、压缩、MIME、TLS、认证与代理策略；
-- 实际 SSH 密钥、服务器身份、主站目录规划与人工运维数据；
-- 自动扩缩容、流量切换、原子发布和自动回滚；
-- GitHub Actions、GitHub Pages、Cloudflare Pages、Netlify、Vercel 等平台专属工作流。
-
-平台专属部署可以绕过 `./run.sh deploy`，使用平台自身的静态发布流程。静态站点运行不依赖 rsync 或特定 Web Server，不需要启动 Robot 或其他应用服务。实际 Web Server、TLS、密码和主机配置仍由运行环境管理。
+平台专属工作流与实例配置、自动扩缩容、原子发布及自动回滚均由外部环境负责。使用 GitHub Pages、Cloudflare Pages 等平台时，可采用平台原生静态发布流程；站点运行本身不依赖 rsync 或特定 Web Server。
 
 ## 3. 数据流
 
 ```text
-Git 提交
-   ↓
-git archive <git-ref>
-   ↓
-临时 Artifact
-   ├─ 可选：重建 posts/posts.json
-   ├─ 写入 deploy-version.json
-   └─ 校验文件、JSON 与 JavaScript
-   ↓
-外部注入 DEPLOY_TARGET
-   ↓
-rsync 传输，或由外部平台采用其他发布方式
-   ↓
-外部注入 PUBLIC_BASE_URL
-   ↓
-版本与核心资源 Smoke Test
+Git 提交 → git archive → 临时产物（可选重建索引、写版本标记、校验）
+        → rsync 传输 → 线上版本与核心资源冒烟验证
 ```
 
-部署链路不读取仓库内的服务器配置文件，也不推断主机、账号、目录或域名。
+部署链路不读取仓库内的服务器配置，也不推断目标主机、账号、目录或域名。
 
 ## 4. 发布产物
 
 ### 4.1 产物来源
 
-`./run.sh deploy [git-ref]` 将目标引用解析为完整 Git SHA，再执行：
-
-```bash
-git archive --format=tar <commit-sha>
-```
-
-Artifact 只包含目标提交中的跟踪文件。工作区修改、未跟踪文件和 `.git/` 不会进入产物。部署前仍要求工作区保持干净，避免将本地状态误认为目标提交状态。
+`./run.sh deploy [git-ref]` 将引用解析为完整 Git SHA，再通过 `git archive` 打包。产物只来自目标提交，不包含工作区修改、未跟踪文件或 `.git/`；部署前仍要求工作区干净，避免把本地状态误认为已发布版本。
 
 ### 4.2 导出边界
 
-`.gitattributes` 使用 `export-ignore` 排除以下内容：
-
-- `.gitattributes`、`.gitignore`；
-- `.cursor/`、`.claude/`、`AGENTS.md`、`docs-rules.md`、`docs/`；
-- `README.md`、`*.log`、`.DS_Store`、`*.test.js`；
-- `run.sh`、`deploy/`、`server/`、`agents/`、`tests/`、`tmp/`、`build/` 和 `.venv/`；
-- `.env*`、`*.sqlite3*`、`testkey.txt` 等运行时敏感文件。
-
-发布产物不包含项目协作说明、设计文档、待办登记、测试文件或运维目录。对 `server/` 等路径的防误发规则不表示当前存在后端实现。
+开发、文档、测试、运维与敏感文件不得进入产物。精确的 `export-ignore` 清单以 [.gitattributes](../../.gitattributes) 为准，产物检查由 `run.sh` 的 `validate_artifact` 维护，不在文档复制第二份路径表。对 `server/` 等路径的防误发规则不表示当前存在后端实现。
 
 ### 4.3 版本标记
 
-部署时在临时 Artifact 根目录生成 `deploy-version.json`：
-
-```json
-{
-  "schema": 1,
-  "commit": "完整 Git SHA",
-  "ref": "请求部署的引用",
-  "generated_at": "UTC 时间"
-}
-```
-
-该文件用于部署后核对线上版本，不属于业务配置，也不写回工作区。
+`deploy-version.json` 由 `run.sh` 的 `write_deploy_marker` 在临时产物内生成，记录 `schema`、完整提交 SHA（`commit`）、请求引用（`ref`）和 UTC 生成时间（`generated_at`）。它用于核对线上版本，不是业务配置，也不写回工作区。
 
 ## 5. 外部配置接口
-
-`./run.sh deploy` 使用以下环境变量：
 
 | 变量 | 必填 | 作用 |
 |---|---|---|
 | `DEPLOY_TARGET` | 是 | rsync 目标；支持远程地址或本地目录 |
-| `PUBLIC_BASE_URL` | 是 | 部署完成后的公开访问地址，用于 Smoke Test |
+| `PUBLIC_BASE_URL` | 是 | 部署后的公开 HTTP(S) 地址，用于冒烟验证 |
 | `DEPLOY_REQUIRED_REF` | 否 | 设置后要求目标提交位于该 Git 引用历史中 |
-
-示例：
 
 ```bash
 DEPLOY_TARGET='user@example.com:/srv/www/blog/' \
@@ -120,69 +56,41 @@ DEPLOY_REQUIRED_REF='origin/main' \
 ./run.sh deploy HEAD
 ```
 
-示例值仅说明变量格式。真实服务器账号、SSH 主机和部署目录不得以部署配置形式写入受跟踪文件；站点 Canonical URL、Sitemap 等公开内容不受此限制。脚本不会自动执行 `git fetch`；使用 `DEPLOY_REQUIRED_REF` 前，应由调用环境更新对应引用。
+示例仅说明变量格式，真实服务器账号、SSH 主机和部署目录不得作为配置写入受跟踪文件；站点 Canonical URL、Sitemap 等公开内容不受此限制。脚本不自动执行 `git fetch`，使用 `DEPLOY_REQUIRED_REF` 前应先更新对应引用。
 
 ## 6. 文章索引模式
 
-常规部署使用目标提交中已有的 `posts/posts.json`。文章发布前执行：
-
-```bash
-./run.sh gen
-```
-
-`--gen` 只在临时 Artifact 内重建索引：
+常规部署使用目标提交中已有的 `posts/posts.json`，不会自动重新生成。文章发布前的生成、审查与提交步骤见[博客发布流程](blog-auto-publish.md#6-新文章发布流程)。
 
 ```bash
 ./run.sh deploy --gen <git-ref>
 ```
 
-该选项不会修改工作区，不替代发布前审查并提交索引的常规流程。文章字段与生成规则见 [blog-auto-publish.md](blog-auto-publish.md)。
+`--gen` 仅在临时产物内重建索引，不修改工作区，也不替代发布前审查并提交索引。
 
 ## 7. 通用部署行为
 
-rsync 传输使用以下稳定参数：
-
-- `--delay-updates`：文件传输完成后再切换临时文件；
-- `--delete-delay`：传输完成后删除目标端多余文件；
-- `--chmod=D755,F644`：Artifact 目录设为 `0755`，文件设为 `0644`。
-
-该传输方式不具备原子发布语义。若托管环境要求零混合版本窗口或秒级回退，应在仓库之外采用 Release 目录、软链接切换或平台原子部署能力。
+rsync 在传输完成后更新临时文件、删除目标端多余文件并统一权限，具体参数以 `run.sh` 的 `do_deploy` 为准。**这不是原子发布**；零混合版本窗口或秒级回退应由仓库外的 Release 目录、软链接或平台能力实现。
 
 ## 8. Smoke Test 边界
 
-部署完成后，脚本验证：
+脚本核对线上版本标记中的 `commit` 与目标 SHA，并检查核心页面（含工作室）、共享资源和动态数据可访问。完整检查清单以 `run.sh` 的 `smoke_test` 为准。
 
-- `/deploy-version.json` 的 `commit` 等于目标 Git SHA；
-- 首页、博客页、工具页和关于页可访问；
-- 共享 CSS、共享 JavaScript、动态数据与 Web App Manifest 可访问。
-
-脚本不验证以下服务器策略：
-
-- `Cache-Control`、ETag 或 Last-Modified；
-- Content-Type 与 MIME 映射；
-- HTTPS、证书链、域名重定向；
-- 压缩、CDN、认证或反向代理行为。
-
-这些策略由外部托管环境负责。项目页面应避免依赖某一种 Web Server 的私有行为。
+该检查不能替代外部环境对缓存、MIME、TLS / 重定向、压缩、CDN、认证与代理策略的验收；站点不得依赖某一种 Web Server 的私有行为。
 
 ## 9. 回退
 
-通用 rsync 部署可重新发布上一稳定提交：
+沿用 §5 的外部配置，重新部署上一稳定提交：
 
 ```bash
-DEPLOY_TARGET='user@example.com:/srv/www/blog/' \
-PUBLIC_BASE_URL='https://blog.example.com' \
 ./run.sh deploy <previous-stable-sha>
 ```
 
-该方式会重新传输文件，不等同于原子回滚。使用 GitHub Pages、Cloudflare Pages 或其他托管平台时，应使用对应平台的版本回退能力。
+该方式重新传输文件，不等于原子回滚或自动回滚。采用平台原生发布时，使用平台自身的版本回退能力。
 
 ## 10. 验收清单
 
-- [ ] 仓库内不存在 Nginx 或其他生产 Web Server 配置；
-- [ ] 仓库内不存在服务器账号、部署目录、证书路径或认证文件；
-- [ ] `DEPLOY_TARGET` 与 `PUBLIC_BASE_URL` 由运行环境注入；
-- [ ] Artifact 仅来自指定 Git 提交；
-- [ ] `deploy-version.json` 与目标提交一致；
-- [ ] 核心页面与静态资源可访问；
-- [ ] 平台专属缓存、TLS、MIME 和回退策略在仓库外验证。
+- [ ] 实例配置与秘密未进入仓库或发布产物，部署目标由运行环境注入；
+- [ ] 工作区干净，目标提交满足部署引用约束，产物校验通过；
+- [ ] 线上版本标记与目标 SHA 一致，核心页面及静态资源可访问；
+- [ ] 平台专属服务器策略与回退能力在仓库外验证。

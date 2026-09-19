@@ -10,8 +10,9 @@
 
 - 从 `posts/*.md` 提取列表元数据；
 - 生成按日期倒序排列的 `posts/posts.json`；
-- 在浏览器中渲染文章列表、筛选、搜索与详情；
-- 从选定 Git 提交生成部署产物。
+- 在浏览器中渲染文章列表、筛选、搜索与详情。
+
+发布产物与部署边界统一见 [deployment-architecture.md](deployment-architecture.md)。
 
 该流程不覆盖：
 
@@ -25,19 +26,8 @@
 ## 2. 数据流
 
 ```text
-posts/*.md
-   │
-   ├─ ./run.sh gen ───────────────→ posts/posts.json
-   │                                  │
-   └──────────────────────────────────┤
-                                      ↓
-                           提交并推送至选定远程分支
-                                      ↓
-                         ./run.sh deploy [git-ref]
-                                      ↓
-                           git archive 生成临时产物
-                                      ↓
-                                 静态托管环境
+posts/*.md ── ./run.sh gen ──→ posts/posts.json
+     └────────── 同次提交并发布 ──────────┘
 
 浏览器打开 blog.html
    ├─ fetch posts/posts.json → 列表、标签筛选、搜索
@@ -71,7 +61,7 @@ ai_summary: 提取文章的关键判断、排查步骤与适用边界。
 
 | 字段 | 索引生成 | 详情渲染 | 当前行为 |
 |---|---|---|---|
-| `title` | 写入 JSON | 不直接使用 | 列表标题。脚本不校验非空 |
+| `title` | 写入 JSON | 设置浏览器页面标题 | 缺省时页面标题回退到正文 H1；不会自动生成正文 H1。索引脚本不校验非空 |
 | `date` | 写入 JSON 并倒序排序 | 显示于文章信息 | 建议固定为 `YYYY-MM-DD`；脚本按字符串排序，不校验日期合法性 |
 | `tag` | 写入 JSON | 显示于文章信息 | 用于标签筛选和默认主题封面选择 |
 | `summary` | 写入 JSON | 不直接使用 | 列表摘要；为空时从正文首个有效文本行截取前 100 个字符 |
@@ -80,9 +70,7 @@ ai_summary: 提取文章的关键判断、排查步骤与适用边界。
 | `publish` | 控制是否进入 JSON | 不使用 | 默认 `true`；`false`、`0`、`no`（不区分大小写）会排除该文章 |
 | `ai_summary` | 忽略 | 存在时显示 | 由详情页直接解析并渲染 AI 摘要卡片 |
 
-新文章通常只需填写 `tag`，省略 `cover` 即可自动复用主题封面；“实践”和“工程实践”共用同一张，Linux 标签匹配忽略大小写。如需覆盖默认图，可显式填写 `cover: picture/blog/embedded.svg` 或其他图片路径。主题注册表统一维护在 `js/blog-covers.js`，不按文章逐一绑定。
-
-正文应保留一个一级标题。详情页不会使用 Front Matter 的 `title` 自动补标题。
+正文应保留一个一级标题。主题封面的复用规则、标签别名和自定义图片行为见 [blog-covers.md](blog-covers.md)。
 
 ### 3.2 摘要回退
 
@@ -136,15 +124,12 @@ git diff -- posts/posts.json
 1. 请求 `posts/posts.json`，生成文章卡片；
 2. 按索引中的 `tag` 去重生成筛选按钮；
 3. 在标题、标签和摘要中执行客户端搜索；
-4. 通过 `js/blog-covers.js` 的 `BlogCovers.getCoverUrl()` 优先使用显式 `cover`，缺省时按 `tag` 复用六类主题 SVG，未知标签使用 `picture/blog/field-notes.svg`；图片加载失败时向通用封面回退一次；
+4. 通过 `js/blog-covers.js` 选择封面，行为见 [blog-covers.md](blog-covers.md)；
 5. 点击卡片后写入 `#post=<Markdown 路径>`；
-6. 请求 Markdown 文件，解析 Front Matter，并通过 Marked.js 4.0.12 渲染正文；
-7. 统计中文字符与英文、数字词元，按每分钟 400 个单位估算阅读时长，最低显示 1 分钟；
-8. 存在 `ai_summary` 时显示 AI 摘要。
+6. 请求 Markdown 文件并渲染正文，按字段契约更新页面标题与文章信息；
+7. 估算字数和阅读时长，存在 `ai_summary` 时显示 AI 摘要。
 
-Marked.js 按 jsDelivr、unpkg、cdnjs 的顺序回退。三处均不可用时，文章详情显示加载错误，文章列表仍可使用。
-
-主题封面的设计、明暗适配与审核入口见 [blog-covers.md](blog-covers.md)。
+解析器加载失败不影响文章列表，详情页提供错误提示与重试机会。依赖加载与降级约定见 [设计系统 §7](design-system.md#7-外部依赖与降级行为)，字数估算以 `blog.html` 的 `countWords` / `buildArticleHead` 为准。
 
 ### 5.1 评论状态
 
@@ -164,25 +149,7 @@ Marked.js 按 jsDelivr、unpkg、cdnjs 的顺序回退。三处均不可用时�
 
 ## 7. 部署行为
 
-常规部署命令：
-
-```bash
-DEPLOY_TARGET='user@example.com:/srv/www/blog/' \
-PUBLIC_BASE_URL='https://blog.example.com' \
-./run.sh deploy HEAD
-```
-
-部署脚本通过 `git archive` 生成临时产物，工作区文件不会直接同步到生产环境。`DEPLOY_TARGET` 与 `PUBLIC_BASE_URL` 必须由运行环境注入；服务器、Web Server 和托管平台配置不属于本仓库。需要限制可部署分支时，可额外设置 `DEPLOY_REQUIRED_REF`。
-
-可选模式：
-
-```bash
-DEPLOY_TARGET='user@example.com:/srv/www/blog/' \
-PUBLIC_BASE_URL='https://blog.example.com' \
-./run.sh deploy --gen <git-ref>
-```
-
-`--gen` 只在目标提交生成的临时产物内重建 `posts/posts.json`，不会修改工作区。该模式适用于核验历史提交或显式重建产物，不替代发布前生成、审查并提交索引的常规流程。部署与回退约束见 [deployment-architecture.md](deployment-architecture.md)。
+部署说明已归并至 [deployment-architecture.md](deployment-architecture.md)，本节保留为引用入口。
 
 ## 8. 验收清单
 

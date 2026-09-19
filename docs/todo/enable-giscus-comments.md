@@ -3,7 +3,7 @@
 - 状态：待处理
 - 创建日期：2026-07-10
 - 目标仓库：`Huanfiy/huanfiy.github.io`
-- 配置位置：`blog.html` 中的 `GISCUS_CONFIG`
+- 配置位置：[blog.html](../../blog.html) 中的 `GISCUS_CONFIG`
 
 ## 目标
 
@@ -11,12 +11,8 @@
 
 ## 当前状态
 
-- giscus 加载、文章映射和主题同步代码已写入 `blog.html`。
-- `repo` 已配置为 `Huanfiy/huanfiy.github.io`。
-- `repoId` 已配置为 `R_kgDOM3iQ0Q`。
-- `category` 已配置为 `Announcements`。
-- `categoryId` 当前为空，因此评论区不会渲染。
-- GitHub 仓库尚未启用 Discussions。
+- giscus 加载、文章映射和主题同步已实现，`categoryId` 仍为空，评论区未启用；其他字段以源码配置为准。
+- GitHub Discussions 与 giscus App 授权状态须在执行时核验，不能从本地配置推断。
 
 ## 前置条件
 
@@ -26,22 +22,10 @@
 
 ## 操作步骤
 
-- [ ] 打开仓库的 `Settings` 页面，在 `General > Features` 中启用 `Discussions`。
-- [ ] 安装 [giscus App](https://github.com/apps/giscus)，并授权访问 `Huanfiy/huanfiy.github.io` 仓库。
-- [ ] 打开 [giscus 配置页](https://giscus.app/zh-CN)，填写仓库名称并选择 `Announcements` 分类。
-- [ ] 从生成的配置中复制 `data-category-id`。
-- [ ] 将 `data-category-id` 的值填入 `blog.html`：
-
-```javascript
-const GISCUS_CONFIG = {
-    repo: 'Huanfiy/huanfiy.github.io',
-    repoId: 'R_kgDOM3iQ0Q',
-    category: 'Announcements',
-    categoryId: '填写 data-category-id'
-};
-```
-
-- [ ] 如果 giscus 配置页返回的分类名称不是 `Announcements`，同时更新 `category` 和 `categoryId`，确保两者对应同一分类。
+- [ ] 在仓库设置中检查 `Discussions`，未启用时开启。
+- [ ] 检查 [giscus App](https://github.com/apps/giscus) 是否已安装并获准访问目标仓库，缺失时补齐。
+- [ ] 在 [giscus 配置页](https://giscus.app/zh-CN) 选择目标仓库与评论分类。
+- [ ] 将生成的 `data-category-id` 填入 `GISCUS_CONFIG.categoryId`；核对仓库及分类的名称与 ID，必要时同步更新对应字段。
 
 `categoryId` 是 GitHub Discussion 分类标识，不属于访问密钥，可以提交到公开仓库。
 
@@ -56,4 +40,4 @@ const GISCUS_CONFIG = {
 
 ## 范围边界
 
-本待办仅覆盖 giscus 启用和功能验证，不包含历史评论迁移、评论内容审核规则、通知策略及 GitHub Discussions 分类治理。
+本待办仅覆盖 giscus 启用和功能验证，不包含历史评论迁移、评论内容审核规则、通知策略及 GitHub Discussions 分类治理。完成验收后删除本文件，并更新引用它的文档。
