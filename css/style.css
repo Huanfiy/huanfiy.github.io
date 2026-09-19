@@ -2046,20 +2046,16 @@ footer::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='16' viewBox='0 0 90 16'%3E%3Cpath d='M0 16V10Q7 2 15 9Q22 1 30 8Q38 3 45 9Q52 2 60 8Q68 3 75 9Q83 2 90 10V16Z' fill='%23101711'/%3E%3C/svg%3E");
 }
 
-/* 页脚草地上睡着的小黑：全站页脚共用，随主题换一套墨色 */
+/* 共享页脚上的睡姿小羽：纯装饰，所有页面与日夜主题使用同一张图。 */
 footer::after {
     content: '';
     position: absolute;
-    right: clamp(16px, 7vw, 120px);
-    top: -44px;
-    width: 104px;
-    height: 48px;
+    right: max(6%, calc((100% - 1100px) / 2));
+    top: -70px;
+    width: 112px;
+    height: 90px;
     pointer-events: none;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 48'%3E%3Cpath d='M12 40C3 42 1 32 9 27' fill='none' stroke='%2323281f' stroke-width='7' stroke-linecap='round'/%3E%3Cellipse cx='48' cy='33' rx='34' ry='14' fill='%2323281f'/%3E%3Ccircle cx='74' cy='27' r='16' fill='%2323281f'/%3E%3Cpath d='M63 16L59 4L71 12Z M85 16L91 4L79 12Z' fill='%2323281f'/%3E%3Cpath d='M66 29q4 3 8 0M78 29q4 3 8 0' fill='none' stroke='%238fe3d9' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M92 10h6l-6 6h6' fill='none' stroke='%234fc4cf' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M99 3h4l-4 4h4' fill='none' stroke='%234fc4cf' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' opacity='.8'/%3E%3C/svg%3E") no-repeat center bottom / contain;
-}
-
-[data-theme="dark"] footer::after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 104 48'%3E%3Cpath d='M12 40C3 42 1 32 9 27' fill='none' stroke='%231c261e' stroke-width='7' stroke-linecap='round'/%3E%3Cellipse cx='48' cy='33' rx='34' ry='14' fill='%231c261e' stroke='%23324b3c' stroke-width='1.5'/%3E%3Ccircle cx='74' cy='27' r='16' fill='%231c261e' stroke='%23324b3c' stroke-width='1.5'/%3E%3Cpath d='M63 16L59 4L71 12Z M85 16L91 4L79 12Z' fill='%231c261e' stroke='%23324b3c' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M66 29q4 3 8 0M78 29q4 3 8 0' fill='none' stroke='%237fe9dd' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M92 10h6l-6 6h6' fill='none' stroke='%236fd8e2' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M99 3h4l-4 4h4' fill='none' stroke='%236fd8e2' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' opacity='.8'/%3E%3C/svg%3E");
+    background: url("../picture/oc/sleep.webp") no-repeat center / contain;
 }
 
 .footer-note {

@@ -55,6 +55,46 @@ async function layout(page) {
     check(result.noPanel, 'No permanent action panel or decorative character frame');
     check(result.bubbleFits && result.noOverlap, 'Speech fits Hero without covering main actions');
 }
+async function footerLayouts(browser) {
+    const page = await browser.newPage();
+    page.on('pageerror', error => problems.push(error.message));
+    page.on('response', response => { if (response.url().startsWith(origin) && response.status() >= 400) problems.push(response.status() + ' ' + response.url()); });
+    for (const route of ['index.html', 'blog.html', 'tool.html', 'about.html', 'tools/downloads.html', 'tools/visualizations.html', 'tools/keyboard.html', 'tools/buy.html']) {
+        await page.goto(`${origin}/${route}`, { waitUntil: 'networkidle2' });
+        for (const width of [1440, 390]) {
+            await page.setViewport({ width, height: 900, deviceScaleFactor: 1 });
+            for (const theme of ['light', 'dark']) {
+                const result = await page.evaluate(async theme => {
+                    document.documentElement.dataset.theme = theme;
+                    const footer = document.querySelector('footer');
+                    footer.scrollIntoView({ block: 'end', behavior: 'instant' });
+                    const style = getComputedStyle(footer, '::after');
+                    const source = style.backgroundImage.match(/^url\("?([^"\)]+)"?\)$/)?.[1];
+                    const image = new Image();
+                    image.src = source || '';
+                    await image.decode();
+                    const rect = footer.getBoundingClientRect();
+                    const right = rect.right - parseFloat(style.right);
+                    const left = right - parseFloat(style.width);
+                    const top = rect.top + parseFloat(style.top);
+                    return {
+                        samePortrait: new URL(image.src).pathname.endsWith('/picture/oc/sleep.webp') && image.naturalWidth === 768 && style.content === '""' && style.backgroundSize === 'contain',
+                        samePlacement: style.width === '112px' && style.height === '90px' && style.top === '-70px' && style.position === 'absolute',
+                        fits: left >= 0 && right <= innerWidth && top >= 0 && top + 90 <= innerHeight,
+                        decorativeOnly: style.pointerEvents === 'none' && !document.querySelector('.oc-footer') && (document.querySelector('[data-oc]') || !window.HuanYu)
+                    };
+                }, theme);
+                check(result.samePortrait && result.samePlacement, `${route}: same sleeping Xiao Yu in ${theme} at ${width}px`);
+                check(result.fits && result.decorativeOnly, `${route}: footer decoration fits and does not add interaction`);
+                if (!route.startsWith('tools/')) {
+                    await pause(500); // Wait for theme colors and scroll-reveal painting before visual review.
+                    await page.screenshot({ path: path.join(output, `footer-${route.replace('.html', '')}-${width}-${theme}.png`) });
+                }
+            }
+        }
+    }
+    await page.close();
+}
 (async () => {
     const browser = await puppeteer.launch({ executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox'] });
     try {
@@ -217,6 +257,7 @@ async function layout(page) {
         check(await fallback.$eval('[data-oc-portrait]', image => image.complete && image.naturalWidth > 0), 'No-JS keeps character illustration');
         check(await fallback.$eval('[data-oc-character]', button => button.disabled), 'No-JS does not offer broken action');
         check(await fallback.$eval('[data-oc-bubble]', bubble => bubble.hidden && !bubble.textContent.includes('你好')), 'No-JS leaves no permanent speech panel');
+        check(await fallback.$eval('footer', footer => getComputedStyle(footer, '::after').backgroundImage.includes('/picture/oc/sleep.webp')), 'Sleeping footer portrait does not depend on JavaScript');
         await fallback.close();
 
         const transient = await browser.newPage();
@@ -266,6 +307,7 @@ async function layout(page) {
         await blocked.click('[data-oc-character]');
         check(await blocked.evaluate(() => window.HuanYu.getState().state === 'pat' && window.HuanYu.getState().collected.length === 1), 'Idle sleep wakes and storage denial falls back to session');
         await blocked.close();
+        await footerLayouts(browser);
         check(problems.length === 0, problems.join('\n'));
         console.log(`OC browser: ${checks} checks passed; screenshots: ${output}`);
     } finally { await browser.close(); }

@@ -37,8 +37,6 @@
 .oc-voice-controls button { background: var(--oc-paper); border: 1px solid var(--oc-line); border-radius: 20px; padding: 8px 12px; min-height: 44px; font-size: .8rem; }
 .oc-sparkles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .oc-sparkles span { position: absolute; left: calc(15% + var(--i) * 11%); top: 55%; color: var(--oc-pink); font-size: 22px; opacity: 0; animation: oc-spark 1.25s calc(var(--i) * .02s) ease-out forwards; }
-.home-oc footer::after { content: none; }
-.oc-footer { position: absolute; right: max(6%, calc((100% - 1100px) / 2)); top: -70px; width: 112px; height: 90px; object-fit: contain; pointer-events: none; }
 
 /* 星屿手记：原生 dialog 的焦点圈与 Escape，所有内容在首页内。 */
 .oc-book { margin: auto; width: min(780px, calc(100% - 32px)); max-height: min(84dvh, 840px); padding: 0; color: var(--dark-text); background: var(--card-bg); border: 2px solid var(--oc-line); border-radius: var(--wobble-card); box-shadow: 8px 10px 0 color-mix(in srgb, var(--oc-ink) 15%, transparent); text-align: left; overscroll-behavior: contain; }

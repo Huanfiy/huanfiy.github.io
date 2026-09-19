@@ -130,7 +130,7 @@ Three.js 工作室是 Huanfly 个人设计风格在三维空间中的延展。
 | 马克笔高亮 | `.marker`：青→绿 45% 透明渐变，`background-size: 100% 42%` 压在文字下沿 | Hero、关于页标题 |
 | 胶带贴纸 | 半透明色块 + 旋转（`::before/::after`） | 博客缩略图 |
 | 森林景观 | 天空 + 三层内联 SVG 景观 + 右下角小尺寸幻羽，见 §4.1 | `index.html` |
-| 草地页脚 | `footer::before` 波浪草丛 SVG data URI，颜色与 `--footer-bg` 同值衔接；`footer::after` 是蜷在草地上睡着的小黑（data URI，浅 / 深各一套）；首页覆盖为幻羽睡姿 WebP | 全站 |
+| 草地页脚 | `footer::before` 波浪草丛 SVG data URI，颜色与 `--footer-bg` 同值衔接；`footer::after` 统一引用 `picture/oc/sleep.webp` 作为睡姿小羽装饰，主页面与工具子页共用，浅 / 深主题保持同一插画与尺寸；页脚装饰本身不依赖角色交互脚本 | 全站 |
 | 卡片光斑 | `.card::after` 跟随指针的色调径向光，`--mx/--my` 由 `js/script.js` 写入；悬停时卡片按 `--rx/--ry` 作 ≤ 3.5° 的纸片倾斜（宽幅博客卡片只有光斑） | 全站卡片 |
 
 ### 4.1 首页 Hero 景观

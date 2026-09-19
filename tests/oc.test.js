@@ -28,6 +28,36 @@ test('offline actions reference real poses, assets and collectibles', async () =
     assert.equal(actionFromTranscript(null), null);
 });
 
+test('all shared footers use the same sleeping portrait without homepage overrides', async () => {
+    const { readFileSync, existsSync } = require('node:fs');
+    const { resolve, dirname } = require('node:path');
+    const { POSES } = await world;
+    const root = resolve(__dirname, '..');
+    const stylesheet = resolve(root, 'css/style.css');
+    const css = readFileSync(stylesheet, 'utf8');
+    const footer = css.match(/\nfooter::after\s*\{([^}]+)\}/)?.[1];
+    assert.ok(footer, 'Shared footer decoration exists');
+    const source = footer.match(/url\("([^"]+)"\)/)?.[1];
+    assert.ok(source, 'Footer loads a self-hosted asset');
+    const asset = resolve(dirname(stylesheet), source);
+    assert.equal(asset, resolve(root, POSES.sleep.src));
+    assert.ok(existsSync(asset));
+    assert.match(footer, /width:\s*112px/);
+    assert.match(footer, /height:\s*90px/);
+    assert.match(footer, /top:\s*-70px/);
+    assert.match(footer, /pointer-events:\s*none/);
+    assert.equal((css.match(/footer::after/g) || []).length, 1, 'No theme-specific cat replacement');
+    assert.doesNotMatch(readFileSync(resolve(root, 'css/oc.css'), 'utf8'), /footer::after|\.oc-footer/);
+    for (const file of ['index.html', 'blog.html', 'tool.html', 'about.html', 'tools/downloads.html', 'tools/visualizations.html', 'tools/keyboard.html', 'tools/buy.html']) {
+        const html = readFileSync(resolve(root, file), 'utf8');
+        assert.match(html, /<footer>/, file);
+        assert.doesNotMatch(html, /class="oc-footer"/, 'No duplicate decoration: ' + file);
+        const href = html.match(/href="([^"]*css\/style\.css)"/)?.[1];
+        assert.ok(href, file);
+        assert.equal(resolve(root, dirname(file), href), stylesheet, file);
+    }
+});
+
 test('voice remains inert until explicitly enabled and supports playback-only adapters', async () => {
     const { createVoiceChannel } = await voice;
     let calls = 0;
