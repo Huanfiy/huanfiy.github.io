@@ -22,16 +22,38 @@ async function pose(page, id) {
         return root.dataset.pose === id && image.complete && image.naturalWidth === 768;
     }, {}, id);
 }
+async function openBook(page) {
+    if (await page.$eval('[data-oc-bubble]', bubble => bubble.hidden)) await page.click('[data-oc-character]');
+    await page.click('[data-oc-open]');
+}
 async function layout(page) {
-    const result = await page.evaluate(() => ({
-        overflow: document.documentElement.scrollWidth > innerWidth,
-        controls: [...document.querySelectorAll('.oc-actions button')].map(button => {
-            const rect = button.getBoundingClientRect();
-            return rect.width >= 44 && rect.height >= 44 && rect.left >= 0 && rect.right <= innerWidth;
-        })
-    }));
+    const result = await page.evaluate(() => {
+        const root = document.querySelector('[data-oc]');
+        const rect = root.getBoundingClientRect();
+        const intro = document.querySelector('.hero-content').getBoundingClientRect();
+        const hero = document.querySelector('#hero').getBoundingClientRect();
+        const bubble = document.querySelector('[data-oc-bubble]');
+        const bubbleRect = bubble.getBoundingClientRect();
+        const buttons = [...document.querySelectorAll('.hero-actions a')];
+        const actions = buttons.map(button => button.getBoundingClientRect());
+        const avatar = document.querySelector('.hero-avatar');
+        return {
+            introRestored: avatar?.parentElement.matches('.hero-content') && getComputedStyle(avatar).width === '128px' && getComputedStyle(avatar.querySelector('img')).height === '128px' && getComputedStyle(avatar, '::before').width === '56px' && getComputedStyle(avatar, '::after').width === '56px' && !document.querySelector('.home-byline, .home-intro'),
+            introTypography: getComputedStyle(document.querySelector('.hero-content')).paddingTop === '48px' && getComputedStyle(document.querySelector('.hero-sub')).fontSize === '18.4px' && getComputedStyle(document.querySelector('.hero-kicker')).fontSize === '15.2px' && getComputedStyle(document.querySelector('.hero-actions')).gap === '19.2px',
+            introCopy: buttons.map(button => button.textContent).join('|') === '开始探索|了解更多' && document.querySelector('.hero-sub').innerHTML === '一名热衷于技术分享与科技制作的探索者。<br>在这里记录学习，分享生活，构建有趣的世界。',
+            overflow: document.documentElement.scrollWidth > innerWidth,
+            compact: rect.width >= 44 && rect.width <= 180 && rect.height <= 180,
+            corner: getComputedStyle(root).position === 'absolute' && rect.left >= innerWidth / 2 && rect.right <= innerWidth && rect.bottom <= hero.bottom && rect.top >= intro.bottom,
+            noPanel: !document.querySelector('.oc-actions, .oc-meta, .oc-aura, .oc-world-label') && !root.closest('.hero-content'),
+            bubbleFits: bubble.hidden || (bubbleRect.left >= 0 && bubbleRect.right <= innerWidth && bubbleRect.top >= hero.top && bubbleRect.bottom <= hero.bottom),
+            noOverlap: bubble.hidden || actions.every(button => bubbleRect.bottom <= button.top || bubbleRect.top >= button.bottom || bubbleRect.right <= button.left || bubbleRect.left >= button.right)
+        };
+    });
+    check(result.introRestored && result.introTypography && result.introCopy, 'Original centered introduction, taped avatar, typography and copy are preserved');
     check(!result.overflow, 'No horizontal overflow');
-    check(result.controls.every(Boolean), 'All action targets fit and are at least 44 px');
+    check(result.compact && result.corner, 'Compact character sits in lower-right forest, outside intro layout');
+    check(result.noPanel, 'No permanent action panel or decorative character frame');
+    check(result.bubbleFits && result.noOverlap, 'Speech fits Hero without covering main actions');
 }
 (async () => {
     const browser = await puppeteer.launch({ executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox'] });
@@ -50,24 +72,29 @@ async function layout(page) {
         await ready(page);
         await layout(page);
         check(await page.evaluate(() => !document.querySelector('#hero-cat') && !window.HuanYu.getState().voiceAvailable), 'Old mascot removed and voice defaults off');
+        await page.evaluate(() => window.HuanYu.say(''));
+        check(await page.$eval('[data-oc-bubble]', bubble => bubble.hidden && bubble.getBoundingClientRect().height === 0), 'Empty speech has no visible panel or layout footprint');
         await pause(700);
         await page.screenshot({ path: path.join(output, 'desktop.png') });
         await page.focus('[data-oc-character]');
         await page.keyboard.press('Enter');
         await pose(page, 'hug');
         await page.keyboard.press('Space');
-        check(await page.evaluate(() => window.HuanYu.getState().collected.length === 1), 'Keyboard character action collects once');
-        for (const [action, image] of [['hug', 'hug'], ['milk', 'milk'], ['magic', 'magic'], ['read', 'read']]) {
-            await page.click(`[data-oc-action="${action}"]`);
+        check(await page.evaluate(() => window.HuanYu.getState().collected.length === 2 && window.HuanYu.getState().state === 'hug'), 'Enter and Space activate successive character interactions');
+        for (const [action, image] of [['milk', 'milk'], ['magic', 'magic'], ['read', 'read'], ['pat', 'hug']]) {
+            await page.click('[data-oc-character]');
             await pose(page, image);
-            check(await page.evaluate(action => window.HuanYu.getState().state === action, action), 'Action ' + action);
+            check(await page.evaluate(action => window.HuanYu.getState().state === action && !document.querySelector('[data-oc-bubble]').hidden, action), 'Character click cycles to ' + action + ' with speech');
         }
-        await page.click('[data-oc-open]');
+        check(await page.evaluate(() => window.HuanYu.getState().collected.length === 5), 'Repeated actions do not duplicate collectibles');
+        await layout(page);
+        await page.screenshot({ path: path.join(output, 'desktop-speech.png') });
+        await openBook(page);
         check(await page.evaluate(() => document.querySelector('[data-oc-book]').open && document.activeElement.matches('[data-oc-close]')), 'Dialog opens with close control focused');
         await page.click('[data-oc-action="circuit"]');
         await pose(page, 'read');
         check(await page.evaluate(() => window.HuanYu.getState().collected.length === 6 && !document.querySelector('[data-oc-book]').open), 'World interaction discovers sixth collectible');
-        await page.click('[data-oc-open]');
+        await openBook(page);
         await page.focus('[data-oc-tab="profile"]');
         await page.keyboard.press('ArrowRight');
         check(await page.evaluate(() => document.activeElement.dataset.ocTab === 'collection' && !document.querySelector('[data-oc-panel="collection"]').hidden), 'Arrow keys switch accessible tabs');
@@ -79,9 +106,10 @@ async function layout(page) {
         await pose(page, 'sleep');
         await page.click('[data-oc-character]');
         await pose(page, 'hug');
-        await page.click('[data-oc-open]');
+        await openBook(page);
         await page.keyboard.press('Escape');
-        check(await page.evaluate(() => !document.querySelector('[data-oc-book]').open && document.activeElement.matches('[data-oc-open]')), 'Escape restores focus');
+        await page.waitForFunction(() => !document.querySelector('[data-oc-book]').open && document.activeElement.matches('[data-oc-character]'));
+        check(await page.$eval('[data-oc-bubble]', bubble => bubble.hidden), 'Escape restores focus to character, not hidden book link');
         await ready(page);
         check(await page.evaluate(() => window.HuanYu.getState().collected.length === 6 && document.querySelector('[data-oc-speech]').textContent.includes('回来')), 'Collection and returning greeting survive reload');
         await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
@@ -96,6 +124,8 @@ async function layout(page) {
             });
         });
         check(await page.evaluate(() => window.ocVoiceCalls.length === 0 && !document.querySelector('[data-oc-voice]').hidden && document.querySelector('[data-oc-listen]').hidden), 'Installing adapter does not activate audio or microphone');
+        await openBook(page);
+        await page.click('[data-oc-tab="profile"]');
         await page.click('[data-oc-voice]');
         await page.waitForFunction(() => window.ocVoiceCalls.length === 1);
         await page.click('[data-oc-listen]');
@@ -103,9 +133,11 @@ async function layout(page) {
         check(await page.evaluate(() => window.ocVoiceCalls[0].signal.aborted), 'Listen interrupts existing voice and maps transcript to local action');
         await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
         await page.waitForFunction(() => window.HuanYu.getState().paused);
-        check(await page.evaluate(() => window.ocVoiceCalls.at(-1).signal.aborted && document.querySelector('[data-oc]').dataset.paused === 'true'), 'Offscreen stops audio and animation');
+        check(await page.evaluate(() => window.ocVoiceCalls.at(-1).signal.aborted && document.querySelector('[data-oc]').dataset.paused === 'true' && document.querySelector('[data-oc-bubble]').hidden), 'Offscreen stops audio and animation and clears speech');
+        await page.evaluate(() => window.HuanYu.say('不可见时不留下常驻气泡'));
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
         await page.waitForFunction(() => !window.HuanYu.getState().paused);
+        check(await page.$eval('[data-oc-bubble]', bubble => bubble.hidden), 'Returning onscreen does not resurrect stale speech');
         await page.evaluate(() => {
             const before = window.HuanYu;
             before.destroy(); before.destroy();
@@ -138,10 +170,19 @@ async function layout(page) {
         }
         await mobile.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
         await pause(150);
+        await mobile.evaluate(() => window.HuanYu.say(''));
         await mobile.screenshot({ path: path.join(output, 'mobile.png'), fullPage: true });
-        await mobile.tap('[data-oc-action="magic"]');
+        for (let i = 0; i < 4; i++) await mobile.tap('[data-oc-character]');
         await pose(mobile, 'magic');
-        check(await mobile.evaluate(() => getComputedStyle(document.querySelector('[data-oc-portrait]')).animationName === 'none' && !document.querySelector('[data-oc-sparkles]').childElementCount), 'Reduced motion preserves touch actions without animation');
+        check(await mobile.evaluate(() => getComputedStyle(document.querySelector('[data-oc-portrait]')).animationName === 'none' && getComputedStyle(document.querySelector('.hero-avatar')).animationName === 'none' && !document.querySelector('[data-oc-sparkles]').childElementCount), 'Reduced motion preserves touch actions without character or avatar animation');
+        await layout(mobile);
+        await mobile.screenshot({ path: path.join(output, 'mobile-speech.png') });
+        for (const width of [320, 768]) {
+            await mobile.setViewport({ width, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+            await mobile.evaluate(() => window.HuanYu.say('小羽的长句子。'.repeat(40)));
+            await layout(mobile);
+        }
+        await mobile.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
         await mobile.tap('[data-oc-open]');
         await mobile.tap('[data-oc-tab="gallery"]');
         await mobile.evaluate(async () => { await Promise.all([...document.querySelectorAll('[data-oc-gallery] img')].map(image => image.decode())); });
@@ -175,7 +216,42 @@ async function layout(page) {
         await fallback.goto(origin, { waitUntil: 'networkidle2' });
         check(await fallback.$eval('[data-oc-portrait]', image => image.complete && image.naturalWidth > 0), 'No-JS keeps character illustration');
         check(await fallback.$eval('[data-oc-character]', button => button.disabled), 'No-JS does not offer broken action');
+        check(await fallback.$eval('[data-oc-bubble]', bubble => bubble.hidden && !bubble.textContent.includes('你好')), 'No-JS leaves no permanent speech panel');
         await fallback.close();
+
+        const transient = await browser.newPage();
+        transient.on('pageerror', error => problems.push(error.message));
+        await transient.setViewport({ width: 1351, height: 900 });
+        await ready(transient);
+        const bounds = await transient.$eval('#hero', hero => hero.getBoundingClientRect().height);
+        await transient.evaluate(() => window.HuanYu.say('第一句'));
+        await pause(4200);
+        await transient.evaluate(() => window.HuanYu.say('第二句'));
+        await pause(1200);
+        check(await transient.$eval('[data-oc-bubble]', bubble => !bubble.hidden && bubble.textContent.includes('第二句')), 'New speech replaces old text and resets dismissal timer');
+        await transient.waitForFunction(() => document.querySelector('[data-oc-bubble]').hidden);
+        check(await transient.$eval('#hero', hero => hero.getBoundingClientRect().height) === bounds, 'Auto-dismiss never changes Hero height');
+        await transient.click('[data-oc-character]');
+        await transient.focus('[data-oc-open]');
+        await pause(5500);
+        check(await transient.$eval('[data-oc-bubble]', bubble => !bubble.hidden), 'Focused speech link does not disappear on timeout');
+        await transient.focus('[data-oc-character]');
+        await transient.waitForFunction(() => document.querySelector('[data-oc-bubble]').hidden);
+        await transient.evaluate(() => window.HuanYu.say('<img src=x onerror=alert(1)>'));
+        check(await transient.$eval('[data-oc-speech]', speech => !speech.children.length && speech.textContent.startsWith('<img')), 'Speech renders text, never HTML');
+        await transient.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+        check(await transient.$eval('[data-oc-bubble]', bubble => bubble.hidden), 'Page hide clears pending speech');
+        await transient.evaluate(() => window.dispatchEvent(new Event('pageshow')));
+        check(await transient.$eval('[data-oc-bubble]', bubble => bubble.hidden), 'Page show does not restore an expired bubble');
+        for (const [width, height] of [[769, 768], [1024, 768], [1280, 720], [1920, 1080], [2560, 1440]]) {
+            await transient.setViewport({ width, height });
+            await transient.evaluate(() => window.HuanYu.say('小羽的长句子。'.repeat(40)));
+            await layout(transient);
+        }
+        await transient.click('[data-oc-character]');
+        await transient.evaluate(() => window.HuanYu.destroy());
+        check(await transient.$eval('[data-oc-bubble]', bubble => bubble.hidden), 'Destroy hides active speech');
+        await transient.close();
 
         const blocked = await browser.newPage();
         await blocked.evaluateOnNewDocument(() => {

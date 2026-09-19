@@ -694,6 +694,54 @@ header .container {
     padding-top: 3rem;
 }
 
+/* 头像：手绘相框 + 胶带 */
+.hero-avatar {
+    position: relative;
+    width: 128px;
+    margin: 0 auto 2rem;
+    transform: rotate(-2deg);
+    animation: gentle-bob 5s ease-in-out infinite;
+}
+
+.hero-avatar img {
+    width: 128px;
+    height: 128px;
+    object-fit: cover;
+    border-radius: 46% 54% 52% 48% / 54% 46% 54% 46%;
+    border: 3px solid var(--ink);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-md);
+}
+
+.hero-avatar::before,
+.hero-avatar::after {
+    content: '';
+    position: absolute;
+    width: 56px;
+    height: 16px;
+    background: color-mix(in srgb, var(--accent-color) 42%, transparent);
+    border-radius: 2px;
+    z-index: 2;
+}
+
+.hero-avatar::before {
+    top: -6px;
+    left: -18px;
+    transform: rotate(-38deg);
+}
+
+.hero-avatar::after {
+    bottom: -2px;
+    right: -20px;
+    transform: rotate(-32deg);
+    background: color-mix(in srgb, var(--warm) 42%, transparent);
+}
+
+@keyframes gentle-bob {
+    0%, 100% { transform: rotate(-2deg) translateY(0); }
+    50% { transform: rotate(-2deg) translateY(-8px); }
+}
+
 .hero-kicker {
     font-size: 0.95rem;
     letter-spacing: 0.28em;
@@ -2116,6 +2164,7 @@ footer::after {
         scroll-behavior: auto;
     }
 
+    .hero-avatar,
     .hero-rays,
     .hero-stars .stars circle,
     .hero-stars .sparkles path,

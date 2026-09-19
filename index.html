@@ -158,7 +158,7 @@
             <svg class="hero-birds" viewBox="-4 -12 100 30"><use href="#birds"/></svg>
         </div>
 
-        <!-- 景观三层：远山 / 森林与后山 / 前山与小黑；各层随指针与滚动产生视差 -->
+        <!-- 景观三层：远山 / 森林与后山 / 前山；各层随指针与滚动产生视差 -->
         <div class="hero-scene">
             <svg class="hero-layer hero-far" viewBox="0 0 1920 520" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
                 <defs>
@@ -217,73 +217,54 @@
         </div>
 
         <div class="hero-content container rise-in">
-            <div class="home-intro">
-                <div class="home-byline"><img src="picture/icon.png" alt="Huanfly" width="54" height="54"><span>A LITTLE CORNER OF MY WORLD</span></div>
-                <p class="hero-kicker">Embedded · Maker · Blogger</p>
-                <h1 class="hero-title">你好，我是<br><span class="marker">Huanfly</span></h1>
-                <p class="hero-sub">一名热衷于技术分享与科技制作的探索者。<br>在这里记录学习，分享生活，<br>也给奇思妙想，留一小片森林。</p>
-                <p class="hero-greeting" id="hero-greeting" aria-live="polite"></p>
-                <div class="hero-actions">
-                    <a href="#explore" class="btn">开始探索 <span aria-hidden="true">↗</span></a>
-                    <a href="about.html" class="btn btn-outline">认识我</a>
-                </div>
-                <p class="home-side-note">代码、生活，还有从星屿来的小小陪伴。</p>
+            <div class="hero-avatar">
+                <img src="picture/icon.png" alt="Huanfly">
+            </div>
+            <p class="hero-kicker">Embedded · Maker · Blogger</p>
+            <h1 class="hero-title">你好，我是 <span class="marker">Huanfly</span></h1>
+            <p class="hero-sub">一名热衷于技术分享与科技制作的探索者。<br>在这里记录学习，分享生活，构建有趣的世界。</p>
+            <p class="hero-greeting" id="hero-greeting" aria-live="polite"></p>
+            <div class="hero-actions">
+                <a href="#explore" class="btn">开始探索</a>
+                <a href="about.html" class="btn btn-outline">了解更多</a>
+            </div>
+        </div>
+
+        <!-- 小羽回到森林右下角：只保留角色，话说完就收起气泡。 -->
+        <section class="oc" data-oc data-state="welcome" aria-label="与幻羽一起探索">
+            <div class="oc-scene">
+                <button type="button" class="oc-character" data-oc-character aria-label="和小羽互动，点击回应或叫醒她" title="点点小羽，和她打个招呼" disabled>
+                    <img data-oc-portrait src="picture/oc/welcome.webp" alt="幻羽：银紫短发、猫耳与紫色披风的星雾猫灵，带着云朵猫挂包向你挥手" width="768" height="768" fetchpriority="high" draggable="false">
+                </button>
+                <div class="oc-sparkles" data-oc-sparkles aria-hidden="true"></div>
+            </div>
+            <div class="oc-bubble" data-oc-bubble hidden>
+                <p data-oc-speech role="status" aria-live="polite" aria-atomic="true" tabindex="0"></p>
+                <button type="button" class="oc-book-button" data-oc-open aria-haspopup="dialog" disabled>星屿手记 <span aria-hidden="true">↗</span></button>
             </div>
 
-            <section class="oc" data-oc data-state="welcome" aria-label="与幻羽一起探索">
-                <div class="oc-scene">
-                    <div class="oc-aura" aria-hidden="true"></div>
-                    <div class="oc-world-label"><span>FROM MISTGARDEN</span><strong>雾庭星屿来信</strong></div>
-                    <span class="oc-touch-hint" aria-hidden="true">轻轻摸摸我</span>
-                    <svg class="oc-float oc-float--butterfly" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#butterfly"/></svg>
-                    <svg class="oc-float oc-float--cloud" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#cloud"/></svg>
-                    <button type="button" class="oc-character" data-oc-character aria-label="摸摸幻羽，叫醒或和小羽打招呼" disabled>
-                        <img data-oc-portrait src="picture/oc/welcome.webp" alt="幻羽：银紫短发、猫耳与紫色披风的星雾猫灵，带着云朵猫挂包向你挥手" width="768" height="768" fetchpriority="high" draggable="false">
-                    </button>
-                    <div class="oc-name"><strong>幻羽</strong><span>小羽 · 梦境缝补师</span></div>
-                    <div class="oc-sparkles" data-oc-sparkles aria-hidden="true"></div>
+            <dialog class="oc-book" data-oc-book aria-labelledby="oc-book-title">
+                <div class="oc-book-heading"><div><p>LETTERS FROM MISTGARDEN</p><h2 id="oc-book-title">星屿手记</h2></div><button type="button" class="oc-close" data-oc-close aria-label="合上星屿手记" autofocus>×</button></div>
+                <div class="oc-tabs" role="tablist" aria-label="手记内容">
+                    <button type="button" role="tab" id="oc-tab-profile" data-oc-tab="profile" aria-controls="oc-panel-profile" aria-selected="true">认识小羽</button>
+                    <button type="button" role="tab" id="oc-tab-collection" data-oc-tab="collection" aria-controls="oc-panel-collection" aria-selected="false" tabindex="-1">相遇收藏</button>
+                    <button type="button" role="tab" id="oc-tab-gallery" data-oc-tab="gallery" aria-controls="oc-panel-gallery" aria-selected="false" tabindex="-1">小羽的日常</button>
                 </div>
-                <div class="oc-bubble">
-                    <span class="oc-bubble-label">小羽轻声说</span>
-                    <p data-oc-speech role="status" aria-live="polite" aria-atomic="true">你好呀，我是幻羽，从雾庭星屿带了一点星光来。要一起在这片森林里走走吗？</p>
-                </div>
-                <div class="oc-actions" aria-label="选择与小羽的互动">
-                    <button type="button" data-oc-action="pat" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#butterfly"/></svg><span>摸摸头</span></button>
-                    <button type="button" data-oc-action="hug" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#cloud"/></svg><span>抱一下</span></button>
-                    <button type="button" data-oc-action="milk" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#milk"/></svg><span>递杯甜奶</span></button>
-                    <button type="button" data-oc-action="magic" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#wand"/></svg><span>缝补梦境</span></button>
-                    <button type="button" data-oc-action="read" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#journal"/></svg><span>一起读书</span></button>
-                </div>
-                <div class="oc-meta">
-                    <button type="button" class="oc-book-button" data-oc-open aria-haspopup="dialog" disabled><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#journal"/></svg>星屿手记 <b data-oc-count aria-label="收藏进度">0 / 6</b><span aria-hidden="true">↗</span></button>
-                    <span class="oc-mood" data-oc-mood>陪你慢慢探索</span>
-                </div>
-                <div class="oc-voice-controls">
-                    <button type="button" data-oc-voice aria-pressed="false" hidden>开启小羽的声音</button>
-                    <button type="button" data-oc-listen aria-pressed="false" hidden>对小羽说话</button>
-                </div>
-                <p class="oc-notice" data-oc-notice role="status" aria-live="polite"></p>
-                <p class="oc-fallback">小羽的互动需要 JavaScript，先让这张小小的她陪你逛逛吧。</p>
-
-                <dialog class="oc-book" data-oc-book aria-labelledby="oc-book-title">
-                    <div class="oc-book-heading"><div><p>LETTERS FROM MISTGARDEN</p><h2 id="oc-book-title">星屿手记</h2></div><button type="button" class="oc-close" data-oc-close aria-label="合上星屿手记" autofocus>×</button></div>
-                    <div class="oc-tabs" role="tablist" aria-label="手记内容">
-                        <button type="button" role="tab" id="oc-tab-profile" data-oc-tab="profile" aria-controls="oc-panel-profile" aria-selected="true">认识小羽</button>
-                        <button type="button" role="tab" id="oc-tab-collection" data-oc-tab="collection" aria-controls="oc-panel-collection" aria-selected="false" tabindex="-1">相遇收藏</button>
-                        <button type="button" role="tab" id="oc-tab-gallery" data-oc-tab="gallery" aria-controls="oc-panel-gallery" aria-selected="false" tabindex="-1">小羽的日常</button>
+                <div class="oc-panel" role="tabpanel" id="oc-panel-profile" data-oc-panel="profile" aria-labelledby="oc-tab-profile" tabindex="0">
+                    <div class="oc-profile">
+                        <img src="picture/oc/magic.webp" alt="幻羽挥动星铃钥杖，托起一颗梦境泡泡" width="280" height="280" loading="lazy">
+                        <div><h3>幻羽 <small>HuanYu / 小羽</small></h3><div class="oc-profile-tags"><span>星雾猫灵</span><span>梦境缝补师</span><span>生日 10 / 17</span></div><p>从雾庭星屿来的小小访客。带着星铃钥杖，收集散落的梦境碎片，把不开心慢慢缝成柔软的好梦。</p><p>有一点害羞，又忍不住想靠近你。喜欢甜牛奶、蝴蝶结、软乎乎的玩偶，还有夜里轻轻吹过的风。</p></div>
                     </div>
-                    <div class="oc-panel" role="tabpanel" id="oc-panel-profile" data-oc-panel="profile" aria-labelledby="oc-tab-profile" tabindex="0">
-                        <div class="oc-profile">
-                            <img src="picture/oc/magic.webp" alt="幻羽挥动星铃钥杖，托起一颗梦境泡泡" width="280" height="280" loading="lazy">
-                            <div><h3>幻羽 <small>HuanYu / 小羽</small></h3><div class="oc-profile-tags"><span>星雾猫灵</span><span>梦境缝补师</span><span>生日 10 / 17</span></div><p>从雾庭星屿来的小小访客。带着星铃钥杖，收集散落的梦境碎片，把不开心慢慢缝成柔软的好梦。</p><p>有一点害羞，又忍不住想靠近你。喜欢甜牛奶、蝴蝶结、软乎乎的玩偶，还有夜里轻轻吹过的风。</p></div>
-                        </div>
-                        <div class="oc-world-note"><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#circuit"/></svg><p>来到这片森林后，小羽发现代码也像星轨。博客是旅行手记，工具箱装着小发明，工作室里还有一块会发光的电路。</p><button type="button" data-oc-action="circuit">一起找找灵感</button></div>
+                    <div class="oc-world-note"><svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#circuit"/></svg><p>来到这片森林后，小羽发现代码也像星轨。博客是旅行手记，工具箱装着小发明，工作室里还有一块会发光的电路。</p><button type="button" data-oc-action="circuit">一起找找灵感</button></div>
+                    <div class="oc-voice-controls">
+                        <button type="button" data-oc-voice aria-pressed="false" hidden>开启小羽的声音</button>
+                        <button type="button" data-oc-listen aria-pressed="false" hidden>对小羽说话</button>
                     </div>
-                    <div class="oc-panel" role="tabpanel" id="oc-panel-collection" data-oc-panel="collection" aria-labelledby="oc-tab-collection" tabindex="0" hidden><div class="oc-collection" data-oc-collection></div><p class="oc-memory" data-oc-memory></p></div>
-                    <div class="oc-panel" role="tabpanel" id="oc-panel-gallery" data-oc-panel="gallery" aria-labelledby="oc-tab-gallery" tabindex="0" hidden><p class="oc-gallery-intro">六张来自星屿的小小日常。点一张，让这个样子的小羽陪你待一会儿。</p><div class="oc-gallery" data-oc-gallery></div></div>
-                </dialog>
-            </section>
-        </div>
+                </div>
+                <div class="oc-panel" role="tabpanel" id="oc-panel-collection" data-oc-panel="collection" aria-labelledby="oc-tab-collection" tabindex="0" hidden><p class="oc-collection-count">相遇收藏 · <span data-oc-count>0 / 6</span></p><div class="oc-collection" data-oc-collection></div><p class="oc-memory" data-oc-memory></p></div>
+                <div class="oc-panel" role="tabpanel" id="oc-panel-gallery" data-oc-panel="gallery" aria-labelledby="oc-tab-gallery" tabindex="0" hidden><p class="oc-gallery-intro">六张来自星屿的小小日常。点一张，让这个样子的小羽陪你待一会儿。</p><div class="oc-gallery" data-oc-gallery></div></div>
+            </dialog>
+        </section>
     </section>
 
     <!-- 核心板块入口 -->

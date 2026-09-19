@@ -2,6 +2,7 @@ import { CHARACTER, POSES, KEEPSAKES, ACTIONS, greeting, readCollection, actionF
 import { createVoiceChannel } from './oc-voice.js';
 
 const instances = new WeakMap();
+const clickActions = ['pat', 'hug', 'milk', 'magic', 'read'];
 const icon = name => `<svg class="oc-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="picture/oc/keepsakes.svg#${name}"/></svg>`;
 
 export function mountCharacter(root) {
@@ -11,8 +12,7 @@ export function mountCharacter(root) {
     const character = $('[data-oc-character]');
     const portrait = $('[data-oc-portrait]');
     const speech = $('[data-oc-speech]');
-    const mood = $('[data-oc-mood]');
-    const notice = $('[data-oc-notice]');
+    const bubble = $('[data-oc-bubble]');
     const book = $('[data-oc-book]');
     const voiceButton = $('[data-oc-voice]');
     const listenButton = $('[data-oc-listen]');
@@ -30,7 +30,8 @@ export function mountCharacter(root) {
     let state = 'welcome';
     let version = 0;
     let imageVersion = 0;
-    let opener = null;
+    let clickIndex = 0;
+    let lastLine = '';
     const counts = new Map();
     const voice = createVoiceChannel(value => {
         root.dataset.voice = value;
@@ -68,15 +69,34 @@ export function mountCharacter(root) {
     function setState(next, label) {
         state = next;
         root.dataset.state = next;
-        mood.textContent = label;
         emit('state', { state: next, label });
     }
+    function hideSpeech() {
+        clearTimeout(timers.get('speech'));
+        if (active() && bubble.contains(document.activeElement)) character.focus({ preventScroll: true });
+        bubble.hidden = true;
+        speech.textContent = '';
+    }
+    function dismissSpeech() {
+        // 阅读或操作手记入口时不要让气泡在指针 / 焦点下消失。
+        if (active() && (bubble.matches(':focus-within') || (fine.matches && bubble.matches(':hover')))) {
+            later('speech', dismissSpeech, 1000);
+            return;
+        }
+        hideSpeech();
+    }
     function say(text, speak = false) {
-        if (destroyed || typeof text !== 'string' || !text.trim()) return;
-        const line = text.trim().slice(0, 240);
-        speech.textContent = line;
-        emit('speech', { text: line, character: CHARACTER.name });
-        if (speak && active() && voice.enabled) void voice.speak({ text: line, character: CHARACTER });
+        if (destroyed || typeof text !== 'string') return;
+        lastLine = text.trim().slice(0, 240);
+        hideSpeech();
+        if (!lastLine) return;
+        if (active() && !book.open) {
+            bubble.hidden = false;
+            speech.textContent = lastLine;
+            later('speech', dismissSpeech, Math.min(16000, Math.max(5000, lastLine.length * 160)));
+        }
+        emit('speech', { text: lastLine, character: CHARACTER.name });
+        if (speak && active() && voice.enabled) void voice.speak({ text: lastLine, character: CHARACTER });
     }
     function scheduleSleep() {
         if (!active() || book.open) return;
@@ -101,8 +121,6 @@ export function mountCharacter(root) {
         collected.push(id);
         try { storage?.setItem('huanyu.keepsakes.v1', JSON.stringify(collected)); } catch { storage = null; }
         renderCollection();
-        notice.textContent = `收到了「${KEEPSAKES.find(item => item.id === id).title}」· 已放进星屿手记`;
-        later('notice', () => { notice.textContent = ''; }, 5500);
         emit('collect', { id, count: collected.length });
     }
     function sparkle() {
@@ -149,15 +167,16 @@ export function mountCharacter(root) {
         });
         root.querySelectorAll('[data-oc-panel]').forEach(panel => { panel.hidden = panel.dataset.ocPanel !== id; });
     }
-    function openBook(button) {
-        opener = button;
+    function openBook() {
         clearTimeout(timers.get('sleep'));
         voice.stop();
         if (!book.open) book.showModal();
+        hideSpeech();
     }
 
     $('[data-oc-gallery]').innerHTML = Object.entries(POSES).map(([id, pose]) => `<button type="button" class="oc-pose-card" data-oc-preview="${id}"><img src="${pose.src}" alt="${pose.alt}" width="280" height="280" loading="lazy"><span>${pose.label}</span></button>`).join('');
     renderCollection();
+    showPose('welcome');
     say(greeting(hero?.dataset.daypart, collected.includes('butterfly')));
     root.dataset.ready = 'true';
     character.disabled = false;
@@ -166,12 +185,16 @@ export function mountCharacter(root) {
     on(root, 'click', event => {
         const target = event.target.closest('button');
         if (!target || !root.contains(target)) return;
-        if (target.hasAttribute('data-oc-character')) interact('pat');
+        if (target.hasAttribute('data-oc-character')) {
+            if (state === 'sleep') clickIndex = 0;
+            interact(clickActions[clickIndex % clickActions.length]);
+            clickIndex += 1;
+        }
         else if (target.dataset.ocAction) {
             if (book.open) book.close();
             interact(target.dataset.ocAction);
         }
-        else if (target.hasAttribute('data-oc-open')) openBook(target);
+        else if (target.hasAttribute('data-oc-open')) openBook();
         else if (target.hasAttribute('data-oc-close')) book.close();
         else if (target.dataset.ocTab) selectTab(target.dataset.ocTab);
         else if (target.dataset.ocPreview) {
@@ -186,7 +209,11 @@ export function mountCharacter(root) {
             scheduleSleep();
         }
     });
-    on(book, 'close', () => { opener?.focus(); scheduleSleep(); });
+    on(book, 'close', () => {
+        if (!active()) return;
+        character.focus({ preventScroll: true });
+        scheduleSleep();
+    });
     on(book, 'click', event => {
         if (event.target !== book) return;
         const rect = book.getBoundingClientRect();
@@ -206,13 +233,14 @@ export function mountCharacter(root) {
         voiceButton.setAttribute('aria-pressed', String(enabled));
         voiceButton.textContent = enabled ? '声音已开启' : '开启小羽的声音';
         listenButton.hidden = !enabled || !voice.canListen;
-        if (enabled) say(speech.textContent, true);
+        if (enabled) say(lastLine, true);
     });
     on(listenButton, 'click', async () => {
         if (root.dataset.voice === 'listening') { voice.stop(); return; }
         const text = await voice.listen();
         if (!active() || !voice.enabled || typeof text !== 'string') return;
         const action = actionFromTranscript(text);
+        if (book.open) book.close();
         if (action) interact(action);
         else say('我听见啦。可以试着说「抱抱」「甜牛奶」或「缝补梦境」。');
     });
@@ -244,7 +272,7 @@ export function mountCharacter(root) {
             clearTimers();
             voice.stop();
             $('[data-oc-sparkles]').replaceChildren();
-            notice.textContent = '';
+            hideSpeech();
         } else {
             if (state !== 'sleep') { setState('welcome', '陪你慢慢探索'); showPose('welcome'); }
             else showPose('sleep');
@@ -256,7 +284,9 @@ export function mountCharacter(root) {
     on(window, 'pageshow', () => { visible = true; syncActivity(); });
     on(reduced, 'change', () => { root.style.setProperty('--oc-lean', '0deg'); $('[data-oc-sparkles]').replaceChildren(); });
     const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
-        visible = entries.some(entry => entry.isIntersecting);
+        const nextVisible = entries.some(entry => entry.isIntersecting);
+        if (nextVisible === visible) return;
+        visible = nextVisible;
         syncActivity();
     }, { threshold: 0.02 }) : null;
     observer?.observe(root);
@@ -290,7 +320,7 @@ export function mountCharacter(root) {
             voice.destroy();
             images.clear();
             $('[data-oc-sparkles]').replaceChildren();
-            notice.textContent = '';
+            hideSpeech();
             if (book.open) book.close();
             root.dataset.paused = 'true';
             delete root.dataset.ready;
