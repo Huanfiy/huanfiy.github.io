@@ -19,19 +19,7 @@
 
 ## 功能
 
-```mermaid
-flowchart TB
-    accTitle: Huanfly 站点地图
-    accDescr: 首页连接博客、工具箱、工作室和关于页。幻羽陪伴位于首页，各页面的详情在页内切换。
-    HOME["首页 · 森林与幻羽<br/>index.html"]
-    HOME --> BLOG["博客<br/>blog.html"]
-    HOME --> TOOLS["工具箱<br/>tool.html"]
-    HOME --> STUDIO["工作室<br/>studio.html"]
-    HOME --> ABOUT["关于<br/>about.html"]
-    classDef default fill:#fffdf5,stroke:#a8bba1,color:#2f3630
-    classDef home fill:#edf3df,stroke:#5da844,color:#2f3630,stroke-width:2px
-    class HOME home
-```
+![站点地图：首页连接博客、工具箱、工作室与关于页](docs/assets/readme/site-map.svg)
 
 | 入口 | 可以做什么 |
 | --- | --- |
@@ -53,25 +41,7 @@ flowchart TB
 
 **浏览器负责渲染与交互，托管端只提供静态文件。** 前端库、字体和图标按页面需要经 CDN 加载。
 
-```mermaid
-flowchart TB
-    accTitle: 纯静态网站的运行架构
-    accDescr: 静态托管提供页面、脚本和内容文件，CDN 提供前端依赖。主站、Markdown 解析和 Three.js 工作室均在访客浏览器中运行；主题与收藏保存在本地。
-    HOST["静态托管<br/>HTML / CSS / JS · Markdown / JSON / 图片"]
-    CDN["CDN<br/>前端库 / 字体 / 图标"]
-    HOST --> APP
-    CDN -.-> APP
-    subgraph BROWSER["访客浏览器"]
-        APP["原生 JavaScript"]
-        APP --> MAIN["主站页面<br/>DOM / CSS · Marked.js"]
-        APP --> ROOM["3D 工作室<br/>Three.js · CSS3D"]
-        APP <--> LOCAL["localStorage<br/>主题 / 收藏"]
-    end
-    classDef default fill:#fffdf5,stroke:#a8bba1,color:#2f3630
-    classDef runtime fill:#e3f3f1,stroke:#4fc4cf,color:#2f3630,stroke-width:2px
-    class APP runtime
-    style BROWSER fill:transparent,stroke:#a8bba1
-```
+![运行架构：静态托管和 CDN 提供资源，主站与工作室在浏览器内运行，本地保存主题和收藏](docs/assets/readme/architecture.svg)
 
 > **能力边界：**终端始终是浏览器内模拟，不连接真实 shell；Robot 仅为「研究中」静态占位。giscus 评论是可选外部服务，未配置时不加载，不属于自建后端。
 
@@ -86,7 +56,7 @@ flowchart TB
 | `tools/` | 独立工具页 |
 | `picture/`、`interests/` | 站点图片、角色资产与兴趣素材 |
 | `tests/` | 契约测试与浏览器回归，不随站点部署 |
-| `docs/` | 拍板设计与待办 |
+| `docs/` | 设计文档、待办与 README 图示 |
 | `run.sh` | 本地预览、索引生成和部署入口 |
 
 具体模块位置与修改入口见 [AGENTS.md](AGENTS.md#项目索引)；添加兴趣素材前阅读相应子目录的 `README.md`。
@@ -106,18 +76,7 @@ node --test tests/*.test.js
 
 ### 发布到静态托管
 
-```mermaid
-flowchart LR
-    accTitle: 仓库发布流程
-    accDescr: 编辑内容并完成本地验证，提交和推送后，从指定 Git 提交打包、校验和同步静态产物，最后验证线上版本与资源。
-    EDIT["编辑内容"] --> CHECK["预览 / 测试"]
-    CHECK --> GIT["提交 / 推送"]
-    GIT --> DEPLOY["run.sh deploy<br/>打包 / 校验 / 同步"]
-    DEPLOY --> VERIFY["线上冒烟验证"]
-    classDef default fill:#fffdf5,stroke:#a8bba1,color:#2f3630
-    classDef release fill:#edf3df,stroke:#5da844,color:#2f3630,stroke-width:2px
-    class DEPLOY release
-```
+![发布流程：编辑内容、预览测试、提交推送、部署和线上冒烟验证](docs/assets/readme/publish-flow.svg)
 
 提交并推送后，在干净工作区中执行：
 
